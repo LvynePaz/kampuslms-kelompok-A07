@@ -22,7 +22,9 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
 # KELOMPOK A07 
-PATRA ANANDA - 10241061 
-NABIL HAFIDZ MUBAROK - 10241055
-NUR DIAH INDAH CLARYZA - 10241059 
+PATRA ANANDA - 10241061                                       
+NABIL HAFIDZ MUBAROK - 10241055                                        
+NUR DIAH INDAH CLARYZA - 10241059                                            
 NOVA KARTIKA CANDRA - 10241057
+
+----------------------
