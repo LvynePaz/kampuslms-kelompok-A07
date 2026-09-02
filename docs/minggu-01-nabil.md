@@ -1,7 +1,19 @@
 **Check Point Minggu 1**
-1. Browser → Route → Controller → Model → Database → Model → Controller → View → HTML → Browser
-2. Karena folder public/ memang dirancang sebagai satu-satunya pintu masuk aplikasi dari internet.
-3. ```.env``` berisi data rahasia seperti password dan API key, jadi tidak boleh di-commit. ```.env.example``` hanya berisi contoh konfigurasi, jadi boleh di-commit agar anggota tim tahu konfigurasi apa yang diperlukan.
-4. Karena banyak tutorial yang dibuat untuk Laravel versi lama, ketika middleware masih didaftarkan melalui ```app/Http/Kernel.php.``` Mulai Laravel 11 dan tetap di Laravel 12, struktur aplikasinya berubah sehingga konfigurasi middleware dipindahkan ke ```bootstrap/app.php.```
-5. ```APP_DEBUG=true``` di server produksi berisiko karena dapat membocorkan informasi penting aplikasi saat terjadi error. Sebaiknya gunakan: ```APP_DEBUG=false```, Ingat: ```true``` untuk development, ```false``` untuk production.
-6. 
+1. Berkas public/index.php adalah titik awal (entry point) aplikasi Laravel yang menerima setiap request dari pengguna.
+Pertama, berkas ini mengecek mode maintenance, lalu memuat Composer autoloader agar library Laravel dapat digunakan.
+Setelah itu, berkas ini menjalankan Laravel melalui bootstrap/app.php dan meneruskan request untuk diproses oleh aplikasi.
+2. Route: bagian ->withRouting(...) — mengatur lokasi file route seperti routes/web.php.
+Middleware: bagian ->withMiddleware(function (Middleware $middleware) { ... }) — tempat untuk mengatur middleware.
+Exception: bagian ->withExceptions(function (Exceptions $exceptions) { ... }) — tempat untuk mengatur penanganan error/exception.
+3. Route yang menghasilkan halaman selamat datang terdapat pada routes/web.php, yaitu Route::get('/', function () { return view('welcome'); });. Route tersebut memanggil file welcome.blade.php yang berada di folder resources/views. Untuk mengubah teks halaman, ubah teks di file welcome.blade.php, lalu simpan dan muat ulang browser untuk memastikan perubahan tampil.
+4. Di routes/web.php ada:
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Dan pada php artisan route:list muncul:
+
+GET|HEAD  /  routes/web.php:5
+
+Artinya route / dari web.php sudah terdaftar dengan benar. GET|HEAD menunjukkan metode HTTP yang bisa digunakan untuk mengakses halaman tersebut.
