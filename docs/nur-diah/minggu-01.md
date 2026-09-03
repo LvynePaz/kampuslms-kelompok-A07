@@ -14,7 +14,7 @@
 |4|Ubah APP_DEBUG=false, lalu ulangi nomor 3|Errornya tetap kejadian, detail error disembunyikan demi keamanan|Halaman generik: Server Error / 500 polos, tanpa stack trace, tanpa nama file, tanpa query SQL|
 
 ## CHECHKPOINT
-1. **1. Urutan berkas yang dilewati request (browser → HTML)**
+1. Urutan berkas yang dilewati request (browser → HTML)
 - `public/index.php` — satu-satunya pintu masuk semua request.
 - `vendor/autoload.php` — dimuat oleh index.php, mengaktifkan semua library lewat Composer.
 - `bootstrap/app.php` — membangun instance aplikasi, mendaftarkan routing, middleware, exception handling.
@@ -26,7 +26,7 @@
 
 2. Karena `public/` didesain sebagai satu-satunya folder yang "aman" untuk publik — isinya cuma asset (CSS, JS, gambar) dan `index.php` sebagai gerbang masuk. Semua logic sensitif (kode aplikasi, konfigurasi database, file `.env`) sengaja ditaruh **di luar** `public/`. Kalau seluruh folder proyek diekspos, siapa pun bisa langsung membuka file seperti `.env` (isinya password database, API key, app key) lewat URL, atau bahkan kode PHP sumber (`app/`, `routes/`) yang membocorkan cara sistem bekerja — celah besar untuk serangan.
 
-3. Beda `.env` dan `.env.example`**
+3. Beda `.env` dan `.env.example`
 - `.env` — berisi konfigurasi **asli** dan sensitif untuk environment kamu (password DB sungguhan, APP_KEY sungguhan, dll). Beda-beda di tiap komputer/server.
 - `.env.example` — cuma **template/contoh**, isinya nama variabel tanpa nilai rahasia (atau nilai dummy), supaya orang lain tahu variabel apa saja yang dibutuhkan.
 Yang di-commit ke Git hanya `.env.example`, karena `.env` asli mengandung kredensial rahasia — kalau ikut ter-commit dan repo-nya publik (atau bahkan private tapi bocor), semua orang bisa lihat password database dan kunci enkripsi kamu.
