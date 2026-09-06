@@ -9,5 +9,6 @@ Route::get('/', function () {
 
 // Halaman tentang (/tentang)
 Route::get('/tentang', function () {
-    return view('tentang');
+    return view('sdfsf
 });
+
