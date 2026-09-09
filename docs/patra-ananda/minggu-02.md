@@ -81,14 +81,3 @@ Telah ditemukan dan diperbaiki **6 masalah** pada branch `W02`:
 - **Perbaikan:** Logika filter dipindahkan ke `CourseController::index()` dan View hanya bertugas me-render data bersih.
 
 ---
-
-## 3. CHECKPOINT — Pertanyaan Mandiri
-
-- [x] **Kenapa menghapus data lewat GET berbahaya?**  
-  Method GET bersifat *safe/idempotent* dan dapat diakses otomatis oleh crawler bot mesin pencari, bookmark, atau browser pre-fetching. Jika aksi mutasi/delete memakai GET, seluruh data dapat terhapus tanpa ada interaksi klik langsung dari pengguna.
-- [x] **Kenapa harus memakai `route()` daripada hardcode URL?**  
-  Memudahkan pemeliharaan kode (maintainability). Jika path URL berubah di `web.php`, seluruh link di aplikasi otomatis menyesuaikan tanpa perlu mengubah file view satu per satu.
-- [x] **Kapan `{!! !!}` boleh dipakai dan apa bahayanya?**  
-  Hanya boleh dipakai jika data sudah 100% disanitasi (misal dari Rich Text Editor terpercaya). Bahayanya adalah celah keamanan **XSS (Cross-Site Scripting)** yang memungkinkan pencurian session cookie pengguna.
-- [x] **Apa peran komponen Blade `<x-layout>`?**  
-  Menyediakan kerangka layout bersama (header, navbar, footer, asset Vite) secara konsisten sehingga tidak perlu copy-paste kode HTML dasar ke setiap halaman.
