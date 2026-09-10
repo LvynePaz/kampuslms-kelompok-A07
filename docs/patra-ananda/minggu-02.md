@@ -92,5 +92,3 @@ Telah ditemukan dan diperbaiki **6 masalah** pada branch `W02`:
 - **Penyebab:** Terdapat blok `@php array_filter(...) @endphp` di dalam file Blade view.
 - **Dampak:** Melanggar prinsip *Separation of Concerns* (MVC).
 - **Perbaikan:** Logika filter dipindahkan ke `CourseController::index()` dan View hanya bertugas me-render data bersih.
-
----
