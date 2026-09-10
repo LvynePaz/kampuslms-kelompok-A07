@@ -15,8 +15,8 @@ class CourseController extends Controller
             'description' => 'Mata kuliah dasar pengembangan aplikasi web modern menggunakan Laravel 12.',
         ],
         [
-            'id'          => 2,
-            'code'        => 'SI2514025',
+            'id'          => 4,
+            'code'        => 'SI2514027',
             'name'        => 'Kecerdasan Bisnis',
             'sks'         => 3,
             'lecturer'    => 'Dwi Arif, S.Kom, M.Kom',
@@ -24,8 +24,6 @@ class CourseController extends Controller
         ],
     ];
 
-
-    // Menampilkan daftar semua mata kuliah
     public function index()
     {
         $courses = $this->courses;

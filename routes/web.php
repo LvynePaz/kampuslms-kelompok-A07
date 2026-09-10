@@ -26,4 +26,3 @@ Route::get('/tentang', function () {
 */
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
-
