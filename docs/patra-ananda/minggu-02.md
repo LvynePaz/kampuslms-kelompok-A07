@@ -11,17 +11,30 @@
 
 ## 2. Hasil Eksplorasi (Read - Break - Fix - Build)
 
-### READ — Penelusuran Request Route `/tentang`
-1. **Penangkap Route:** Route `/tentang` ditangkap pada berkas `routes/web.php` pada baris:
+### READ — Telusuri satu request penuh (30 menit)
+
+Ambil route `/tentang` yang Anda buat minggu lalu. Tanpa AI, tulis di catatan Anda:
+
+1. **Baris mana di `routes/web.php` yang menangkapnya?**
+   Ditangkap pada baris route:
    ```php
    Route::get('/tentang', function () {
        return view('tentang');
    });
    ```
-2. **Controller/Handler:** Pada tahap awal ditangani langsung oleh closure function (atau `TentangController` jika dipindahkan).
-3. **View yang Dikembalikan:** `resources/views/tentang.blade.php`.
-4. **Layout:** Dibungkus menggunakan komponen `<x-layout>`.
-5. **Verifikasi Route List:** Hasil perintah `php artisan route:list --path=tentang` menampilkan method `GET|HEAD` dengan URI `tentang` sesuai definisi.
+   *(Sesuai Konsep 2.1, Laravel membaca `routes/web.php` dari atas ke bawah dan mencocokkan method HTTP `GET` serta URI `/tentang`).*
+
+2. **Kalau ditangani controller, berkas dan method mana?**
+   Saat ini masih menggunakan *closure* (fungsi tanpa nama). Jika mengikuti pola MVC pada Konsep 2.1 (*Controller sebagai pelayan yang menerima request dan menyerahkan ke view*), rute ini dapat diarahkan ke berkas `app/Http/Controllers/TentangController.php` pada method `index()` atau `__invoke()`.
+
+3. **View mana yang dikembalikan? Di path apa persisnya?**
+   View yang dikembalikan adalah template Blade di path `resources/views/tentang.blade.php`.
+
+4. **Layout apa yang membungkusnya?**
+   Pada berkas `tentang.blade.php` bawaan Minggu 1 belum dibungkus oleh layout (masih HTML mandiri). Namun, berdasarkan Konsep 2.1 (*Layout dan Komponen Blade*), kerangka bersama seharusnya dibungkus menggunakan komponen Blade `<x-layout>` yang mengarah ke `resources/views/components/layout.blade.php` agar tag HTML dasar, navbar, dan aset `@vite` tidak perlu disalin-tempel berulang kali.
+
+5. **Jalankan `php artisan route:list --path=tentang`. Cocok dengan analisis Anda?**
+   Cocok. Perintah tersebut memverifikasi bahwa route `/tentang` terdaftar dengan method `GET|HEAD`, mengarah ke view `tentang`, dan siap menangkap request dari browser.
 
 ---
 
@@ -79,5 +92,3 @@ Telah ditemukan dan diperbaiki **6 masalah** pada branch `W02`:
 - **Penyebab:** Terdapat blok `@php array_filter(...) @endphp` di dalam file Blade view.
 - **Dampak:** Melanggar prinsip *Separation of Concerns* (MVC).
 - **Perbaikan:** Logika filter dipindahkan ke `CourseController::index()` dan View hanya bertugas me-render data bersih.
-
----
