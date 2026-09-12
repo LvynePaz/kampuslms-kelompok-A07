@@ -3,13 +3,6 @@
 use App\Http\Controllers\CourseController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| KampusLMS — Routes Utama (Kelompok A07)
-|--------------------------------------------------------------------------
-*/
-
-// Dashboard
 Route::get('/', function () {
     return view('dashboard');
 })->name('dashboard');
