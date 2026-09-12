@@ -28,9 +28,9 @@ Route tersebut menggunakan method `GET` sehingga akan dijalankan ketika browser 
 
 ## CHECKPOINT MINGGU 2
 
-- [] Kenapa menghapus data lewat GET berbahaya? Beri satu skenario konkret.
-- [] KApa yang terjadi kalau /courses/{course} ditulis sebelum /courses/create? Kenapa?
+- [✓] Kenapa menghapus data lewat GET berbahaya? Beri satu skenario konkret.
+- [✓] KApa yang terjadi kalau /courses/{course} ditulis sebelum /courses/create? Kenapa?
 - [] Tunjukkan di kode Anda satu tempat yang memakai route(). Apa untungnya dibanding URL hardcode?
-- []Apa beda {{ }} dan {!! !!}? Peragakan XSS yang Anda buat di bagian BREAK.
-- [] Apa fungsi @vite? Apa beda npm run dev dan npm run build?
-- [] Jelaskan mengapa data dari Request tidak boleh dipercaya.
+- [✓]Apa beda {{ }} dan {!! !!}? Peragakan XSS yang Anda buat di bagian BREAK.
+- [✓] Apa fungsi @vite? Apa beda npm run dev dan npm run build?
+- [✓] Jelaskan mengapa data dari Request tidak boleh dipercaya.
