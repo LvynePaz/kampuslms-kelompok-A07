@@ -6,22 +6,20 @@
 
 ## BREAK
 
-| #  |Yang dicoba|Prediksi Anda sebelum mencoba|Pesan error sebenarnya|
+| #  |Yang dicoba|Yang harus Anda amati|Yang saya pelajari|
 |---|---|---|---|
-|1|Ubah `Route::get` menjadi `Route::post` pada route daftar mata kuliah|Halaman tidak dapat dibuka karena route hanya menerima `POST`, sedangkan browser mengakses halaman menggunakan `GET`|405 Method Not Allowed. Request GET tidak sesuai dengan route yang hanya menerima POST|
-|2|Ubah nama view di return `view(...)` menjadi yang tidak ada|Laravel akan error karena file view yang dipanggil tidak ditemukan|`View [nama-view] not found`. Laravel tidak menemukan file Blade sesuai nama view yang dipanggil|
-|3|Hapus `->name('courses.show')`, lalu muat halaman yang memakai `route('courses.show')`|Laravel tidak dapat membuat URL karena route dengan nama tersebut sudah tidak terdaftar|`Route [courses.show] not defined`. Route dengan nama courses.show tidak ditemukan|
-|4|Pindahkan `/courses/{course}` ke ATAS `/courses/create`, lalu buka `/courses/create`|Laravel akan menganggap `create` sebagai nilai dari `{course}` sehingga route detail course yang dijalankan|Hasilnya `/courses/create` dapat masuk ke route `/courses/{course}`, sehingga create dianggap sebagai parameter `course`, bukan membuka halaman create|
-|5|Ganti `{{ $nama }}` menjadi `{!! $nama !!}`, isi `$nama` dengan `<script>alert('XSS')</script>`|Script akan dijalankan karena `{!! !!}` tidak melakukan escaping terhadap HTML|Muncul pop-up XSS di browser. Ini menunjukkan script JavaScript berhasil dijalankan dan merupakan contoh XSS|
-|6|Hapus `@vite(...)` dari layout|Tampilan halaman akan berubah karena CSS/JavaScript yang sebelumnya dimuat melalui Vite tidak lagi dipanggil|CSS/JS tidak termuat sebagaimana mestinya, sehingga tampilan dapat menjadi berantakan atau fungsi JavaScript tertentu tidak berjalan|
-|7|Hentikan `npm run dev` lalu muat ulang halaman|Asset yang membutuhkan Vite development server tidak akan dapat dimuat|Asset dari Vite tidak dapat dimuat ataupun muncul masalah koneksi ke Vite, sehingga CSS atau JavaScript tidak bekerja seperti saat `npm run dev` berjalan|
-|8|Panggil `route('courses.show')` tanpa mengirim parameter|Laravel akan error karena route `courses.show` membutuhkan parameter `{course}`, tetapi parameternya tidak diberikan|`Missing required parameter for [Route: courses.show]` karena parameter course wajib diberikan|
+|1|Hapus `unique(['course_id','user_id'])` dari course_user, lalu daftarkan mahasiswa yang sama dua kali|Data ganda lolos tanpa keluhan|Unique constraint digunakan untuk mencegah data yang sama tersimpan lebih dari satu kali. Sehingga, jika `unique(['course_id','user_id'])` dihapus, mahasiswa yang sama bisa terdaftar pada mata kuliah yang sama secara berulang|
+|2|Tambahkan role ke `$fillable` model User, lalu kirim request pembuatan user dengan role=admin lewat form yang **tidak punya field role**|Mass assignment nyata — Anda baru saja jadi admin|Mass assignment dapat menjadi masalah keamanan jika field sensitif seperti role dimasukkan ke `$fillable`. Akibatnya, user dapat mengirim nilai `role=admin` meskipun field tersebut tidak tersedia di form, sehingga bisa terjadi perubahan hak akses secara tidak sengaja atau bahkan menjadi celah keamanan|
+|3|Ganti seluruh `$fillable` dengan `protected $guarded = [];` lalu ulangi nomor 2|Kenapa `$guarded kosong` dilarang|Hal tersebut karena `$guarded = []` berarti semua atribut model boleh diisi melalui mass assignment. Karena itu, penggunaan `$guarded` kosong berisiko karena field penting seperti role dapat diubah tanpa pembatasan|
+|4|Kosongkan isi `down()` di satu migrasi, lalu jalankan `php artisan migrate:refresh`|Migrasi tidak reversible = CI merah|Method `down()` pada migration penting untuk rollback. Jika `down()` dikosongkan, migration tidak dapat dikembalikan dengan benar saat menjalankan `migrate:refresh`. Ini menunjukkan bahwa setiap migration sebaiknya memiliki proses rollback yang jelas agar perubahan database tetap dapat dikontrol|
+|5|Ubah `restrictOnDelete` pada `lecturer_id` menjadi `cascadeOnDelete`, lalu hapus satu dosen|Kehilangan data berantai|`cascadeOnDelete` dan `restrictOnDelete` memiliki dampak yang berbeda. `restrictOnDelete` mencegah data dosen dihapus jika masih digunakan oleh data lain, sedangkan `cascadeOnDelete` akan ikut menghapus data yang memiliki hubungan dengan dosen tersebut. Karena itu, penggunaan cascade harus hati-hati agar data terkait tidak ikut terhapus tanpa sengaja|
 
-## CHECKPOINT MINGGU 2
+## CHECKPOINT MINGGU 3
 
-- [✓] Kenapa menghapus data lewat GET berbahaya? Beri satu skenario konkret.
-- [✓] KApa yang terjadi kalau /courses/{course} ditulis sebelum /courses/create? Kenapa?
-- [] Tunjukkan di kode Anda satu tempat yang memakai route(). Apa untungnya dibanding URL hardcode?
-- [✓]Apa beda {{ }} dan {!! !!}? Peragakan XSS yang Anda buat di bagian BREAK.
-- [✓] Apa fungsi @vite? Apa beda npm run dev dan npm run build?
-- [✓] Jelaskan mengapa data dari Request tidak boleh dipercaya.
+- [ ] Tunjukkan migrasi yang **Anda** tulis. Jelaskan setiap constraint di dalamnya.
+- [ ] Kenapa `course_user` punya unique composite? Peragakan apa yang terjadi kalau dihapus.
+- [ ] Apa itu mass assignment? Tunjukkan di kode Anda apa yang mencegahnya, lalu peragakan serangannya dengan `curl`.
+- [ ] Kenapa `role` tidak boleh ada di `$fillable`? Di mana ia diisi sebagai gantinya?
+- [ ] Kenapa `lecturer_id` memakai `restrictOnDelete` sementara `materials.course_id` memakai `cascadeOnDelete`?
+- [ ] Jalankan `php artisan migrate:refresh` di depan penguji. Harus berhasil tanpa error.
+- [ ] Tunjukkan satu bagian kode yang Anda tulis dengan bantuan AI. Apa yang Anda ubah dari keluaran aslinya, dan kenapa?
