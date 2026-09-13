@@ -1,8 +1,27 @@
 ## READ
 1. Gambar ulang ERD dari spesifikasi di papan/kertas, tanpa melihat dokumen.
-2. Untuk setiap foreign key, tentukan perilaku onDelete-nya dan tuliskan alasannya.
+   
+2. Untuk setiap foreign key, tentukan perilaku onDelete-nya dan tuliskan alasannya.  
+
+|Foreign Key|Perilaku|Alasan|  
+|---|---|---|  
+|`courses.lecturer_id` → `users.id`|**restrictOnDelete**|Course, materials, assignments, submissions, dan grades semuanya berantai ke `courses`. Kalau dosen dihapus lalu course ikut cascade, seluruh histori akademik mahasiswa (nilai, tugas) ikut lenyap. Jadi hapus dosen harus **ditolak** dulu selama dia masih punya course aktif — admin wajib pindahkan/reassign dulu| 
+| `course_user.course_id` → `courses.id` | **cascadeOnDelete** | Baris `course_user` cuma catatan "siapa terdaftar di course apa". Kalau course-nya sendiri dihapus, catatan pendaftaran itu otomatis tidak relevan lagi. |  
+| `course_user.user_id` → `users.id` | **cascadeOnDelete** | Sama seperti di atas — kalau akun mahasiswa dihapus, catatan keanggotaannya di course tidak berguna lagi disimpan sendirian. |  
+| `materials.course_id` → `courses.id` | **cascadeOnDelete** | Materi cuma bermakna dalam konteks course tertentu; hapus course = materi ikut tidak relevan. |  
+| `materials.uploaded_by` → `users.id` | **restrictOnDelete** | Kolom ini adalah jejak siapa yang mengunggah (accountability). Kalau user dihapus lalu materialnya ikut cascade/null, jejak akademik hilang. Lebih aman ditolak dulu, dosen/admin harus tangani datanya dulu sebelum akun dihapus. |  
+| `assignments.course_id` → `courses.id` | **cascadeOnDelete** | Sama logikanya dengan materials — tugas tanpa course induk tidak ada artinya. |  
+| `assignments.created_by` → `users.id` | **restrictOnDelete** | Assignment yang dibuat dosen ini punya rantai lanjutan ke `submissions` dan `grades` mahasiswa. Kalau dihapus cascade, nilai mahasiswa ikut lenyap — jadi harus restrict. |  
+| `submissions.assignment_id` → `assignments.id` | **cascadeOnDelete** | Submission cuma bermakna sebagai jawaban dari assignment tertentu; hapus assignment = submission ikut tidak relevan. |  
+| `submissions.user_id` → `users.id` | **restrictOnDelete** | Submission adalah bukti kerja akademik mahasiswa dan jadi dasar nilai (`grades`). Ini harus dipertahankan sebagai arsip/audit trail, jadi hapus akun mahasiswa ditolak selama masih ada submission miliknya. |  
+| `grades.submission_id` → `submissions.id` | **cascadeOnDelete** | Grade adalah anak langsung dari satu submission spesifik (relasi 1:1) — kalau submission-nya dihapus, nilainya otomatis kehilangan makna dan boleh ikut terhapus. |  
+| `grades.graded_by` → `users.id` | **restrictOnDelete** | Kolom ini jejak akuntabilitas siapa dosen yang memberi nilai. Hapus akun dosen penilai tidak boleh diam-diam menghapus/mengosongkan histori penilaian — harus ditolak dulu. |  
+
 3. Jawab: kalau seorang dosen dihapus, apa yang terjadi pada mata kuliahnya? Kenapa dirancang begitu?
-4. Jawab: kenapa grades.submission_id bersifat unique, bukan sekadar index biasa?
+Tidak terjadi apa-apa pada course-nya — **penghapusan dosennya sendiri yang gagal/ditolak** oleh database, karena `lecturer_id` memakai `restrictOnDelete`. Dengan memakai `cascadeOnDelete`, menghapus satu akun dosen akan otomatis menghapus semua course yang dia ampu dan karena `assignments`, `submissions`, `grades` semuanya cascade dari `courses`, efek dominonya bisa menghapus seluruh nilai dan tugas mahasiswa hanya karena satu dosen resign/dinonaktifkan. Itu kerugian data yang sangat besar dan tidak masuk akal secara bisnis. Dengan `restrictOnDelete`, sistem memaksa admin untuk **memindahkan dulu** course tersebut ke dosen lain (update `lecturer_id`) sebelum akun dosen lama boleh dihapus — data akademik tetap aman.
+
+4. Jawab: kenapa grades.submission_id bersifat unique, bukan sekadar index biasa?  
+Karena relasinya memang **1:1** — satu submission cuma boleh punya **tepat satu** nilai. Index biasa hanya mempercepat pencarian, tapi tidak mencegah duplikasi data. Kalau cuma memakai index biasa, aplikasi bisa saja (sengaja atau karena bug/race condition) meng-insert dua baris grade untuk `submission_id` yang sama — akan ada dua nilai berbeda untuk satu jawaban mahasiswa, yang jelas tidak masuk akal dan membuat ambigu nilai mana yang valid. Constraint `unique` memaksa aturan bisnis ini ditegakkan **di level database**, bukan cuma diandalkan dari validasi controller yang bisa bocor (mirip kasus `course_user` pada eksperimen sebelumnya).
 
 ## BREAK
 
