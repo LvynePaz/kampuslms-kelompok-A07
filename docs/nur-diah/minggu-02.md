@@ -1,6 +1,7 @@
 ## READ
 1. Route yang menangkap `/tentang` berada di `routes/web.php`, yaitu 
 ```php
+<<<<<<< HEAD
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
@@ -26,6 +27,19 @@ Laravel akan mencari file view bernama tentang di dalam folder resources/views. 
 4. Pada berkas `tentang.blade.php` yang dibuat pada Minggu 1, halaman tentang belum menggunakan layout atau komponen Blade. Isinya masih berupa HTML yang berdiri sendiri. Setelah mempelajari konsep Layout dan Komponen Blade, halaman tersebut dapat menggunakan komponen `<x-layout>` yang berada di `resources/views/components/layout.blade.php.` Dengan menggunakan layout, bagian yang sama seperti struktur HTML dasar, navbar, dan @vite tidak perlu ditulis ulang pada setiap halaman.
 
 5. Cocok. Setelah menjalankan `php artisan route:list --path=tentang`, request ke `/tentang` ditangkap oleh route di `routes/web.php`, kemudian closure menjalankan return `view('tentang')`, sehingga Laravel menampilkan file `resources/views/tentang.blade.php`. Hasil `route:list` dapat digunakan untuk memastikan bahwa method, URL, nama route, dan action yang digunakan sudah sesuai dengan kode yang dibuat.
+=======
+Route::get('/tentang', function () { return view('tentang'); });
+```
+Route tersebut menggunakan method `GET` sehingga akan dijalankan ketika browser mengakses URL `/tentang`.
+
+2. Route `/tentang` tidak ditangani oleh Controller. Route tersebut langsung menggunakan anonymous function atau closure yang ditulis setelah `Route::get()`.
+
+3. View yang dikembalikan adalah `view('tentang')`. View tersebut berada di `resources/views/tentang.blade.php`.
+
+4. Untuk mengetahui layout yang digunakan, saya perlu melihat isi tentang.blade.php. Jika di dalamnya terdapat `@extends('layouts.app')`, berarti layout yang digunakan adalah `resources/views/layouts/app.blade`.php. Jika tidak terdapat `@extends`, berarti halaman tersebut tidak menggunakan layout tersebut.
+
+5. Setelah menjalankan `php artisan route:list --path=tentang`, route `/tentang` akan muncul sebagai route dengan method `GET|HEAD` dan menggunakan Closure sebagai action. Hasil tersebut sesuai dengan kode di `routes/web.php` karena route `/tentang` memang menggunakan `Route::get()` dan anonymous function, bukan Controller.
+>>>>>>> bc5d7367a747e4ec2a86706c1bdf68d2c26ae819
 
 ## BREAK
 
@@ -47,4 +61,8 @@ Laravel akan mencari file view bernama tentang di dalam folder resources/views. 
 - [] Tunjukkan di kode Anda satu tempat yang memakai route(). Apa untungnya dibanding URL hardcode?
 - [✓]Apa beda {{ }} dan {!! !!}? Peragakan XSS yang Anda buat di bagian BREAK.
 - [✓] Apa fungsi @vite? Apa beda npm run dev dan npm run build?
+<<<<<<< HEAD
 - [✓] Jelaskan mengapa data dari Request tidak boleh dipercaya.
+=======
+- [✓] Jelaskan mengapa data dari Request tidak boleh dipercaya.
+>>>>>>> bc5d7367a747e4ec2a86706c1bdf68d2c26ae819
