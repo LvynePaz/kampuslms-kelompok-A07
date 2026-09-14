@@ -1,5 +1,5 @@
 *READ*
-1.  
+1.  ![alt text](<WhatsApp Image 2026-09-14 at 00.41.09.jpeg>)
 2. 
 |Foreign key |``onDelete``|Alasan|
 |------------|------------|------|
