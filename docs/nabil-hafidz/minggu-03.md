@@ -32,9 +32,9 @@ $table->foreignId('submission_id')
 Dengan demikian, relasi ``submissions`` ke ``grades`` adalah one-to-zero-or-one: sebuah submission boleh belum dinilai, tetapi setelah dinilai hanya boleh memiliki satu record nilai.
 
 *BREAK*
-|#|Yang dicoba|Yang harus anda diamati|
-|-|-----------|-----------------------|
-|1|Hapus ``unique(['course_id','user_id'])`` dari ``course_user``, lalu daftarkan mahasiswa yang sama dua kali|Data ganda lolos tanpa keluhan|
+|#|Yang dicoba|Yang harus anda diamati|Hasil Pengamatan
+|-|-----------|-----------------------|----------------|
+|1|Hapus ``unique(['course_id','user_id'])`` dari ``course_user``, lalu daftarkan mahasiswa yang sama dua kali|Data ganda lolos tanpa keluhan|Data yang dimasukkan user bisa ganda tanpa data yang unique 
 |2|Tambahkan ``role`` ke ``$fillable`` model ``User``, lalu kirim request pembuatan user dengan role=admin lewat form yang tidak punya field role|Mass assignment nyata — Anda baru saja jadi admin
 |3|Ganti seluruh ``$fillable`` dengan ``protected $guarded = [];`` lalu ulangi nomor 2|Kenapa ``$guarded`` kosong dilarang
 |4|Kosongkan isi ``down()`` di satu migrasi, lalu jalankan ``php artisan migrate:refresh``|Migrasi tidak reversible = CI merah
