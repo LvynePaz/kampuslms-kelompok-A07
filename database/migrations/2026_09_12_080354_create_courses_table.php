@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->unsignedTinyInteger('sks')->default(3);
-            $table->foreignId('lecturer_id')->constrained('users')->restrictOnDelete();
+// Ganti restrictOnDelete menjadi cascadeOnDelete:
+$table->foreignId('lecturer_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['draft', 'active', 'archived'])->default('draft');
             $table->timestamps();
         });

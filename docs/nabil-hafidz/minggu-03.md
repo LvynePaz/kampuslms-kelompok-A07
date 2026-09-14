@@ -1,5 +1,5 @@
 *READ*
-1.  ![alt text](<WhatsApp Image 2026-09-14 at 00.41.09.jpeg>)
+1. ![alt text](<WhatsApp Image 2026-09-14 at 00.41.09.jpeg>)
 2. 
 |Foreign key |``onDelete``|Alasan|
 |------------|------------|------|
@@ -35,10 +35,7 @@ Dengan demikian, relasi ``submissions`` ke ``grades`` adalah one-to-zero-or-one:
 |#|Yang dicoba|Yang harus anda diamati|Hasil Pengamatan
 |-|-----------|-----------------------|----------------|
 |1|Hapus ``unique(['course_id','user_id'])`` dari ``course_user``, lalu daftarkan mahasiswa yang sama dua kali|Data ganda lolos tanpa keluhan|Data yang dimasukkan user bisa ganda tanpa data yang unique 
-|2|Tambahkan ``role`` ke ``$fillable`` model ``User``, lalu kirim request pembuatan user dengan role=admin lewat form yang tidak punya field role|Mass assignment nyata — Anda baru saja jadi admin
-|3|Ganti seluruh ``$fillable`` dengan ``protected $guarded = [];`` lalu ulangi nomor 2|Kenapa ``$guarded`` kosong dilarang
-|4|Kosongkan isi ``down()`` di satu migrasi, lalu jalankan ``php artisan migrate:refresh``|Migrasi tidak reversible = CI merah
-|5|Ubah ``restrictOnDelete`` pada ``lecturer_id`` menjadi ``cascadeOnDelete``, lalu hapus satu dosen|Kehilangan data berantai
-
-*Jawab* 
-1. 
+|2|Tambahkan ``role`` ke ``$fillable`` model ``User``, lalu kirim request pembuatan user dengan role=admin lewat form yang tidak punya field role|Mass assignment nyata — Anda baru saja jadi admin|Pengguna berhasil mengangkat dirinya sendiri menjadi administrator hanya dengan menyelipkan satu baris data saat registrasi
+|3|Ganti seluruh ``$fillable`` dengan ``protected $guarded = [];`` lalu ulangi nomor 2|Kenapa ``$guarded`` kosong dilarang|Jiak menggunakan protected $guarded = [] berarti menyerahkan seluruh struktur tabel ke publik secara tidak aman.
+|4|Kosongkan isi ``down()`` di satu migrasi, lalu jalankan ``php artisan migrate:refresh``|Migrasi tidak reversible = CI merah|akan terjadi eror karna database nya sudah ada
+|5|Ubah ``restrictOnDelete`` pada ``lecturer_id`` menjadi ``cascadeOnDelete``, lalu hapus satu dosen|Kehilangan data berantai |  Tinker mengembalikan null. Mata kuliah Pemrograman Web hilang tanpa jejak dari database begitu akun dosennya dihapus
