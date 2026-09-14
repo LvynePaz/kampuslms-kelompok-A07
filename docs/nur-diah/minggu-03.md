@@ -1,6 +1,7 @@
 ## READ
 1. Gambar ulang ERD dari spesifikasi di papan/kertas, tanpa melihat dokumen.
-   
+   ![alt text](<erd kampuslms.jpeg>)
+
 2. Untuk setiap foreign key, tentukan perilaku onDelete-nya dan tuliskan alasannya.  
 
 |Foreign Key|Perilaku|Alasan|  
@@ -17,7 +18,7 @@
 | `grades.submission_id` → `submissions.id` | **cascadeOnDelete** | Grade adalah anak langsung dari satu submission spesifik (relasi 1:1) — kalau submission-nya dihapus, nilainya otomatis kehilangan makna dan boleh ikut terhapus. |  
 | `grades.graded_by` → `users.id` | **restrictOnDelete** | Kolom ini jejak akuntabilitas siapa dosen yang memberi nilai. Hapus akun dosen penilai tidak boleh diam-diam menghapus/mengosongkan histori penilaian — harus ditolak dulu. |  
 
-3. Jawab: kalau seorang dosen dihapus, apa yang terjadi pada mata kuliahnya? Kenapa dirancang begitu?
+3. Jawab: kalau seorang dosen dihapus, apa yang terjadi pada mata kuliahnya? Kenapa dirancang begitu?  
 Tidak terjadi apa-apa pada course-nya — **penghapusan dosennya sendiri yang gagal/ditolak** oleh database, karena `lecturer_id` memakai `restrictOnDelete`. Dengan memakai `cascadeOnDelete`, menghapus satu akun dosen akan otomatis menghapus semua course yang dia ampu dan karena `assignments`, `submissions`, `grades` semuanya cascade dari `courses`, efek dominonya bisa menghapus seluruh nilai dan tugas mahasiswa hanya karena satu dosen resign/dinonaktifkan. Itu kerugian data yang sangat besar dan tidak masuk akal secara bisnis. Dengan `restrictOnDelete`, sistem memaksa admin untuk **memindahkan dulu** course tersebut ke dosen lain (update `lecturer_id`) sebelum akun dosen lama boleh dihapus — data akademik tetap aman.
 
 4. Jawab: kenapa grades.submission_id bersifat unique, bukan sekadar index biasa?  
@@ -32,6 +33,9 @@ Karena relasinya memang **1:1** — satu submission cuma boleh punya **tepat sat
 |3|Ganti seluruh `$fillable` dengan `protected $guarded = [];` lalu ulangi nomor 2|Kenapa `$guarded kosong` dilarang|Hal tersebut karena `$guarded = []` berarti semua atribut model boleh diisi melalui mass assignment. Karena itu, penggunaan `$guarded` kosong berisiko karena field penting seperti role dapat diubah tanpa pembatasan|
 |4|Kosongkan isi `down()` di satu migrasi, lalu jalankan `php artisan migrate:refresh`|Migrasi tidak reversible = CI merah|Method `down()` pada migration penting untuk rollback. Jika `down()` dikosongkan, migration tidak dapat dikembalikan dengan benar saat menjalankan `migrate:refresh`. Ini menunjukkan bahwa setiap migration sebaiknya memiliki proses rollback yang jelas agar perubahan database tetap dapat dikontrol|
 |5|Ubah `restrictOnDelete` pada `lecturer_id` menjadi `cascadeOnDelete`, lalu hapus satu dosen|Kehilangan data berantai|`cascadeOnDelete` dan `restrictOnDelete` memiliki dampak yang berbeda. `restrictOnDelete` mencegah data dosen dihapus jika masih digunakan oleh data lain, sedangkan `cascadeOnDelete` akan ikut menghapus data yang memiliki hubungan dengan dosen tersebut. Karena itu, penggunaan cascade harus hati-hati agar data terkait tidak ikut terhapus tanpa sengaja|
+
+## FIX
+
 
 ## CHECKPOINT MINGGU 3
 
