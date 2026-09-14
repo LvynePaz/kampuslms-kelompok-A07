@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('enrolled_at')->useCurrent();
             $table->timestamps();
 
-           $table->unique(['course_id', 'user_id']); // Unique composite cegah enroll ganda
+            $table->unique(['course_id', 'user_id']); // Unique composite cegah enroll ganda
         });
     }
 
