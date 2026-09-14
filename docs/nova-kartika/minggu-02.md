@@ -3,30 +3,30 @@
 ## READ
 1. Baris mana di routes/web.php yang menangkapnya?
 Jawab:
-Request untuk halaman /tentang ditangkap oleh route ini:
+request untuk halaman /tentang ditangkap oleh route ini:
 ```php
 Route::get('/tentang', function () { return view('tentang'); });
 ```
-Laravel akan mencari route dari atas ke bawah. Karena method yang digunakan adalah GET dan alamatnya /tentang, maka request tersebut masuk ke route ini.
+laravel akan mencari route dari atas ke bawah karena method yang digunakan GET dan alamatnya /tentang, maka request tersebut masuk ke route ini
 
-2. Kalau ditangani controller, berkas dan method mana?
-Jawab: Untuk sekarang route ini masih menggunakan closure, yaitu fungsi yang langsung ditulis di dalam route dan belum memakai controller. Kalau mau menggunakan controller, route ini bisa diarahkan ke file app/Http/Controllers/TentangController.php.
-Method yang bisa dipakai yaitu index() atau __invoke().
+1. Kalau ditangani controller, berkas dan method mana?
+Jawab: untuk route ini masih pakai closure, yaitu fungsi yang langsung ditulis di dalam route dan belum pakai controller. kalau mau pakai controller, route ini bisa diarahkan ke file app/Http/Controllers/TentangController.php.
+method yang bisa dipakai yaitu index() atau __invoke()
 
-3. View mana yang dikembalikan? Di path apa persisnya?
+1. View mana yang dikembalikan? Di path apa persisnya?
 Jawaban:
-View yang dipanggil adalah tentang.
-File-nya ada di:
+view yang dipanggil adalah tentang
+file-nya ada di:
 resources/views/tentang.blade.php
 
-4. Layout apa yang membungkusnya?
+1. Layout apa yang membungkusnya?
 Jawaban:
-Untuk file tentang.blade.php bawaan Minggu 1, saat ini belum memakai layout. Isinya masih berupa HTML sendiri.
-Kalau mengikuti konsep Layout dan Komponen Blade, halaman ini bisa memakai <x-layout> yang file-nya ada di resources/views/components/layout.blade.php. Di layout tersebut bisa berisi bagian yang sering dipakai seperti HTML dasar, navbar, dan @vite, jadi tidak perlu dibuat lagi di setiap halaman.
+untuk file tentang.blade.php bawaan minggu 1, skekarang ini belum pakai layout isinya masih berupa HTML sendiri.
+kalau ikutin konsep layout dan komponen blade, halaman ini bisa pakai <x-layout> yang file-nya ada di resources/views/components/layout.blade.php. di layout itu bisa berisi bagian yang sering dipakai seperti HTML dasar, navbar, dan @vite, jadi tidak perlu dibuat lagi di setiap halaman.
 
-5. Jalankan php artisan route:list --path=tentang. Cocok dengan analisis Anda?
+1. Jalankan php artisan route:list --path=tentang. Cocok dengan analisis Anda?
 Jawaban:
-Cocok. Dari perintah tersebut terlihat kalau route /tentang terdaftar dengan method GET|HEAD dan mengarah ke view tentang. Jadi route tersebut sudah terdaftar dan bisa menerima request dari browser.
+cocok, dari perintah tsb terlihat kalau route /tentang terdaftar dengan method GET|HEAD dan mengarah ke view tentang. jadi route tersebut sudah terdaftar dan bisa menerima request dari browser.
 
 ## BREAK
 | No | Yang Diubah | Prediksi Sebelum Mencoba | Pesan Error Sebenarnya | Yang Dipelajari |
