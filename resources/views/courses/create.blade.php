@@ -1,4 +1,3 @@
-```blade
 <x-layout title="Tambah Mata Kuliah">
 
     <style>
