@@ -49,95 +49,170 @@ Berikut adalah rangkuman 5 simulasi pengujian kerusakan yang telah dicoba langsu
 
 ---
 
-##### BREAK 1: Hapus `unique(['course_id', 'user_id'])` di Tabel Pivot
+##### BREAK 1: Hapus `unique(['course_id', 'user_id'])` di Tabel Pivot → Mahasiswa Bisa Daftar Mata Kuliah yang Sama Berkali-kali
 
-* **Yang Dirusak:** Gembok database dimatikan, jadi tidak ada lagi yang melarang mahasiswa daftar ke mata kuliah yang sama lebih dari satu kali.
+* **Yang Dirusak:** Constraint `unique` pada tabel pivot `course_user` dihapus, sehingga database tidak lagi mencegah satu mahasiswa terdaftar ke mata kuliah yang sama lebih dari satu kali.
 * **Cara Coba Singkat:**
-  1. Di migrasi `create_course_user_table.php`, beri `//` pada `$table->unique(['course_id', 'user_id']);`.
-  2. Jalankan `php artisan migrate:fresh` lalu buka `php artisan tinker`.
-  3. Daftarkan mahasiswa yang sama ke mata kuliah yang sama dua kali:
+  1. **Buka file:** `database/migrations/xxxx_create_course_user_table.php`
+  2. **Komentari baris berikut** (tambah `//` di depannya):
+     ```php
+     // $table->unique(['course_id', 'user_id']); // <-- beri // di sini
+     ```
+  3. **Di terminal**, jalankan ulang semua migrasi dari awal:
+     ```bash
+     php artisan migrate:fresh
+     ```
+  4. **Buka Tinker** (shell interaktif Laravel):
+     ```bash
+     php artisan tinker
+     ```
+  5. **Di dalam Tinker**, jalankan ketiga baris ini satu per satu — tekan Enter setelah masing-masing:
      ```php
      DB::table('course_user')->insert(['course_id' => 1, 'user_id' => 1]);
      DB::table('course_user')->insert(['course_id' => 1, 'user_id' => 1]);
      DB::table('course_user')->where('user_id', 1)->count();
      ```
+  6. **Ketik `exit` lalu Enter** untuk keluar dari Tinker.
 * **Yang Terjadi di terminal:** Output menghasilkan angka **`2`**. Database menerima kedua data tanpa error.
-* **Kenapa Bahaya:** Kalau cuma mengandalkan pengecekan di controller, itu gampang jebol pas ada *race condition* (misalnya mahasiswa tidak sabar lalu spam klik tombol daftar 2x saat sinyal lemot). Akhirnya satu mahasiswa bisa terdaftar dobel dan dapat dua lembar nilai. Database harus jadi benteng terakhir yang menolak duplikasi.
-* **Solusi Benar:** Wajib pasang `$table->unique(['course_id', 'user_id']);` di migrasi tabel pivot.
+* **Kenapa Bahaya:** Validasi di controller saja tidak cukup — saat terjadi *race condition* (misalnya tombol daftar diklik dua kali berturut-turut), kedua request bisa lolos secara bersamaan sebelum pengecekan selesai. Hasilnya, satu mahasiswa bisa terdaftar dua kali dan muncul dua kali di daftar nilai. Constraint di level database adalah lapisan validasi terakhir yang tidak bisa dilewati dari sisi aplikasi.
+* **Solusi Benar:** Tambahkan `$table->unique(['course_id', 'user_id']);` di migrasi tabel pivot agar database menolak data duplikat di level storage, bukan hanya di level aplikasi.
 
 ---
 
-##### BREAK 2: Bocorkan `role` ke dalam `$fillable` Model User
+##### BREAK 2: Bocorkan `role` ke dalam `$fillable` Model User → Siapa Pun Bisa Naik Pangkat Jadi Admin Lewat Form
 
-* **Yang Dirusak:** Kolom penentu jabatan (`role`) dibocorkan ke `$fillable`, jadi siapa pun bisa mengisi hak akses sesuka hati dari luar (*Mass Assignment*).
+* **Yang Dirusak:** Kolom `role` ditambahkan ke `$fillable`, sehingga nilainya bisa diisi langsung dari input request luar tanpa pembatasan (*Mass Assignment*).
 * **Cara Coba Singkat:**
-  1. Di `app/Models/User.php`, tambahkan `'role'` ke dalam array `$fillable`.
-  2. Buka `php artisan tinker` dan simulasikan request form yang diselipi atribut `role`:
+  1. **Buka file:** `app/Models/User.php`
+  2. **Cari array `$fillable`**, lalu **tambahkan `'role'`** di dalamnya sehingga menjadi:
+     ```php
+     protected $fillable = [
+         'name',
+         'email',
+         'password',
+         'role', // <-- tambahkan baris ini
+     ];
+     ```
+  3. **Simpan file** (`Ctrl+S`).
+  4. **Buka Tinker** di terminal:
+     ```bash
+     php artisan tinker
+     ```
+  5. **Di dalam Tinker**, jalankan blok kode ini (copy-paste sekaligus, lalu tekan Enter):
      ```php
      $user = App\Models\User::create([
          'name' => 'Penyusup',
          'email' => 'hacker@test.com',
-         'password' => '123',
-         'role' => 'admin' // <-- diselipkan padahal tidak ada di form HTML
+         'password' => bcrypt('123'),
+         'role' => 'admin', // <-- diselipkan, padahal tidak ada di form HTML
      ]);
-     $user->role;
+     echo $user->role;
      ```
-* **Yang Terjadi di terminal:** Output mengembalikan nilai **`"admin"`**. Pengguna biasa berhasil naik pangkat sendiri jadi administrator kampus.
-* **Kenapa Bahaya:** Tampilan form di browser itu bukan jaminan keamanan sama sekali. Pengguna tinggal buka Inspect Element atau tembak lewat Postman/cURL buat menyelipkan `'role' => 'admin'`. Token CSRF pun tidak peduli isinya apa, dia cuma ngecek asal website. Kalau tidak dijaga di model, orang luar bisa langsung jadi admin kampus dalam hitungan detik.
-* **Solusi Benar:** Jangan pernah masukkan kolom sensitif (`role`, `is_admin`, `score`) ke `$fillable`. Kolom `role` harus dikunci dan diisi manual lewat kode controller (`$user->role = 'mahasiswa';`), bukan ditelan mentah-mentah dari input form.
+  6. **Ketik `exit` lalu Enter** untuk keluar dari Tinker.
+* **Yang Terjadi di terminal:** Output mengembalikan nilai **`"admin"`**. Artinya, kolom `role` berhasil diisi dari luar tanpa melewati validasi khusus.
+* **Kenapa Bahaya:** Tampilan form di browser tidak menjamin keamanan. Siapa pun bisa mengirim request langsung via Postman, cURL, atau Inspect Element dengan menambahkan field `role=admin`. Token CSRF hanya memverifikasi asal request, bukan isi datanya. Jika kolom `role` tidak diproteksi di model, siapa pun bisa mengubah peran akun melalui request HTTP biasa.
+* **Solusi Benar:** Jangan masukkan kolom sensitif seperti `role`, `is_admin`, atau `score` ke dalam `$fillable`. Kolom `role` harus diisi secara eksplisit di controller (`$user->role = 'mahasiswa';`), bukan diambil mentah dari input request.
 
 ---
 
-##### BREAK 3: Pakai Jalan Pintas `protected $guarded = [];`
+##### BREAK 3: Pakai `protected $guarded = []` → Semua Kolom Tabel Terbuka Bebas untuk Diisi dari Luar
 
-* **Yang Dirusak:** Semua satpam pelindung model dimatikan total pakai jalan pintas `$guarded = []`.
+* **Yang Dirusak:** Properti `$fillable` dihapus dan diganti dengan `$guarded = []` (array kosong), yang berarti tidak ada satu pun kolom yang diblokir dari pengisian via mass assignment.
 * **Cara Coba Singkat:**
-  1. Di `app/Models/User.php`, hapus `$fillable` dan ganti jadi `protected $guarded = [];`.
-  2. Di Tinker, buat user baru dengan menyelipkan parameter sembarang apa saja (misal: `'role' => 'admin'`).
-* **Yang Terjadi di terminal:** Output tetap tembus menjadi **`"admin"`**.
-* **Kenapa Bahaya:** Ini kebiasaan buruk demi cepat selesai. Karena blacklist-nya kosong,keamanan di database jadi terbuka lebar untuk kolom apa pun. Bahayanya lagi, kalau nanti ada teman kelompok yang nambah kolom baru di tabel (seperti `saldo`, `api_token`, atau `status_aktif`), kolom baru itu otomatis langsung bisa diisi bebas oleh siapa pun.
-* **Solusi Benar:** Jangan pernah pakai `$guarded = []`. Wajib pakai `$fillable` dan daftarkan satu per satu kolom mana saja yang memang boleh diisi oleh pengguna umum.
-
----
-
-##### BREAK 4: Kosongkan Method `down()` pada Migrasi
-
-* **Yang Dirusak:** Fungsi pembatalan/penghapusan (`down()`) dikosongkan, jadi migrasi cuma bisa maju tapi tidak bisa mundur (*tidak reversible*).
-* **Cara Coba Singkat:**
-  1. Di berkas `create_users_table.php`, kosongkan isi fungsi `down()`:
+  1. **Buka file:** `app/Models/User.php`
+  2. **Hapus seluruh baris** `protected $fillable = [...]`, lalu **ganti** dengan satu baris berikut:
      ```php
-     public function down(): void {}
+     protected $guarded = []; // <-- blacklist dikosongkan = semua kolom terbuka
      ```
-  2. Di terminal jalankan perintah refresh migrasi:
+  3. **Simpan file** (`Ctrl+S`).
+  4. **Buka Tinker** di terminal:
+     ```bash
+     php artisan tinker
+     ```
+  5. **Di dalam Tinker**, jalankan kode berikut (copy-paste sekaligus):
+     ```php
+     $user = App\Models\User::create([
+         'name' => 'Penyusup',
+         'email' => 'hacker2@test.com',
+         'password' => bcrypt('123'),
+         'role' => 'admin', // <-- kolom sensitif bebas masuk
+     ]);
+     echo $user->role;
+     ```
+  6. **Ketik `exit` lalu Enter** untuk keluar dari Tinker.
+* **Yang Terjadi di terminal:** Output tetap menghasilkan **`"admin"`**. Kolom `role` tetap bisa diisi dari luar meskipun tidak ada di form.
+* **Kenapa Bahaya:** `$guarded = []` berarti semua kolom tabel bisa diisi via mass assignment tanpa terkecuali. Jika ada kolom baru ditambahkan ke tabel (misalnya `api_token`, `status_aktif`, atau `saldo`), kolom tersebut secara otomatis ikut terbuka tanpa perlu konfigurasi tambahan.
+* **Solusi Benar:** Gunakan `$fillable` dan daftarkan secara eksplisit hanya kolom yang memang boleh diisi dari input pengguna. Hindari `$guarded = []` karena pendekatan ini rentan saat skema tabel berkembang.
+
+---
+
+##### BREAK 4: Kosongkan Method `down()` pada Migrasi → Rollback Gagal Total, Pipeline CI/CD Langsung Error
+
+* **Yang Dirusak:** Isi fungsi `down()` dihapus, sehingga proses rollback migrasi tidak melakukan apa-apa — tabel yang sudah dibuat tidak akan dihapus saat rollback dijalankan.
+* **Cara Coba Singkat:**
+  1. **Pastikan migrasi sudah jalan normal dulu.** Jalankan ini di terminal:
+     ```bash
+     php artisan migrate:fresh
+     ```
+  2. **Buka file:** `database/migrations/xxxx_create_users_table.php`
+  3. **Cari fungsi `down()`**, lalu **kosongkan isinya** sehingga menjadi:
+     ```php
+     public function down(): void
+     {
+         // Schema::dropIfExists('users'); <-- baris ini dihapus / dikosongkan
+     }
+     ```
+  4. **Simpan file** (`Ctrl+S`).
+  5. **Kembali ke terminal**, lalu jalankan perintah refresh migrasi:
      ```bash
      php artisan migrate:refresh
      ```
 * **Yang Terjadi di terminal:** Terminal langsung tampilkan error merah:  
   `SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'users' already exists`
-* **Kenapa Bahaya:** Perintah `migrate:refresh` itu alurnya: hapus dulu semua tabel lewat `down()`, baru bikin ulang lewat `up()`. Karena fungsi `down()`-nya kosong, tabel lamanya masih nongkrong di database. Pas `up()` mau jalan lagi, database langsung error karena tabelnya sudah ada. Efek fatalnya, pipeline otomatis **CI/CD (GitHub Actions) langsung gagal/merah** dan proses deploy ke server rusak.
-* **Solusi Benar:** Apa pun tabel yang dibuat di fungsi `up()` (misal `Schema::create`), wajib ada perintah buat menghapusnya di fungsi `down()` (misal `Schema::dropIfExists`).
+* **Kenapa Bahaya:** Perintah `migrate:refresh` bekerja dengan urutan: jalankan `down()` untuk menghapus semua tabel, lalu jalankan ulang `up()` untuk membuatnya kembali. Jika `down()` kosong, tabel lama tidak dihapus. Saat `up()` mencoba membuat tabel yang sama, database akan mengembalikan error karena tabel sudah ada. Akibatnya, pipeline **CI/CD (misalnya GitHub Actions) akan gagal** dan proses deploy terhenti.
+* **Solusi Benar:** Setiap tabel yang dibuat di `up()` dengan `Schema::create(...)` harus ada pasangannya di `down()` berupa `Schema::dropIfExists(...)`. Keduanya harus selalu simetris.
 
 ---
 
-##### BREAK 5: Ganti `restrictOnDelete` Jadi `cascadeOnDelete` pada Relasi Dosen
+##### BREAK 5: Ganti `restrictOnDelete` → `cascadeOnDelete` pada Relasi Dosen → Mata Kuliah Ikut Terhapus Saat Akun Dosen Dihapus
 
-* **Yang Dirusak:** Aturan hapus data diubah. Jadi kalau akun dosen dihapus, mata kuliah yang dia ajar bakal ikut terhapus otomatis.
+* **Yang Dirusak:** Perilaku foreign key pada kolom `lecturer_id` diubah dari `nullOnDelete` menjadi `cascadeOnDelete`, sehingga ketika data dosen dihapus, semua mata kuliah yang mengacu ke dosen tersebut ikut terhapus secara otomatis.
 * **Cara Coba Singkat:**
-  1. Di migrasi `courses`, ubah kolom `lecturer_id` menjadi `cascadeOnDelete()`.
-  2. Jalankan `php artisan migrate:fresh` dan buka `php artisan tinker`.
-  3. Buat dosen dan mata kuliah, lalu hapus dosen tersebut:
+  1. **Buka file:** `database/migrations/xxxx_create_courses_table.php`
+  2. **Cari definisi kolom `lecturer_id`**, lalu **ubah `nullOnDelete()`/`restrictOnDelete()`** menjadi `cascadeOnDelete()`:
      ```php
-     $dosen = App\Models\User::create(['name' => 'Dosen A', 'email' => 'dosen@test.com', 'password' => '123', 'role' => 'dosen']);
+     // SEBELUM (benar):
+     $table->foreignId('lecturer_id')->nullable()->constrained('users')->nullOnDelete();
+
+     // SESUDAH (sengaja dirusak):
+     $table->foreignId('lecturer_id')->nullable()->constrained('users')->cascadeOnDelete();
+     ```
+  3. **Simpan file** (`Ctrl+S`).
+  4. **Di terminal**, jalankan ulang semua migrasi dari awal:
+     ```bash
+     php artisan migrate:fresh
+     ```
+  5. **Buka Tinker:**
+     ```bash
+     php artisan tinker
+     ```
+  6. **Di dalam Tinker**, jalankan baris-baris ini satu per satu — tekan Enter setelah masing-masing:
+     ```php
+     // Buat akun dosen baru
+     $dosen = App\Models\User::create(['name' => 'Dosen A', 'email' => 'dosen@test.com', 'password' => bcrypt('123'), 'role' => 'dosen']);
+
+     // Buat mata kuliah yang mengacu ke dosen tersebut
      DB::table('courses')->insert(['code' => 'SI101', 'name' => 'Pemrograman Web', 'sks' => 3, 'lecturer_id' => $dosen->id]);
 
-     // Hapus dosen
+     // Hapus akun dosen
      $dosen->delete();
 
-     // Cek apakah mata kuliah masih ada
+     // Cek apakah mata kuliah masih ada (harusnya ada, tapi ternyata...)
      DB::table('courses')->where('code', 'SI101')->first();
      ```
-* **Yang Terjadi di terminal:** Output jadi **`null`** (kosong). Mata kuliah "Pemrograman Web" langsung hilang dari database.
-* **Kenapa Bahaya:** Kalau ada dosen pensiun, resign, atau akunnya dihapus admin, masa mata kuliahnya ikut hilang? Nanti tugas, materi, dan riwayat nilai mahasiswa di mata kuliah itu bakal ikut terhapus semua. Harusnya mata kuliah tetap aman di sistem, tinggal diganti ke dosen lain yang baru.
-* **Solusi Benar:** Tetap pakai `restrictOnDelete`. Jadi kalau akun dosen mau dihapus tapi dia masih punya mata kuliah yang diajar, database bakal menolak sampai mata kuliahnya dipindahkan dulu ke dosen pengganti.
+  7. **Ketik `exit` lalu Enter** untuk keluar dari Tinker.
+* **Yang Terjadi di terminal:** Output mengembalikan **`null`**. Data mata kuliah "Pemrograman Web" terhapus dari database bersamaan dengan dihapusnya akun dosen.
+* **Kenapa Bahaya:** Jika akun dosen dihapus (karena pensiun, resign, atau alasan lain), semua mata kuliah yang diajarnya ikut hilang, termasuk tugas, materi, dan riwayat nilai mahasiswa yang terkait. Padahal mata kuliah tersebut seharusnya tetap ada dan bisa dialihkan ke dosen lain.
+* **Solusi Benar:** Gunakan `nullOnDelete()` pada kolom `lecturer_id`. Dengan cara ini, ketika akun dosen dihapus, nilai `lecturer_id` di tabel `courses` cukup diubah menjadi `NULL` — mata kuliah tetap ada dan dapat ditetapkan ke dosen pengganti.
 
 
