@@ -1,21 +1,22 @@
 <?php
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('dashboard');
 })->name('dashboard');
 
-// Tentang
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
 /*
 |--------------------------------------------------------------------------
-| CRUD Mata Kuliah (Rute statis di ATAS rute berparameter — mencegah Route Shadowing)
+| CRUD Mata Kuliah & Pengguna
 |--------------------------------------------------------------------------
 */
-Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
-Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+
+Route::resource('courses', CourseController::class);
+Route::resource('users', UserController::class);
