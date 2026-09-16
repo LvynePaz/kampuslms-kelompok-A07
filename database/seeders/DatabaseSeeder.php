@@ -13,6 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            DemoAccountSeeder::class,
+            // Tambahkan seeder MK / Mahasiswa jika ada
+        ]);
+
         // User::factory(10)->create();
 
         User::factory()->create([
