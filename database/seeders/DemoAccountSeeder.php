@@ -15,37 +15,31 @@ class DemoAccountSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@kampuslms.test'],
-            [
-                'name' => 'Admin Demo',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'nim_nip' => 'ADM-0001',
-                'email_verified_at' => now(),
-            ]
-        );
+    // Admin
+    $admin = User::firstOrNew(['email' => 'admin@kampuslms.test']);
+    $admin->name             = 'Admin Demo';
+    $admin->password         = Hash::make('password');
+    $admin->role             = 'admin';
+    $admin->nim_nip          = 'ADM-0001';
+    $admin->email_verified_at = now();
+    $admin->save();
 
-        User::updateOrCreate(
-            ['email' => 'dosen@kampuslms.test'],
-            [
-                'name' => 'Dosen Demo',
-                'password' => Hash::make('password'),
-                'role' => 'dosen',
-                'nim_nip' => '198000000001',
-                'email_verified_at' => now(),
-            ]
-        );
+    // Dosen
+    $dosen = User::firstOrNew(['email' => 'dosen@kampuslms.test']);
+    $dosen->name             = 'Dosen Demo';
+    $dosen->password         = Hash::make('password');
+    $dosen->role             = 'dosen';
+    $dosen->nim_nip          = '198000000001';
+    $dosen->email_verified_at = now();
+    $dosen->save();
 
-        User::updateOrCreate(
-            ['email' => 'mahasiswa@kampuslms.test'],
-            [
-                'name' => 'Mahasiswa Demo',
-                'password' => Hash::make('password'),
-                'role' => 'mahasiswa',
-                'nim_nip' => '108000000001',
-                'email_verified_at' => now(),
-            ]
-        );
+    // Mahasiswa
+    $mhs = User::firstOrNew(['email' => 'mahasiswa@kampuslms.test']);
+    $mhs->name             = 'Mahasiswa Demo';
+    $mhs->password         = Hash::make('password');
+    $mhs->role             = 'mahasiswa';
+    $mhs->nim_nip          = '108000000001';
+    $mhs->email_verified_at = now();
+    $mhs->save();
     }
 }
