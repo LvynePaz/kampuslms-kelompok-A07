@@ -32,17 +32,20 @@
         }
 
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-family: inherit;
             font-size: 0.9rem;
+            background-color: white;
         }
 
         .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -100,6 +103,17 @@
 
     <div class="form-card">
 
+        @if ($errors->any())
+            <div style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                <strong style="display: block; margin-bottom: 4px;">Terdapat kesalahan pada isian form:</strong>
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('courses.store') }}" method="POST">
             @csrf
 
@@ -153,17 +167,18 @@
             </div>
 
             <div class="form-group">
-                <label for="lecturer">Dosen Pengampu</label>
+                <label for="lecturer_id">Dosen Pengampu</label>
 
-                <input
-                    type="text"
-                    id="lecturer"
-                    name="lecturer"
-                    value="{{ old('lecturer') }}"
-                    placeholder="Nama dosen"
-                >
+                <select id="lecturer_id" name="lecturer_id">
+                    <option value="">-- Pilih Dosen Pengampu --</option>
+                    @foreach ($lecturers as $lecturer)
+                        <option value="{{ $lecturer->id }}" {{ old('lecturer_id') == $lecturer->id ? 'selected' : '' }}>
+                            {{ $lecturer->name }} ({{ $lecturer->email }})
+                        </option>
+                    @endforeach
+                </select>
 
-                @error('lecturer')
+                @error('lecturer_id')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
