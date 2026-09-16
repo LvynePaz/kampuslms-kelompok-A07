@@ -4,8 +4,14 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+use App\Models\Course;
+use App\Models\User;
+
 Route::get('/', function () {
-    return view('dashboard');
+    $courseCount = Course::count();
+    $userCount = User::count();
+
+    return view('dashboard', compact('courseCount', 'userCount'));
 })->name('dashboard');
 
 Route::get('/tentang', function () {
