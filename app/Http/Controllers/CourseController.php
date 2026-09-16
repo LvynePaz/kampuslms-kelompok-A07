@@ -2,43 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use Illuminate\Http\Request;
+
 class CourseController extends Controller
 {
-    // Data statis sementara (database masuk minggu depan)
-    private array $courses = [
-        [
-            'id'          => 1,
-            'code'        => 'SI2514024',
-            'name'        => 'Pemrograman Web',
-            'sks'         => 3,
-            'lecturer'    => 'Aidil Saputra Kirsan, S.Kom, M.Kom',
-            'description' => 'Mata kuliah dasar pengembangan aplikasi web modern menggunakan Laravel 12.',
-        ],
-        [
-            'id'          => 4,
-            'code'        => 'SI2514027',
-            'name'        => 'Kecerdasan Bisnis',
-            'sks'         => 3,
-            'lecturer'    => 'Dwi Arif, S.Kom, M.Kom',
-            'description' => 'Penerapan konsep kecerdasan bisnis (Business Intelligence) untuk analisis dan pengambilan keputusan berbasis data.',
-        ],
-    ];
-
+    // Menampilkan daftar mata kuliah
     public function index()
     {
-        $courses = $this->courses;
+        $courses = Course::with('lecturer')->latest()->paginate(10);
+
         return view('courses.index', compact('courses'));
     }
 
-    // Menampilkan detail satu mata kuliah berdasarkan ID
-    public function show($id)
+    // Menampilkan form tambah mata kuliah
+    public function create()
     {
-        $course = collect($this->courses)->firstWhere('id', (int) $id);
+        return view('courses.create');
+    }
 
-        if (!$course) {
-            abort(404);
-        }
+    // Menyimpan mata kuliah baru
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'code'        => 'required|unique:courses,code',
+            'name'        => 'required|string|max:255',
+            'sks'         => 'required|integer|min:1|max:6',
+            'lecturer_id' => 'required|exists:users,id',
+            'description' => 'nullable|string',
+        ]);
 
+        Course::create($validated);
+
+        return redirect()
+            ->route('courses.index')
+            ->with('success', 'Mata kuliah berhasil ditambahkan.');
+    }
+
+    // Menampilkan detail satu mata kuliah
+    public function show(Course $course)
+    {
         return view('courses.show', compact('course'));
+    }
+
+    // Menampilkan form edit mata kuliah
+    public function edit(Course $course)
+    {
+        return view('courses.edit', compact('course'));
+    }
+
+    // Memperbarui data mata kuliah
+    public function update(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'code'        => 'required|unique:courses,code,' . $course->id,
+            'name'        => 'required|string|max:255',
+            'sks'         => 'required|integer|min:1|max:6',
+            'lecturer_id' => 'required|exists:users,id',
+            'description' => 'nullable|string',
+        ]);
+
+        $course->update($validated);
+
+        return redirect()
+            ->route('courses.index')
+            ->with('success', 'Mata kuliah berhasil diperbarui.');
+    }
+
+    // Menghapus mata kuliah
+    public function destroy(Course $course)
+    {
+        $course->delete();
+
+        return redirect()
+            ->route('courses.index')
+            ->with('success', 'Mata kuliah berhasil dihapus.');
     }
 }
