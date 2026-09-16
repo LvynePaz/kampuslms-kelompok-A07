@@ -2,98 +2,118 @@
 
     <style>
         .page-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .page-header h1 {
-            font-size: 1.6rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #1a2f25;
+            letter-spacing: -0.4px;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: #647a6e;
+            font-size: 0.9rem;
         }
 
         .form-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 8px rgba(0,0,0,0.07);
-            border: 1px solid #e2e8f0;
-            padding: 2rem;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px -2px rgba(35, 62, 49, 0.05), 0 2px 6px -1px rgba(35, 62, 49, 0.02);
+            border: 1px solid rgba(45, 74, 62, 0.08);
+            padding: 2.25rem;
+            max-width: 800px;
         }
 
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.35rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
+            margin-bottom: 7px;
+            font-size: 0.88rem;
             font-weight: 600;
-            color: #334155;
+            color: #21332a;
         }
 
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            padding: 11px 14px;
+            border: 1px solid rgba(45, 74, 62, 0.2);
+            border-radius: 10px;
             font-family: inherit;
-            font-size: 0.9rem;
-            background-color: white;
+            font-size: 0.92rem;
+            background-color: #fbfcfa;
+            color: #1a2f25;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #2d4a3e;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(45, 74, 62, 0.12);
         }
 
         .form-group textarea {
-            min-height: 100px;
+            min-height: 110px;
             resize: vertical;
         }
 
         .error-message {
             margin-top: 5px;
             color: #dc2626;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
         }
 
         .form-actions {
             display: flex;
-            gap: 8px;
-            margin-top: 1.5rem;
+            gap: 10px;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(45, 74, 62, 0.08);
         }
 
         .btn-save,
         .btn-cancel {
-            padding: 9px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.92rem;
             font-weight: 600;
             text-decoration: none;
             border: none;
             cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .btn-save {
-            background: #1d4ed8;
-            color: white;
+            background: #2d4a3e;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(45, 74, 62, 0.2);
         }
 
         .btn-save:hover {
-            background: #1e40af;
+            background: #22382f;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(45, 74, 62, 0.28);
         }
 
         .btn-cancel {
-            background: #f1f5f9;
-            color: #475569;
+            background: #eef5f1;
+            color: #2d4a3e;
+            border: 1px solid rgba(45, 74, 62, 0.15);
         }
 
         .btn-cancel:hover {
-            background: #e2e8f0;
+            background: #e2ece6;
+            color: #1a2f25;
         }
     </style>
 
@@ -212,4 +232,3 @@
     </div>
 
 </x-layout>
-```
