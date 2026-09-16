@@ -193,7 +193,7 @@
 
     <div class="about-hero">
         <div class="about-hero-badge">
-            <span>🌿 Profil Kelompok A07</span>
+            <span>Profil Kelompok A07</span>
         </div>
         <h1>Kelompok A07 — KampusLMS</h1>
         <p>Institut Teknologi Kalimantan · Program Studi Sistem Informasi / Informatika · Mata Kuliah Pemrograman Web</p>
@@ -204,28 +204,28 @@
             <div class="avatar-container">PA</div>
             <div class="member-name">Patra Ananda</div>
             <span class="member-nim-badge">10241061</span>
-            <p class="member-role">Pengembang KampusLMS</p>
+            <p class="member-role">BACKEND</p>
         </div>
 
         <div class="member-card">
             <div class="avatar-container">NH</div>
             <div class="member-name">Nabil Hafidz Mubarok</div>
             <span class="member-nim-badge">10241055</span>
-            <p class="member-role">Pengembang KampusLMS</p>
+            <p class="member-role">DATABASE</p>
         </div>
 
         <div class="member-card">
             <div class="avatar-container">ND</div>
             <div class="member-name">Nur Diah Indah Claryza</div>
             <span class="member-nim-badge">10241059</span>
-            <p class="member-role">Pengembang KampusLMS</p>
+            <p class="member-role">FRONTEND</p>
         </div>
 
         <div class="member-card">
             <div class="avatar-container">NK</div>
             <div class="member-name">Nova Kartika Candra</div>
             <span class="member-nim-badge">10241057</span>
-            <p class="member-role">Pengembang KampusLMS</p>
+            <p class="member-role">KETUA</p>
         </div>
     </div>
 
@@ -238,7 +238,7 @@
             </div>
             <div class="footer-card-text">
                 <h4>Proyek Pengembangan Web KampusLMS</h4>
-                <p>Dibangun secara kolaboratif menggunakan Laravel 11 dengan standar arsitektur bersih dan terstruktur.</p>
+                <p>Dibangun secara kerja  dan kelompok </p>
             </div>
         </div>
         <a href="{{ route('dashboard') }}" class="btn-back-dash">
