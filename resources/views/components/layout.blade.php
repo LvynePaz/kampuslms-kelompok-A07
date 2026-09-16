@@ -87,6 +87,14 @@
             transform: translateY(-1px);
         }
 
+        .admin-menu { position: relative; }
+        .admin-menu summary { color: rgba(232, 241, 236, 0.88); padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; list-style: none; }
+        .admin-menu summary::-webkit-details-marker { display: none; }
+        .admin-menu summary:hover, .admin-menu[open] summary { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+        .admin-menu-items { position: absolute; right: 0; top: 2.4rem; min-width: 180px; padding: .45rem; background: #ffffff; border: 1px solid var(--color-border-subtle); border-radius: 10px; box-shadow: 0 10px 24px rgba(27, 46, 38, .16); }
+        .admin-menu-items a { display: block; color: var(--color-text-main); padding: .65rem .75rem; }
+        .admin-menu-items a:hover { background: var(--color-sage-soft); color: var(--color-sage-deep); transform: none; }
+
         /* MAIN CONTENT */
         .main-content {
             max-width: 1120px;
@@ -114,6 +122,13 @@
         <div class="navbar-links">
             <a href="{{ route('dashboard') }}">Dashboard</a>
             <a href="{{ route('courses.index') }}">Mata Kuliah</a>
+            <details class="admin-menu">
+                <summary>Mode Admin</summary>
+                <div class="admin-menu-items">
+                    <a href="{{ route('users.index') }}">Semua Pengguna</a>
+                    <a href="{{ route('users.create') }}">Tambah Pengguna</a>
+                </div>
+            </details>
             <a href="{{ route('tentang') }}">Tentang</a>
         </div>
     </nav>
