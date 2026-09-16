@@ -207,7 +207,7 @@
                         </td>
 
                         <td>
-                            {{ $course['lecturer'] }}
+                            {{ $course->lecturer?->name ?? '-' }}
                         </td>
 
                         <td>

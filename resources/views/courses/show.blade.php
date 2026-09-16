@@ -116,7 +116,7 @@
             <div class="code-badge">{{ $course['code'] }}</div>
             <h1>{{ $course['name'] }}</h1>
             <div class="meta">
-                <span> {{ $course['lecturer'] }}</span>
+                <span> {{ $course->lecturer?->name ?? '-' }}</span>
                 <span> {{ $course['sks'] }} SKS</span>
             </div>
         </div>
@@ -134,7 +134,7 @@
                 </div>
                 <div class="info-item">
                     <div class="label">Dosen Pengampu</div>
-                    <div class="value">{{ $course['lecturer'] }}</div>
+                    <div class="value">{{ $course->lecturer?->name ?? '-' }}</div>
                 </div>
             </div>
 

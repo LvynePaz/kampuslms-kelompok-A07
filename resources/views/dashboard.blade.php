@@ -60,15 +60,19 @@
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-number">4</div>
+            <div class="stat-number">{{ $courseCount }}</div>
             <div class="stat-label">Mata Kuliah</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ $userCount }}</div>
+            <div class="stat-label">Total Pengguna</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">4</div>
             <div class="stat-label">Anggota Tim</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">W02</div>
+            <div class="stat-number">W03</div>
             <div class="stat-label">Progres Minggu</div>
         </div>
     </div>
