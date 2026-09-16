@@ -15,14 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             DemoAccountSeeder::class,
-            // Tambahkan seeder MK / Mahasiswa jika ada
-        ]);
-
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            AcademicSeeder::class,
         ]);
     }
 }
