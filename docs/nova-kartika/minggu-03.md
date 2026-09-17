@@ -34,3 +34,13 @@ $table->foreignId('submission_id')
     ->cascadeOnDelete();
 ```
 jadi hubungannya adalah one-to-zero-or-one artinya submission boleh belum punya nilai tapi kalau sudah dinilai cuma boleh punya satu data nilai
+
+## BREAK
+
+| # | Yang dicoba | Yang harus Anda amati | Yang Dipelajari |
+|---|---|---|---|
+| 1 | Hapus `unique(['course_id','user_id'])` dari `course_user`, lalu daftarkan mahasiswa yang sama dua kali | Data ganda lolos tanpa keluhan | ternyata `unique` dipakai supaya data yang sama tidak masuk dua kali |
+| 2 | Tambahkan `role` ke `$fillable` model `User`, lalu kirim request pembuatan user dengan `role=admin` lewat form yang **tidak punya field role** | **Mass assignment nyata** — Anda baru saja jadi admin | `$fillable` harus dibatasi supaya data tertentu tidak bisa diisi sembarangan |
+| 3 | Ganti seluruh `$fillable` dengan `protected $guarded = [];` lalu ulangi nomor 2 | Kenapa `$guarded` kosong dilarang | `$guarded = []` ternyata membuat semua field tidak dibatasi |
+| 4 | Kosongkan isi `down()` di satu migrasi, lalu jalankan `php artisan migrate:refresh` | Migrasi tidak reversible = CI merah | `down()` ternyata penting supaya migration bisa dibalik |
+| 5 | Ubah `restrictOnDelete` pada `lecturer_id` menjadi `cascadeOnDelete`, lalu hapus satu dosen | Kehilangan data berantai | kalau pakai `cascadeOnDelete` data yang berhubungan juga bisa ikut terhapus |
