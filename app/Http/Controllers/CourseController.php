@@ -28,7 +28,7 @@ class CourseController extends Controller
             'code'        => 'required|unique:courses,code',
             'name'        => 'required|string|max:255',
             'sks'         => 'required|integer|min:1|max:6',
-            'lecturer_id' => 'required|exists:users,id',
+            'lecturer_id' => 'required|exists:users,id,role,dosen',
             'description' => 'nullable|string',
         ]);
 
@@ -58,7 +58,7 @@ class CourseController extends Controller
             'code'        => 'required|unique:courses,code,' . $course->id,
             'name'        => 'required|string|max:255',
             'sks'         => 'required|integer|min:1|max:6',
-            'lecturer_id' => 'required|exists:users,id',
+            'lecturer_id' => 'required|exists:users,id,role,dosen',
             'description' => 'nullable|string',
         ]);
 
