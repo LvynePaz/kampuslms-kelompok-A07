@@ -108,7 +108,7 @@ class AcademicSeeder extends Seeder
             ],
             [
                 'code' => 'SI2514022',
-                'name' => 'Manajemen Sumber Daya Manusia (VKA)',
+                'name' => 'Manajemen Sumber Daya Manusia',
                 'description' => 'Membahas pengelolaan SDM, talent management, motivasi kerja, dinamika tim, dan kepemimpinan di era transformasi digital.',
                 'sks' => 2,
                 'lecturer_id' => $lecturers[2]->id, // bu Vika
@@ -116,7 +116,7 @@ class AcademicSeeder extends Seeder
             ],
             [
                 'code' => 'SI2514023',
-                'name' => 'Perencanaan Strategis Sistem Informasi (YTW)',
+                'name' => 'Perencanaan Strategis Sistem Informasi',
                 'description' => 'Membekali metodologi penyusunan rencana strategis sistem informasi dan teknologi informasi (Renstra SI/TI) menggunakan framework Ward & Peppard.',
                 'sks' => 3,
                 'lecturer_id' => $lecturers[3]->id, // bu Yuyun
