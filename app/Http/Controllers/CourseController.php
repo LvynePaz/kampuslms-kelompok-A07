@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -18,19 +19,23 @@ class CourseController extends Controller
     // Menampilkan form tambah mata kuliah
     public function create()
     {
-        return view('courses.create');
+        $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
+
+        return view('courses.create', compact('lecturers'));
     }
 
     // Menyimpan mata kuliah baru
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code'        => 'required|unique:courses,code',
+            'code'        => 'required|string|max:50|unique:courses,code',
             'name'        => 'required|string|max:255',
             'sks'         => 'required|integer|min:1|max:6',
             'lecturer_id' => 'required|exists:users,id,role,dosen',
             'description' => 'nullable|string',
         ]);
+
+        $validated['status'] = $request->input('status', 'active');
 
         Course::create($validated);
 
@@ -48,14 +53,16 @@ class CourseController extends Controller
     // Menampilkan form edit mata kuliah
     public function edit(Course $course)
     {
-        return view('courses.edit', compact('course'));
+        $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
+
+        return view('courses.edit', compact('course', 'lecturers'));
     }
 
     // Memperbarui data mata kuliah
     public function update(Request $request, Course $course)
     {
         $validated = $request->validate([
-            'code'        => 'required|unique:courses,code,' . $course->id,
+            'code'        => 'required|string|max:50|unique:courses,code,' . $course->id,
             'name'        => 'required|string|max:255',
             'sks'         => 'required|integer|min:1|max:6',
             'lecturer_id' => 'required|exists:users,id,role,dosen',
