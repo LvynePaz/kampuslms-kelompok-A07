@@ -208,9 +208,25 @@
                 <textarea
                     id="description"
                     name="description"
-                >{{ old('description', $course['description']) }}</textarea>
+                >{{ old('description', $course->description) }}</textarea>
 
                 @error('description')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+
+                <select id="status" name="status">
+                    @foreach (['draft', 'active', 'archived'] as $s)
+                        <option value="{{ $s }}" {{ old('status', $course->status) === $s ? 'selected' : '' }}>
+                            {{ ucfirst($s) }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('status')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
@@ -230,3 +246,4 @@
     </div>
 
 </x-layout>
+
