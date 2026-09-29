@@ -1,4 +1,4 @@
-*READ*
+*READ
 1. Method yang menerima request adalah ``store(Request $request)`` pada ``CourseController``. Method ini dipanggil oleh route resource ``courses`` untuk request ``POST /courses``.
 
 2. Validasi terjadi saat ``$request->validate([...])`` dipanggil di awal method ``store``, sebelum ``Course::create($validated)`` dan sebelum mata kuliah disimpan ke database.
