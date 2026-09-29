@@ -44,8 +44,8 @@
         <div class="error-code">404</div>
         <div class="error-title">Halaman Tidak Ditemukan</div>
         <div class="error-desc">Maaf, halaman atau data yang Anda cari tidak ada.</div>
-        <a href="{{ route('courses.index') }}" class="btn-home">
-            Kembali ke Daftar Mata Kuliah
+        <a href="{{ route('dashboard') }}" class="btn-home">
+            Kembali ke Dashboard
         </a>
     </div>
 

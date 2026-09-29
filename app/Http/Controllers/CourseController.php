@@ -13,8 +13,14 @@ class CourseController extends Controller
     // Menampilkan daftar mata kuliah dengan pencarian, filter status, dan pagination
     public function index(Request $request)
     {
-        $courses = Course::query()
+        $user = $request->user();
+        $query = Course::query()
             ->with('lecturer')
+            ->when($user?->role === 'dosen', fn ($query) =>
+                $query->where('lecturer_id', $user->id))
+            ->when($user?->role === 'mahasiswa', fn ($query) =>
+                $query->whereHas('students', fn ($students) =>
+                    $students->whereKey($user->id)))
             ->when($request->filled('q'), fn ($query) =>
                 $query->where(fn ($sub) =>
                     $sub->where('name', 'like', '%' . $request->q . '%')
@@ -22,11 +28,16 @@ class CourseController extends Controller
                 ))
             ->when($request->filled('status'), fn ($query) =>
                 $query->where('status', $request->status))
-            ->latest()
+            ->latest();
+
+        $courses = $query
             ->paginate(15)
             ->withQueryString(); // filter tetap bertahan saat berpindah halaman
 
-        return view('courses.index', compact('courses'));
+        $routePrefix = explode('.', $request->route()->getName())[0] . '.';
+        $userRole = $user?->role ?? 'admin';
+
+        return view('courses.index', compact('courses', 'routePrefix', 'userRole'));
     }
 
     // Menampilkan form tambah mata kuliah
@@ -45,14 +56,18 @@ class CourseController extends Controller
         Course::create($request->validated());
 
         return redirect()
-            ->route('courses.index')
+            ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil ditambahkan.');
     }
 
     // Menampilkan detail satu mata kuliah
     public function show(Course $course)
     {
-        return view('courses.show', compact('course'));
+        abort_unless($this->userCanView($course), 403);
+
+        $routePrefix = explode('.', request()->route()->getName())[0] . '.';
+
+        return view('courses.show', compact('course', 'routePrefix'));
     }
 
     // Menampilkan form edit mata kuliah
@@ -69,7 +84,7 @@ class CourseController extends Controller
         $course->update($request->validated());
 
         return redirect()
-            ->route('courses.index')
+            ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil diperbarui.');
     }
 
@@ -79,7 +94,20 @@ class CourseController extends Controller
         $course->delete();
 
         return redirect()
-            ->route('courses.index')
+            ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
+
+    private function userCanView(Course $course): bool
+    {
+        if (request()->routeIs('admin.*') && ! request()->user()) {
+            return true;
+        }
+
+        $user = request()->user();
+
+        return $user?->role === 'admin'
+            || ($user->role === 'dosen' && $course->lecturer_id === $user->id)
+            || ($user->role === 'mahasiswa' && $course->students()->whereKey($user->id)->exists());
     }
 }
