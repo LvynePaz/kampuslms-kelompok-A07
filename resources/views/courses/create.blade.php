@@ -134,7 +134,7 @@
             </div>
         @endif
 
-        <form action="{{ route('courses.store') }}" method="POST">
+        <form action="{{ route('admin.courses.store') }}" method="POST">
             @csrf
 
             <div class="form-group">
@@ -238,7 +238,7 @@
                     Simpan
                 </button>
 
-                <a href="{{ route('courses.index') }}" class="btn-cancel">
+                <a href="{{ route('admin.courses.index') }}" class="btn-cancel">
                     Batal
                 </a>
             </div>

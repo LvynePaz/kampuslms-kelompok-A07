@@ -135,7 +135,7 @@
             </div>
         @endif
 
-        <form action="{{ route('courses.update', $course['id']) }}" method="POST">
+        <form action="{{ route('admin.courses.update', $course['id']) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -236,7 +236,7 @@
                     Update
                 </button>
 
-                <a href="{{ route('courses.index') }}" class="btn-cancel">
+                <a href="{{ route('admin.courses.index') }}" class="btn-cancel">
                     Batal
                 </a>
             </div>

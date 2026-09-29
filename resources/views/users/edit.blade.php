@@ -18,14 +18,14 @@
     </style>
 
     <div class="user-form-wrap">
-        <a href="{{ route('users.show', $user) }}" class="user-form-back">&lt;- Kembali ke detail pengguna</a>
+        <a href="{{ route('admin.users.show', $user) }}" class="user-form-back">&lt;- Kembali ke detail pengguna</a>
         <div class="user-form-heading"><div class="user-form-kicker">Mode admin / pengguna</div><h1>Edit pengguna</h1><p>Perbarui informasi akun dan role {{ $user->name }}.</p></div>
-        <form action="{{ route('users.update', $user) }}" method="POST" class="user-form-card">
+        <form action="{{ route('admin.users.update', $user) }}" method="POST" class="user-form-card">
             @csrf @method('PUT')
             <div class="user-form-card-head"><h2>Informasi akun</h2><p>Password boleh dikosongkan jika tidak ingin mengubahnya.</p></div>
             <div class="user-form-body">
                 @include('users._form', ['user' => $user])
-                <div class="user-form-actions"><a href="{{ route('users.show', $user) }}" class="user-form-button secondary">Batal</a><button type="submit" class="user-form-button primary">Simpan perubahan</button></div>
+                <div class="user-form-actions"><a href="{{ route('admin.users.show', $user) }}" class="user-form-button secondary">Batal</a><button type="submit" class="user-form-button primary">Simpan perubahan</button></div>
             </div>
         </form>
     </div>

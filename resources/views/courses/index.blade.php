@@ -6,12 +6,14 @@
             <p>Kelola kurikulum dan mata kuliah aktif pada semester berjalan</p>
         </div>
 
-        <a href="{{ route('courses.create') }}" class="btn-add">
+        @if ($userRole === 'admin')
+        <a href="{{ route($routePrefix . 'courses.create') }}" class="btn-add">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             <span>Tambah Mata Kuliah</span>
         </a>
+        @endif
     </div>
 
     @if (session('success'))
@@ -24,7 +26,7 @@
     @endif
 
     {{-- Form pencarian & filter status — state disimpan di query string, bukan session --}}
-    <form method="GET" action="{{ route('courses.index') }}" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+    <form method="GET" action="{{ route($routePrefix . 'courses.index') }}" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
         <input
             type="text"
             name="q"
@@ -40,7 +42,7 @@
         </select>
         <button type="submit" style="padding:9px 18px; background:#2d4a3e; color:#fff; border:none; border-radius:9px; font-size:0.9rem; font-weight:600; cursor:pointer;">Cari</button>
         @if (request('q') || request('status'))
-            <a href="{{ route('courses.index') }}" style="padding:9px 14px; background:#eef5f1; color:#2d4a3e; border:1px solid rgba(45,74,62,0.15); border-radius:9px; font-size:0.9rem; text-decoration:none;">Reset</a>
+            <a href="{{ route($routePrefix . 'courses.index') }}" style="padding:9px 14px; background:#eef5f1; color:#2d4a3e; border:1px solid rgba(45,74,62,0.15); border-radius:9px; font-size:0.9rem; text-decoration:none;">Reset</a>
         @endif
     </form>
 
@@ -65,7 +67,7 @@
                         </td>
 
                         <td>
-                            <a href="{{ route('courses.show', $course) }}" class="link-name">
+                            <a href="{{ route($routePrefix . 'courses.show', $course) }}" class="link-name">
                                 {{ $course->name }}
                             </a>
                         </td>
@@ -95,16 +97,17 @@
                         <td>
                             <div class="action-buttons">
 
-                                <a href="{{ route('courses.show', $course) }}" class="btn-detail">
+                                <a href="{{ route($routePrefix . 'courses.show', $course) }}" class="btn-detail">
                                     Lihat
                                 </a>
 
-                                <a href="{{ route('courses.edit', $course) }}" class="btn-edit">
+                                @if ($userRole === 'admin')
+                                <a href="{{ route($routePrefix . 'courses.edit', $course) }}" class="btn-edit">
                                     Edit
                                 </a>
 
                                 <form
-                                    action="{{ route('courses.destroy', $course) }}"
+                                    action="{{ route($routePrefix . 'courses.destroy', $course) }}"
                                     method="POST"
                                     onsubmit="return confirm('Apakah kamu yakin ingin menghapus mata kuliah ini?')"
                                     style="display: inline;"
@@ -116,6 +119,7 @@
                                         Hapus
                                     </button>
                                 </form>
+                                @endif
 
                             </div>
                         </td>
@@ -126,7 +130,7 @@
                         <td colspan="6" class="empty-state">
                             @if (request('q') || request('status'))
                                 Tidak ada mata kuliah yang cocok dengan pencarian.
-                                <a href="{{ route('courses.index') }}" style="color:#2d4a3e;">Reset filter</a>
+                                <a href="{{ route($routePrefix . 'courses.index') }}" style="color:#2d4a3e;">Reset filter</a>
                             @else
                                 Belum ada mata kuliah terdaftar. Silakan tambahkan mata kuliah baru.
                             @endif

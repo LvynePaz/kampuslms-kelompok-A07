@@ -591,14 +591,16 @@
         </a>
         <div class="navbar-links">
             <a href="{{ route('dashboard') }}">Dashboard</a>
-            <a href="{{ route('courses.index') }}">Mata Kuliah</a>
+            <a href="{{ auth()->check() ? route(auth()->user()->role . '.courses.index') : route('admin.courses.index') }}">Mata Kuliah</a>
+            @if (! auth()->check() || auth()->user()->role === 'admin')
             <details class="admin-menu">
                 <summary>Mode Admin</summary>
                 <div class="admin-menu-items">
-                    <a href="{{ route('users.index') }}">Semua Pengguna</a>
-                    <a href="{{ route('users.create') }}">Tambah Pengguna</a>
+                    <a href="{{ route('admin.users.index') }}">Semua Pengguna</a>
+                    <a href="{{ route('admin.users.create') }}">Tambah Pengguna</a>
                 </div>
             </details>
+            @endif
             <a href="{{ route('tentang') }}">Tentang</a>
         </div>
     </nav>

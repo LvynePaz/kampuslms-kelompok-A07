@@ -46,7 +46,7 @@ class UserController extends Controller
         $user->role = $validated['role'];
         $user->save();
 
-        return redirect()->route('users.show', $user)
+        return redirect()->route('admin.users.show', $user)
             ->with('status', 'Pengguna berhasil dibuat.');
     }
 
@@ -78,7 +78,7 @@ class UserController extends Controller
         $user->role = $validated['role'];
         $user->save();
 
-        return redirect()->route('users.show', $user)
+        return redirect()->route('admin.users.show', $user)
             ->with('status', 'Pengguna berhasil diperbarui.');
     }
 
@@ -86,7 +86,7 @@ class UserController extends Controller
     {
         $user->delete();
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('status', 'Pengguna berhasil dihapus.');
     }
 }
