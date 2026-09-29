@@ -362,6 +362,20 @@
             box-shadow: 0 2px 8px rgba(27, 83, 48, 0.06);
         }
 
+        .alert-error {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            font-size: 0.88rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(153, 27, 27, 0.06);
+        }
+
         /* PAGINATION */
         .pagination-wrapper {
             padding: 14px 18px;
@@ -605,6 +619,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span>{{ session('status') }}</span>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert-error" style="margin-bottom:1rem;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>{{ session('error') }}</span>
             </div>
         @endif
         {{ $slot }}
