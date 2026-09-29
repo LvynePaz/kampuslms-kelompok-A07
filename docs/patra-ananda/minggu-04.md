@@ -200,46 +200,84 @@ Pada repositori `LMS-Broken` branch `w04`, ditemukan dan diperbaiki **6 masalah 
 
 Berikut adalah implementasi nyata yang telah dibangun di proyek kelompok `kampuslms-kelompok-A07`:
 
-1. **Membuat Form Request Khusus:**
-   - Dibuat `app/Http/Requests/StoreCourseRequest.php` dan `app/Http/Requests/UpdateCourseRequest.php`.
-   - Mengonfigurasi pesan validasi ramah berbahasa Indonesia melalui method `messages()`.
-   - Menangani aturan `unique` update secara tepat via `Rule::unique('courses', 'code')->ignore($this->route('course'))`.
+#### 1. Form Request Terpisah (Courses & Users)
 
-2. **Form Blade yang Tahan Kesalahan:**
-   - Form `courses/create.blade.php` dan `courses/edit.blade.php` dilengkapi dengan atribut `value="{{ old('field', $course->field ?? '') }}"`.
-   - Menampilkan indikator pesan error di bawah masing-masing input menggunakan `@error('field') <p class="text-sm text-red-500">{{ $message }}</p> @enderror`.
-   - Memasang proteksi `@csrf` serta method spoofing `@method('PUT')` pada form edit.
+Dibuat 4 kelas Form Request di `app/Http/Requests/`:
 
-3. **Pesan Notifikasi Global (Flash Message):**
-   - Menambahkan komponen flash message di dalam layout bersama `resources/views/components/layout.blade.php`:
-     ```blade
-     @if (session('success'))
-         <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg">
-             {{ session('success') }}
-         </div>
-     @endif
-     ```
+| File | Keterangan |
+|------|-----------|
+| `StoreCourseRequest.php` | Validasi tambah mata kuliah, `unique` polos |
+| `UpdateCourseRequest.php` | Validasi edit, `Rule::unique()->ignore($this->route('course'))` |
+| `StoreUserRequest.php` | Validasi tambah pengguna, role divalidasi tapi tidak di `$fillable` |
+| `UpdateUserRequest.php` | Validasi edit pengguna, `Rule::unique()->ignore($this->route('user'))` |
 
-4. **Daftar Mata Kuliah Lengkap dengan Filter & Paginasi:**
-   - Menggunakan query dinamis dengan eager loading untuk menghindari masalah N+1:
-     ```php
-     $courses = Course::query()
-         ->with('lecturer')
-         ->when($request->filled('q'), function ($query) use ($request) {
-             $query->where(function ($sub) use ($request) {
-                 $sub->where('name', 'like', '%' . $request->q . '%')
-                     ->orWhere('code', 'like', '%' . $request->q . '%');
-             });
-         })
-         ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
-         ->latest()
-         ->paginate(15)
-         ->withQueryString();
-     ```
+Semua Request menggunakan `authorize(): bool { return true; }` dengan komentar `TODO (minggu 7): ganti dengan Policy`.
 
-5. **Penghapusan Aman dengan Konfirmasi:**
-   - Tombol hapus dibungkus dalam form dengan method spoofing `@method('DELETE')` dan `@csrf`.
-   - Menambahkan konfirmasi JavaScript `onsubmit="return confirm('Apakah Anda yakin ingin menghapus mata kuliah ini?');"` sebelum request dikirimkan ke server.
+```php
+// UpdateCourseRequest — menangani jebakan unique pada update
+'code' => ['required', 'string', 'max:20',
+           Rule::unique('courses', 'code')->ignore($this->route('course'))],
+```
+
+Tanpa `ignore()`, mengedit mata kuliah tanpa mengubah kode selalu gagal karena kodenya "sudah dipakai" — oleh dirinya sendiri.
+
+#### 2. Controller Upgrade: Form Request + Pencarian + Filter
+
+`CourseController` dan `UserController` diperbarui:
+- `store()` dan `update()` kini menerima Form Request, bukan `Request` biasa
+- `$request->validated()` menggantikan `$request->validate([...])` inline
+- `index()` mendukung pencarian dan filter via query string, dengan `->withQueryString()`
+
+```php
+// CourseController@index — filter bertahan saat berpindah halaman
+$courses = Course::query()
+    ->with('lecturer')
+    ->when($request->filled('q'), fn ($query) =>
+        $query->where(fn ($sub) =>
+            $sub->where('name', 'like', '%' . $request->q . '%')
+                ->orWhere('code', 'like', '%' . $request->q . '%')
+        ))
+    ->when($request->filled('status'), fn ($query) =>
+        $query->where('status', $request->status))
+    ->latest()
+    ->paginate(15)
+    ->withQueryString();
+```
+
+#### 3. Flash Message Global di Layout
+
+Ditambahkan di `resources/views/components/layout.blade.php` sehingga berlaku untuk **seluruh halaman** tanpa harus menulis ulang per-view:
+
+```blade
+@if (session('success'))
+    <div class="alert-success">{{ session('success') }}</div>
+@endif
+@if (session('status'))
+    <div class="alert-success">{{ session('status') }}</div>
+@endif
+```
+
+#### 4. Filter Pencarian di Dua Modul (Courses & Users)
+
+- **Courses**: filter kode/nama + dropdown status (`draft/active/archived`)
+- **Users**: filter nama/email/NIM-NIP + dropdown role (`admin/dosen/mahasiswa`)
+- Keduanya memakai form `GET` ke query string, bukan session
+- Tombol **Reset** muncul hanya saat ada filter aktif
+
+#### 5. Field Status di Form Courses
+
+Sebelumnya field `status` tidak ada di form `create` dan `edit` — status selalu default `active`. Sekarang tersedia dropdown status di kedua form, dengan nilai lama dipertahankan via `old('status', $course->status)`.
+
+#### 6. Konfirmasi Hapus dengan DELETE yang Benar
+
+Seluruh tombol hapus menggunakan:
+```blade
+<form method="POST" onsubmit="return confirm('...')">
+    @csrf
+    @method('DELETE')
+    <button type="submit">Hapus</button>
+</form>
+```
 
 ---
 

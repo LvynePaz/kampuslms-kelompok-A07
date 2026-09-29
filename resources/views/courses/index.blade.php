@@ -23,6 +23,27 @@
         </div>
     @endif
 
+    {{-- Form pencarian & filter status — state disimpan di query string, bukan session --}}
+    <form method="GET" action="{{ route('courses.index') }}" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+        <input
+            type="text"
+            name="q"
+            value="{{ request('q') }}"
+            placeholder="Cari kode atau nama mata kuliah…"
+            style="flex:1; min-width:220px; padding:9px 13px; border:1px solid rgba(45,74,62,0.2); border-radius:9px; font-size:0.9rem; background:#fbfcfa;"
+        >
+        <select name="status" style="padding:9px 13px; border:1px solid rgba(45,74,62,0.2); border-radius:9px; font-size:0.9rem; background:#fbfcfa;">
+            <option value="">Semua Status</option>
+            @foreach (['draft','active','archived'] as $s)
+                <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>
+            @endforeach
+        </select>
+        <button type="submit" style="padding:9px 18px; background:#2d4a3e; color:#fff; border:none; border-radius:9px; font-size:0.9rem; font-weight:600; cursor:pointer;">Cari</button>
+        @if (request('q') || request('status'))
+            <a href="{{ route('courses.index') }}" style="padding:9px 14px; background:#eef5f1; color:#2d4a3e; border:1px solid rgba(45,74,62,0.15); border-radius:9px; font-size:0.9rem; text-decoration:none;">Reset</a>
+        @endif
+    </form>
+
     <div class="table-card">
         <table>
             <thead>
@@ -30,6 +51,7 @@
                     <th>Kode</th>
                     <th>Nama Mata Kuliah</th>
                     <th>SKS</th>
+                    <th>Status</th>
                     <th>Dosen Pengampu</th>
                     <th>Aksi</th>
                 </tr>
@@ -39,18 +61,30 @@
                 @forelse ($courses as $course)
                     <tr>
                         <td>
-                            <span class="code-tag">{{ $course['code'] }}</span>
+                            <span class="code-tag">{{ $course->code }}</span>
                         </td>
 
                         <td>
-                            <a href="{{ route('courses.show', $course['id']) }}" class="link-name">
-                                {{ $course['name'] }}
+                            <a href="{{ route('courses.show', $course) }}" class="link-name">
+                                {{ $course->name }}
                             </a>
                         </td>
 
                         <td>
-                            <span class="badge-sks">
-                                {{ $course['sks'] }} SKS
+                            <span class="badge-sks">{{ $course->sks }} SKS</span>
+                        </td>
+
+                        <td>
+                            @php
+                                $statusClass = match($course->status) {
+                                    'active'   => 'background:#d1fae5; color:#065f46;',
+                                    'draft'    => 'background:#fef3c7; color:#92400e;',
+                                    'archived' => 'background:#f3f4f6; color:#6b7280;',
+                                    default    => '',
+                                };
+                            @endphp
+                            <span style="padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:600; {{ $statusClass }}">
+                                {{ ucfirst($course->status) }}
                             </span>
                         </td>
 
@@ -61,16 +95,16 @@
                         <td>
                             <div class="action-buttons">
 
-                                <a href="{{ route('courses.show', $course['id']) }}" class="btn-detail">
+                                <a href="{{ route('courses.show', $course) }}" class="btn-detail">
                                     Lihat
                                 </a>
 
-                                <a href="{{ route('courses.edit', $course['id']) }}" class="btn-edit">
+                                <a href="{{ route('courses.edit', $course) }}" class="btn-edit">
                                     Edit
                                 </a>
 
                                 <form
-                                    action="{{ route('courses.destroy', $course['id']) }}"
+                                    action="{{ route('courses.destroy', $course) }}"
                                     method="POST"
                                     onsubmit="return confirm('Apakah kamu yakin ingin menghapus mata kuliah ini?')"
                                     style="display: inline;"
@@ -89,13 +123,24 @@
 
                 @empty
                     <tr>
-                        <td colspan="5" class="empty-state">
-                            Belum ada mata kuliah terdaftar. Silakan tambahkan mata kuliah baru.
+                        <td colspan="6" class="empty-state">
+                            @if (request('q') || request('status'))
+                                Tidak ada mata kuliah yang cocok dengan pencarian.
+                                <a href="{{ route('courses.index') }}" style="color:#2d4a3e;">Reset filter</a>
+                            @else
+                                Belum ada mata kuliah terdaftar. Silakan tambahkan mata kuliah baru.
+                            @endif
                         </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+
+        {{-- Pagination bawaan Laravel — query string dibawa otomatis via ->withQueryString() --}}
+        <div class="pagination-wrapper">
+            {{ $courses->links() }}
+        </div>
     </div>
 
 </x-layout>
+
