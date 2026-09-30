@@ -56,9 +56,9 @@
 
 ## CHECKPOINT MINGGU 4
 
-- [✓] Kenapa validasi di JavaScript tidak dianggap keamanan? Peragakan cara melewatinya.
-- [✓] Apa yang dikembalikan `$request->validated()` dan kenapa lebih aman daripada `$request->all()`?
-- [✓] Jelaskan pola PRG. Apa yang terjadi kalau `store` mengembalikan view?
-- [✓] Kenapa filter pencarian sebaiknya di query string, bukan session? Beri satu skenario yang rusak kalau dipindah ke session.
-- [✓] Apa fungsi `@csrf`? Serangan apa yang dicegahnya, dan bagaimana serangan itu bekerja?
-- [✓] Kenapa aturan `unique` pada update perlu `ignore()`?
+- [] Kenapa validasi di JavaScript tidak dianggap keamanan? Peragakan cara melewatinya.
+- [] Apa yang dikembalikan `$request->validated()` dan kenapa lebih aman daripada `$request->all()`?
+- [] Jelaskan pola PRG. Apa yang terjadi kalau `store` mengembalikan view?
+- [] Kenapa filter pencarian sebaiknya di query string, bukan session? Beri satu skenario yang rusak kalau dipindah ke session.
+- [] Apa fungsi `@csrf`? Serangan apa yang dicegahnya, dan bagaimana serangan itu bekerja?
+- [] Kenapa aturan `unique` pada update perlu `ignore()`?
