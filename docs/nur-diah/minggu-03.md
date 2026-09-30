@@ -37,8 +37,7 @@ Karena relasinya memang **1:1** — satu submission cuma boleh punya **tepat sat
 ## FIX
 
 
-## CHECKPOINT MINGGU 3
-
+## CHECKPOINT MINGGU
 - [ ] Tunjukkan migrasi yang **Anda** tulis. Jelaskan setiap constraint di dalamnya.
 - [ ] Kenapa `course_user` punya unique composite? Peragakan apa yang terjadi kalau dihapus.
 - [ ] Apa itu mass assignment? Tunjukkan di kode Anda apa yang mencegahnya, lalu peragakan serangannya dengan `curl`.

@@ -178,6 +178,7 @@
                     name="sks"
                     value="{{ old('sks') }}"
                     min="1"
+                    max ="6"
                     placeholder="Contoh: 3"
                 >
 
