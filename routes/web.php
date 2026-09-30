@@ -48,3 +48,17 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
             ->shallow();
     });
 });
+
+// Fitur Login simulasi cp 5 
+Route::get('/login/{id}', function ($id) {
+    $user = \App\Models\User::findOrFail($id);
+    auth()->login($user);
+    
+    return redirect()->route($user->role . '.courses.index')
+        ->with('success', "Kamu sekarang login sebagai: {$user->name} (Role: {$user->role}, ID: {$user->id})");
+})->name('login-as');
+
+Route::get('/logout', function () {
+    auth()->logout();
+    return redirect()->route('dashboard')->with('success', 'Berhasil logout!');
+})->name('logout');
