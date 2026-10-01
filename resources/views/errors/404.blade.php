@@ -8,7 +8,7 @@
         .error-code {
             font-size: 7rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            background: linear-gradient(135deg, #243c32, #416454);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             line-height: 1;
@@ -17,24 +17,24 @@
         .error-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #1a2f25;
             margin-bottom: 0.5rem;
         }
         .error-desc {
-            color: #64748b;
+            color: #5e7166;
             font-size: 1rem;
             margin-bottom: 2rem;
         }
         .btn-home {
             display: inline-block;
-            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            background: linear-gradient(135deg, #243c32, #3c6152);
             color: white;
             text-decoration: none;
             padding: 12px 28px;
             border-radius: 10px;
             font-weight: 600;
             font-size: 0.95rem;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+            box-shadow: 0 4px 12px rgba(36, 60, 50, 0.2);
             transition: transform 0.2s;
         }
         .btn-home:hover { transform: translateY(-2px); }
@@ -44,8 +44,8 @@
         <div class="error-code">404</div>
         <div class="error-title">Halaman Tidak Ditemukan</div>
         <div class="error-desc">Maaf, halaman atau data yang Anda cari tidak ada.</div>
-        <a href="{{ route('courses.index') }}" class="btn-home">
-            Kembali ke Daftar Mata Kuliah
+        <a href="{{ route('dashboard') }}" class="btn-home">
+            Kembali ke Dashboard
         </a>
     </div>
 

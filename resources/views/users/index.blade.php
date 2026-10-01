@@ -6,7 +6,7 @@
             <p>Kelola akun dan role pengguna KampusLMS dari satu tempat</p>
         </div>
 
-        <a href="{{ route('users.create') }}" class="btn-add">
+        <a href="{{ route('admin.users.create') }}" class="btn-add">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     stroke-linecap="round"
@@ -33,6 +33,27 @@
             <span>{{ session('status') }}</span>
         </div>
     @endif
+
+    {{-- Form pencarian & filter role — state di query string, bukan session --}}
+    <form method="GET" action="{{ route('admin.users.index') }}" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+        <input
+            type="text"
+            name="q"
+            value="{{ request('q') }}"
+            placeholder="Cari nama, email, atau NIM/NIP…"
+            style="flex:1; min-width:220px; padding:9px 13px; border:1px solid rgba(45,74,62,0.2); border-radius:9px; font-size:0.9rem; background:#fbfcfa;"
+        >
+        <select name="role" style="padding:9px 13px; border:1px solid rgba(45,74,62,0.2); border-radius:9px; font-size:0.9rem; background:#fbfcfa;">
+            <option value="">Semua Role</option>
+            @foreach (['admin', 'dosen', 'mahasiswa'] as $r)
+                <option value="{{ $r }}" @selected(request('role') === $r)>{{ ucfirst($r) }}</option>
+            @endforeach
+        </select>
+        <button type="submit" style="padding:9px 18px; background:#2d4a3e; color:#fff; border:none; border-radius:9px; font-size:0.9rem; font-weight:600; cursor:pointer;">Cari</button>
+        @if (request('q') || request('role'))
+            <a href="{{ route('admin.users.index') }}" style="padding:9px 14px; background:#eef5f1; color:#2d4a3e; border:1px solid rgba(45,74,62,0.15); border-radius:9px; font-size:0.9rem; text-decoration:none;">Reset</a>
+        @endif
+    </form>
 
     <div class="table-card">
 
@@ -78,21 +99,21 @@
                             <div class="action-buttons">
 
                                 <a
-                                    href="{{ route('users.show', $user) }}"
+                                    href="{{ route('admin.users.show', $user) }}"
                                     class="btn-detail"
                                 >
                                     Lihat
                                 </a>
 
                                 <a
-                                    href="{{ route('users.edit', $user) }}"
+                                    href="{{ route('admin.users.edit', $user) }}"
                                     class="btn-edit"
                                 >
                                     Edit
                                 </a>
 
                                 <form
-                                    action="{{ route('users.destroy', $user) }}"
+                                    action="{{ route('admin.users.destroy', $user) }}"
                                     method="POST"
                                     onsubmit="return confirm('Hapus pengguna ini?')"
                                     style="display: inline;"

@@ -134,7 +134,7 @@
             </div>
         @endif
 
-        <form action="{{ route('courses.store') }}" method="POST">
+        <form action="{{ route('admin.courses.store') }}" method="POST">
             @csrf
 
             <div class="form-group">
@@ -218,12 +218,28 @@
                 @enderror
             </div>
 
+            <div class="form-group">
+                <label for="status">Status</label>
+
+                <select id="status" name="status">
+                    @foreach (['draft', 'active', 'archived'] as $s)
+                        <option value="{{ $s }}" {{ old('status', 'active') === $s ? 'selected' : '' }}>
+                            {{ ucfirst($s) }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('status')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn-save">
                     Simpan
                 </button>
 
-                <a href="{{ route('courses.index') }}" class="btn-cancel">
+                <a href="{{ route('admin.courses.index') }}" class="btn-cancel">
                     Batal
                 </a>
             </div>

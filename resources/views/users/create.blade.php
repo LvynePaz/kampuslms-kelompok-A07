@@ -18,14 +18,14 @@
     </style>
 
     <div class="user-form-wrap">
-        <a href="{{ route('users.index') }}" class="user-form-back">&lt;- Kembali ke daftar pengguna</a>
+        <a href="{{ route('admin.users.index') }}" class="user-form-back">&lt;- Kembali ke daftar pengguna</a>
         <div class="user-form-heading"><div class="user-form-kicker">Mode admin / pengguna</div><h1>Tambah pengguna</h1><p>Buat akun baru dan tentukan role aksesnya di KampusLMS.</p></div>
-        <form action="{{ route('users.store') }}" method="POST" class="user-form-card">
+        <form action="{{ route('admin.users.store') }}" method="POST" class="user-form-card">
             @csrf
             <div class="user-form-card-head"><h2>Informasi akun</h2><p>Isi data pengguna dengan lengkap.</p></div>
             <div class="user-form-body">
                 @include('users._form')
-                <div class="user-form-actions"><a href="{{ route('users.index') }}" class="user-form-button secondary">Batal</a><button type="submit" class="user-form-button primary">Simpan pengguna</button></div>
+                <div class="user-form-actions"><a href="{{ route('admin.users.index') }}" class="user-form-button secondary">Batal</a><button type="submit" class="user-form-button primary">Simpan pengguna</button></div>
             </div>
         </form>
     </div>

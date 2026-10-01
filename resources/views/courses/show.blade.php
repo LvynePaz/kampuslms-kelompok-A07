@@ -127,7 +127,7 @@
     </style>
 
     {{-- Tombol Kembali menggunakan route() —  bukan hardcode '/courses' --}}
-    <a href="{{ route('courses.index') }}" class="back-link">
+    <a href="{{ route($routePrefix . 'courses.index') }}" class="back-link">
         ← Kembali ke Daftar Mata Kuliah
     </a>
 

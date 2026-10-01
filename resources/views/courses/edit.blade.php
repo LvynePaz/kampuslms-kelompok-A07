@@ -135,7 +135,7 @@
             </div>
         @endif
 
-        <form action="{{ route('courses.update', $course['id']) }}" method="POST">
+        <form action="{{ route('admin.courses.update', $course['id']) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -208,9 +208,25 @@
                 <textarea
                     id="description"
                     name="description"
-                >{{ old('description', $course['description']) }}</textarea>
+                >{{ old('description', $course->description) }}</textarea>
 
                 @error('description')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+
+                <select id="status" name="status">
+                    @foreach (['draft', 'active', 'archived'] as $s)
+                        <option value="{{ $s }}" {{ old('status', $course->status) === $s ? 'selected' : '' }}>
+                            {{ ucfirst($s) }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('status')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
@@ -220,7 +236,7 @@
                     Update
                 </button>
 
-                <a href="{{ route('courses.index') }}" class="btn-cancel">
+                <a href="{{ route('admin.courses.index') }}" class="btn-cancel">
                     Batal
                 </a>
             </div>
@@ -230,3 +246,4 @@
     </div>
 
 </x-layout>
+

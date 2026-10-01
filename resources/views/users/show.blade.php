@@ -21,7 +21,7 @@
     </style>
 
     <div class="user-detail">
-        <a href="{{ route('users.index') }}" class="user-back">&lt;- Kembali ke daftar pengguna</a>
+        <a href="{{ route('admin.users.index') }}" class="user-back">&lt;- Kembali ke daftar pengguna</a>
         <section class="profile-card">
             <div class="profile-head"><div class="profile-avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div><div><h1>{{ $user->name }}</h1><p>Profil pengguna KampusLMS</p></div></div>
             <div class="profile-body">
@@ -31,7 +31,7 @@
                     <div class="profile-item"><small>NIM / NIP</small><strong>{{ $user->nim_nip ?: 'Belum diisi' }}</strong></div>
                     <div class="profile-item"><small>Terdaftar sejak</small><strong>{{ $user->created_at?->format('d M Y') ?: '-' }}</strong></div>
                 </div>
-                <div class="profile-actions"><a href="{{ route('users.edit', $user) }}" class="profile-edit">Edit pengguna</a><a href="{{ route('users.index') }}" class="profile-close">Tutup detail</a></div>
+                <div class="profile-actions"><a href="{{ route('admin.users.edit', $user) }}" class="profile-edit">Edit pengguna</a><a href="{{ route('admin.users.index') }}" class="profile-close">Tutup detail</a></div>
             </div>
         </section>
     </div>
