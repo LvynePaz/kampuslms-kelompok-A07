@@ -295,8 +295,8 @@
         }
 
         .role-admin {
-            background: #e3edf8;
-            color: #28537d;
+            background: #e2ede7;
+            color: #1f4233;
         }
 
         .role-dosen {
