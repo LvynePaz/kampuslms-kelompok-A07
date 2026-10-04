@@ -38,4 +38,16 @@ class RoleMiddlewareTest extends TestCase
             ->get('/dosen/courses')
             ->assertForbidden();
     }
+
+    public function test_scope_bindings(): void
+    {
+        $dosen = User::find(4);
+        $this->actingAs($dosen)
+            ->get('/dosen/courses/1/assignments/1')
+            ->assertOk();
+
+        $this->actingAs($dosen)
+            ->get('/dosen/courses/1/assignments/4')
+            ->assertNotFound();
+    }
 }

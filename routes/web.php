@@ -32,8 +32,7 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
             ->only(['index', 'show'])
             ->shallow();
         Route::resource('courses.assignments', AssignmentController::class)
-            ->only(['index', 'show'])
-            ->shallow();
+            ->only(['index', 'show']);
     });
 });
 

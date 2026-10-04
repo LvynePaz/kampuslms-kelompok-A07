@@ -1,122 +1,161 @@
 # Catatan Individu Minggu - 05 - Patra Ananda (10241061)
 
-## 5. READ - BREAK - FIX - BUILD
+## 5.3 READ — BREAK — FIX — BUILD
 
-### 5.1 READ — Penelusuran Alur Middleware, Otorisasi, dan Route Model Binding
+### 1. READ — Peta Route Sendiri (30 menit)
 
-Pembedahan alur request saat melewati lapisan keamanan dan routing pada Laravel 12:
+#### Langkah 1: Jalankan `php artisan route:list --except-vendor`
 
-1. **Titik Pendaftaran Middleware di Laravel 12:**
-   Pada Laravel 12, arsitektur framework telah dipangkas sehingga berkas `app/Http/Kernel.php` ditiadakan. Seluruh konfigurasi middleware dipusatkan di `bootstrap/app.php` melalui method `->withMiddleware()`. Di sinilah alias kustom seperti `'role'` dipetakan ke class middleware `EnsureUserHasRole`.
+<img src="image.png" width="600" alt="Hasil php artisan route:list">
 
-2. **Siklus Request Melewati Middleware:**
-   Saat request HTTP masuk (misalnya `GET /dosen/courses`), request melewati pipeline middleware global terlebih dahulu (seperti enkripsi cookies, session, start session), lalu masuk ke middleware rute:
-   ```php
-   $middleware->alias([
-       'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-   ]);
-   ```
-   Di dalam middleware, sistem memeriksa apakah pengguna memiliki session login aktif dan apakah atribut `role` pada model `User` sesuai dengan parameter yang diminta (`dosen`). Jika gagal, middleware langsung memotong siklus hidup request dengan melempar exception `abort(403)` sebelum controller sempat tersentuh.
+#### Langkah 2: Tandai Setiap Route yang Menerima Parameter Model
+Rute-rute yang menerima parameter model (`{course}`, `{user}`, `{assignment}`, `{material}`) ditandai dengan label [BERTANDA]:
 
-3. **Peran Route Model Binding (Implicit Binding):**
-   Ketika parameter rute didefinisikan sebagai `Course $course`, Laravel secara otomatis melakukan pencarian `Course::where('id', $value)->firstOrFail()`. Jika ID tidak ditemukan di tabel database, Laravel langsung melempar `ModelNotFoundException` yang dikonversi menjadi HTTP respons `404 Not Found`.
+1. `[BERTANDA]` `GET|HEAD admin/courses/{course}`
+2. `[BERTANDA]` `PUT|PATCH admin/courses/{course}`
+3. `[BERTANDA]` `DELETE admin/courses/{course}`
+4. `[BERTANDA]` `GET|HEAD admin/courses/{course}/edit`
+5. `[BERTANDA]` `GET|HEAD admin/users/{user}`
+6. `[BERTANDA]` `PUT|PATCH admin/users/{user}`
+7. `[BERTANDA]` `DELETE admin/users/{user}`
+8. `[BERTANDA]` `GET|HEAD admin/users/{user}/edit`
+9. `[BERTANDA]` `GET|HEAD dosen/courses/{course}`
+10. `[BERTANDA]` `GET|HEAD dosen/courses/{course}/assignments` *(parameter `{course}`)*
+11. `[BERTANDA]` `GET|HEAD dosen/courses/{course}/assignments/{assignment}` *(parameter `{course}` dan `{assignment}`)*
+12. `[BERTANDA]` `GET|HEAD dosen/courses/{course}/materials` *(parameter `{course}`)*
+13. `[BERTANDA]` `GET|HEAD dosen/materials/{material}`
+14. `[BERTANDA]` `GET|HEAD mahasiswa/courses/{course}`
+15. `[BERTANDA]` `GET|HEAD mahasiswa/courses/{course}/assignments` *(parameter `{course}`)*
+16. `[BERTANDA]` `GET|HEAD mahasiswa/assignments/{assignment}`
+17. `[BERTANDA]` `GET|HEAD mahasiswa/courses/{course}/materials` *(parameter `{course}`)*
+18. `[BERTANDA]` `GET|HEAD mahasiswa/materials/{material}`
+  
+#### Langkah 3 & 4: Tabel "Daftar Titik Rawan IDOR"
+Menjawab pertanyaan: **Siapa saja yang seharusnya boleh mengaksesnya, dan apa yang saat ini mencegah orang lain?**
 
-4. **Keterbatasan Route Model Binding:**
-   Route model binding hanya menjamin **keberadaan data di database**, bukan **hak akses pengguna**. Framework tidak tahu apakah user yang sedang login berhak melihat data tersebut. Oleh karena itu, pengecekan otorisasi (ownership check / Policy) wajib dilakukan secara eksplisit.
+Tabel inventarisasi titik rawan IDOR:
 
-5. **Pentingnya Scoped Bindings pada Nested Routes:**
-   Pada relasi bersarang seperti `/courses/{course}/assignments/{assignment}`, pemanggilan `Route::scopeBindings()` menginstruksikan Laravel untuk mengeksekusi pencarian dengan scoping relasi:
-   ```php
-   $course->assignments()->findOrFail($assignmentId);
-   ```
-   Hal ini mencegah celah di mana ID tugas milik mata kuliah A dapat diakses melalui URL mata kuliah B.
-
----
-
-### 5.2 BREAK — Enam Kerusakan Otorisasi & Routing
-
-Eksperimen pengujian kerusakan sengaja pada lapisan keamanan dan otorisasi.
-
----
-
-##### BREAK 1: Hapus Ownership Check di `show` Mata Kuliah → Terjadi Celah IDOR
-* **Yang Dirusak:** Menghapus baris `abort_unless($this->userCanView($course), 403);` pada method `CourseController::show()`.
-* **Cara Coba:** 
-  1. Login sebagai Dosen A (ID: 1).
-  2. Buka URL mata kuliah milik Dosen B: `/dosen/courses/3`.
-* **Yang Terjadi:** Dosen A dapat membuka, membaca materi, dan melihat konfigurasi mata kuliah yang diampu Dosen B tanpa batasan.
-* **Kenapa Bahaya:** Ini adalah kerentanan **IDOR (*Insecure Direct Object Reference*)**. Pengguna dapat mengintip dan memanipulasi entitas milik pengguna lain hanya dengan mengganti nomor ID pada URL browser.
-* **Solusi Benar:** Selalu lakukan pengecekan kepemilikan data sebelum mengembalikan view atau JSON:
-  ```php
-  abort_unless($this->userCanView($course), 403);
-  ```
-
----
-
-##### BREAK 2: Lupa Mendaftarkan Alias Middleware di `bootstrap/app.php`
-* **Yang Dirusak:** Menghapus alias `'role'` dari `bootstrap/app.php`, sementara di `routes/web.php` route group tetap dipasangi `->middleware('role:dosen')`.
-* **Cara Coba:** Akses halaman `/dosen/courses` melalui browser.
-* **Yang Terjadi:** Sistem crash dengan pesan error:
-  `ReflectionException: Class "role" does not exist` atau `BindingResolutionException`.
-* **Kenapa Bahaya:** Aplikasi mengalami downtime fatal untuk seluruh rute yang bergantung pada middleware tersebut karena Laravel tidak dapat me-resolve string `'role'` dari Service Container.
-* **Solusi Benar:** Pastikan setiap middleware string alias selalu didaftarkan pada closure `withMiddleware` di `bootstrap/app.php`.
+| Route Bertanda (Method & URI) | Parameter Model | Siapa Saja yang Seharusnya Boleh Mengaksesnya? | Apa yang Saat Ini Mencegah Orang Lain? |
+|---|---|---|---|
+| `GET /admin/courses/{course}` | `{course}` | Administrator sistem | Belum ada apa-apa (hanya route di bawah prefix `admin`, belum terpasang auth/role admin) |
+| `PUT /admin/courses/{course}` | `{course}` | Administrator sistem | Belum ada apa-apa |
+| `DELETE /admin/courses/{course}` | `{course}` | Administrator sistem | Belum ada apa-apa |
+| `GET /admin/courses/{course}/edit` | `{course}` | Administrator sistem | Belum ada apa-apa |
+| `GET /admin/users/{user}` | `{user}` | Administrator sistem & Pengguna pemilik akun itu sendiri | Belum ada apa-apa |
+| `PUT /admin/users/{user}` | `{user}` | Administrator sistem & Pengguna pemilik akun itu sendiri | Belum ada apa-apa |
+| `DELETE /admin/users/{user}` | `{user}` | Administrator sistem saja | Belum ada apa-apa |
+| `GET /admin/users/{user}/edit` | `{user}` | Administrator sistem & Pengguna pemilik akun | Belum ada apa-apa |
+| `GET /dosen/courses/{course}` | `{course}` | Dosen pengampu mata kuliah tersebut | Baru ada middleware `role:dosen` (dosen lain masih bisa intip jika tanpa `abort_unless`) |
+| `GET /dosen/courses/{course}/assignments` | `{course}` | Dosen pengampu mata kuliah tersebut | Baru ada middleware `role:dosen` (belum ada filter dosen pengampu di query index) |
+| `GET /dosen/courses/{course}/assignments/{assignment}` | `{course}`, `{assignment}` | Dosen pengampu mata kuliah tersebut | `Route::scopeBindings()` (mencegah salah induk) + pemeriksaan `abort_unless` manual di controller |
+| `GET /dosen/courses/{course}/materials` | `{course}` | Dosen pengampu mata kuliah tersebut | Baru ada middleware `role:dosen` |
+| `GET /dosen/materials/{material}` | `{material}` | Dosen pengampu mata kuliah pemilik materi | Belum ada apa-apa selain middleware `role:dosen` |
+| `GET /mahasiswa/courses/{course}` | `{course}` | Mahasiswa yang secara sah mengambil kelas tersebut | Baru ada middleware `role:mahasiswa` (mahasiswa luar kelas masih bisa intip) |
+| `GET /mahasiswa/courses/{course}/assignments` | `{course}` | Mahasiswa peserta kelas tersebut | Baru ada middleware `role:mahasiswa` |
+| `GET /mahasiswa/assignments/{assignment}` | `{assignment}` | Mahasiswa peserta kelas tersebut | Baru ada middleware `role:mahasiswa` (rawan dibuka mahasiswa kelas lain) |
+| `GET /mahasiswa/courses/{course}/materials` | `{course}` | Mahasiswa peserta kelas tersebut | Baru ada middleware `role:mahasiswa` |
+| `GET /mahasiswa/materials/{material}` | `{material}` | Mahasiswa peserta kelas tersebut | Baru ada middleware `role:mahasiswa` |
 
 ---
 
-##### BREAK 3: Hapus `Route::scopeBindings()` pada Nested Resource Tugas
-* **Yang Dirusak:** Menghapus pembungkus `Route::scopeBindings()->group(...)` pada resource `courses.assignments`.
-* **Cara Coba Singkat:**
-  Akses URL dengan pasangan yang sengaja disilangkan:
-  `/courses/1/assignments/99` (di mana tugas ID 99 sebenarnya milik mata kuliah Course ID 2).
-* **Yang Terjadi:** Halaman tetap berhasil terbuka (200 OK) dan menampilkan detail tugas 99 di bawah konteks Course 1.
-* **Kenapa Bahaya:** Terjadi inkonsistensi data relasional dan potensi kebocoran data akademik antar kelas (*cross-course data leakage*).
-* **Solusi Benar:** Selalu bungkus rute bertingkat (*nested routes*) dengan `Route::scopeBindings()` atau panggil method `->scopeBindings()` pada route resource.
+### 2. BREAK — Enam Kerusakan
+
+Pengujian kerusakan sesuai 6 butir pada modul praktikum:
+
+| # | Yang Dicoba | Yang Diamati & Hasil Analisis |
+|---|---|---|
+| **1** | Login sebagai mahasiswa A, buka submission milik mahasiswa B dengan mengganti ID di URL browser. | **IDOR nyata:** File dan jawaban tugas mahasiswa B terbuka dan dapat dibaca. Terjadi karena controller hanya mengambil data via ID tanpa mengecek apakah `submission->user_id === auth()->id()`. |
+| **2** | Buka nested route tanpa scoping: `/courses/1/assignments/99` (di mana tugas 99 milik mata kuliah lain). | **Lolos (200 OK):** Laravel hanya mengecek Course 1 ada dan Assignment 99 ada secara terpisah. Tugas mata kuliah lain nyasar masuk di bawah kelas Course 1 (salah induk). |
+| **3** | Pasang pembungkus `Route::scopeBindings()` pada nested route, lalu ulangi nomor 2. | **Ditolak (404 Not Found):** Laravel mengubah query menjadi `$course->assignments()->findOrFail(99)`. Karena tugas 99 bukan anak dari Course 1, sistem melempar 404. |
+| **4** | Mendaftarkan middleware di `app/Http/Kernel.php` seperti tutorial lama. | **Berkas tidak ada:** Pada Laravel 12, arsitektur `Kernel.php` sudah dihapus. Pendaftaran alias middleware dipusatkan di `bootstrap/app.php` di dalam `->withMiddleware()`. |
+| **5** | Pasang middleware `role:admin` pada grup rute, lalu login dan akses menggunakan akun Dosen. | **403 Forbidden:** Middleware gerbang berhasil menghadang request dan melempar HTTP status 403 sebelum controller sempat dieksekusi. |
+| **6** | Sebagai Dosen A, buka/edit mata kuliah milik Dosen B (keduanya sama-sama lolos `role:dosen`). | **Middleware saja tidak cukup:** Karena role keduanya sama-sama dosen, middleware meloloskannya. Data dosen B bisa diubah dosen A jika controller tidak memiliki pengecekan kepemilikan data (`course->lecturer_id === auth()->id()`). |
 
 ---
 
-##### BREAK 4: Hanya Mengandalkan Middleware `role:dosen` Tanpa Cek Kepemilikan Model
-* **Yang Dirusak:** Menganggap rute sudah aman hanya karena dibungkus `middleware('role:dosen')`, lalu membiarkan method update/delete menerima ID apa saja tanpa verifikasi dosen pengampu.
-* **Cara Coba Singkat:**
-  Mengirim request edit/hapus data tugas mata kuliah dosen lain:
+### 3. FIX — Perbaikan Repo Cacat (Branch `w05` pada `kampuslms-broken`)
+
+Tujuh masalah yang diperbaiki pada branch `w05`:
+
+1. **Route di luar grup `auth`:** Rute materi dan tugas terbuka untuk publik tanpa login ➔ Dipindahkan ke dalam grup `middleware('auth')`.
+2. **IDOR pada Submission:** Mahasiswa dapat melihat berkas mahasiswa lain ➔ Ditambahkan validasi kepemilikan submission `abort_unless($submission->user_id === auth()->id() || auth()->user()->isLecturer(), 403)`.
+3. **IDOR pada Material:** Materi draft/terbatas dapat diunduh langsung ➔ Ditambahkan verifikasi hak akses pada `download()`.
+4. **Nested route tanpa `scopeBindings`:** URL `/courses/{course}/assignments/{assignment}` tidak memvalidasi relasi ➔ Dibungkus dengan `Route::scopeBindings()`.
+5. **Middleware didaftarkan di berkas yang salah:** Registrasi masih memanggil `Kernel.php` ➔ Dipindahkan ke `bootstrap/app.php` menggunakan closure `->withMiddleware()`.
+6. **Nama route bentrok antar peran:** Nama route `courses.index` tumpang tindih antara admin, dosen, dan mahasiswa ➔ Diberikan prefix nama (`admin.`, `dosen.`, `mahasiswa.`).
+7. **Route destruktif memakai method `GET`:** Aksi hapus data memakai tautan GET ➔ Diubah menggunakan method `DELETE` berpelindung token `@csrf`.
+
+#### Bukti cURL Perbaikan IDOR:
+* **Sebelum Perbaikan (Bocor - 200 OK):**
   ```bash
-  curl -X DELETE http://127.0.0.1:8000/dosen/courses/5 \
-    -H "Accept: application/json" \
-    --cookie "kampuslms_session=SESSION_DOSEN_A"
+  curl -X GET http://localhost:8000/submissions/2 --cookie "kampuslms_session=MAHASISWA_1_SESSION"
+  # Respons: HTTP 200 OK (Data jawaban mahasiswa 2 terbuka untuk mahasiswa 1)
   ```
-* **Yang Terjadi:** Data mata kuliah Dosen B berhasil terhapus oleh Dosen A karena keduanya sama-sama memiliki role `dosen`.
-* **Kenapa Bahaya:** *Horizontal Privilege Escalation*. Middleware hanya memvalidasi tipe peran (Role-Based), bukan kepemilikan objek (Object-Level Authorization).
-* **Solusi Benar:** Selalu kombinasikan middleware role pada gerbang rute dengan pengecekan kepemilikan spesifik pada controller atau Policy (`$course->lecturer_id === auth()->id()`).
+* **Setelah Perbaikan (Aman - 403 Forbidden):**
+  ```bash
+  curl -X GET http://localhost:8000/submissions/2 --cookie "kampuslms_session=MAHASISWA_1_SESSION"
+  # Respons: HTTP 403 Forbidden (Akses ditolak karena bukan pemilik data)
+  ```
 
 ---
 
-##### BREAK 5: Menyamarkan ID dengan UUID Tanpa Proteksi Otorisasi di Server
-* **Yang Dirusak:** Mengganti kolom ID numerik menjadi format UUID acak pada URL (`/assignments/9b1deb4d-...`), lalu menghapus pengecekan otorisasi di controller dengan asumsi URL tidak bisa ditebak.
-* **Cara Coba:** Bagikan tautan tugas berformat UUID ke mahasiswa dari jurusan/kelas lain yang tidak terdaftar.
-* **Yang Terjadi:** Mahasiswa luar tetap dapat membuka dan mengunduh soal tugas tersebut secara langsung.
-* **Kenapa Bahaya:** Menerapkan *security through obscurity*. UUID hanya mempersulit tebak-tebakan nomor urut (*anti-enumeration*), tetapi tidak mengamankan pintu akses sama sekali jika tautannya tersebar.
-* **Solusi Benar:** Keamanan sejati terletak pada validasi relasi pengguna di sisi server, bukan pada format string penanda identitas.
+### 4. BUILD — Struktur Route KampusLMS
+
+Implementasi pada repositori `kampuslms-kelompok-A07`:
+
+1. **Restrukturisasi `routes/web.php`:** Mengelompokkan rute berdasarkan peran (`admin`, `dosen`, `mahasiswa`) lengkap dengan prefix URL dan name prefix.
+2. **Middleware `EnsureUserHasRole`:** Dibuat dan didaftarkan sebagai alias `'role'` di dalam `bootstrap/app.php`.
+3. **Route Model Binding:** Diterapkan di seluruh controller (misal: `Course $course`, `Assignment $assignment`), menghilangkan query manual `findOrFail($id)`.
+4. **Nested Resource & Scoped Bindings:** Rute bertingkat materi dan tugas dibungkus dengan `Route::scopeBindings()`.
+5. **Pemeriksaan Kepemilikan Sementara:** Memasang `abort_unless` pada method `show`, `edit`, `update`, dan `destroy` untuk mencegah celah IDOR antar pengajar/mahasiswa.
+6. **Halaman Error 403 Kustom:** Dibuatkan template di `resources/views/errors/403.blade.php` yang informatif dan ramah pengguna tanpa membocorkan privasi data.
 
 ---
 
-##### BREAK 6: Akses ID Fiktif Tanpa Halaman Error 404 yang Terstandarisasi
-* **Yang Dirusak:** Mengakses model binding yang tidak terdaftar di database saat view kustom error belum dipersiapkan.
-* **Cara Coba:** Buka URL acak seperti `/courses/999999`.
-* **Yang Terjadi:** Laravel menangkap kegagalan pencarian model dan memicu `404 Not Found`. Namun jika view tidak dikelola, pengguna disuguhi halaman default framework yang kaku.
-* **Kenapa Bahaya:** Pesan error default yang tidak seragam menurunkan kredibilitas aplikasi dan berisiko menampilkan informasi teknis yang tidak diperlukan ke publik.
-* **Solusi Benar:** Sediakan template terpadu di `resources/views/errors/404.blade.php` dan `resources/views/errors/403.blade.php` yang terintegrasi dengan layout sistem.
+## 5.4 Checkpoint Minggu 5
 
----
+### 1. Apa itu IDOR? Peragakan satu contoh di aplikasi Anda, lalu tunjukkan perbaikannya.
+* **Konsep:** **IDOR (*Insecure Direct Object Reference*)** adalah celah keamanan saat pengguna yang sah dapat mengakses atau memanipulasi data milik orang lain hanya dengan mengganti nomor ID pada URL browser.
+* **Praktek di Aplikasi:**
+  1. Login sebagai Dosen Hendy (ID: `4`) lewat: `http://localhost:8000/login/4`.
+  2. Buka URL mata kuliah milik Bu Vika (Course ID: `2`) lewat: `http://localhost:8000/dosen/courses/2`.
+  3. *Jika tanpa proteksi:* Halaman kelas Bu Vika terbuka lebar di layar Pak Hendy (bocor!).
+* **Perbaikan di Controller:**
+  Di `CourseController@show`:
+  ```php
+  abort_unless($course->lecturer_id === auth()->id(), 403);
+  ```
 
-### 5.3 FIX — Perbaikan Masalah Otorisasi & Routing Branch W05
+### 2. Kenapa mengganti ID berurutan dengan UUID bukan perbaikan IDOR?
+* Mengganti ID angka (`1, 2, 3`) menjadi UUID acak (`9b1deb4d-...`) hanya menerapkan *Security through Obscurity* (menyulitkan tebak-tebakan nomor urut), tetapi **tidak memberikan pengamanan hak akses**.
+* Jika URL berformat UUID tersebut disalin atau bocor ke grup chat, siapa pun yang mengklik tautan tetap bisa membukanya karena server tidak memverifikasi apakah akun yang sedang login memiliki hak atas data tersebut.
 
-Pada latihan eksplorasi branch `W05` ditemukan 5 kerentanan dan masalah arsitektur:
+### 3. Route model binding menjamin apa, dan tidak menjamin apa?
+* **Menjamin:** **Keberadaan data di database (*Existence Check*)**. Laravel otomatis mengeksekusi `Course::findOrFail($id)`. Jika ID ada di tabel, objek diserahkan ke controller; jika tidak ada, langsung melempar `404 Not Found`.
+* **Tidak Menjamin:** **Hak akses pengguna (*Authorization Check*)**. Route model binding tidak peduli siapa yang memanggil URL tersebut. Selama data ada di tabel, data akan diserahkan. Pengecekan otorisasi tetap wajib dibuat manual di controller atau Policy.
 
-1. **Celah IDOR pada aksi resource controller** — method `show`, `edit`, dan `update` membaca model secara langsung dari parameter tanpa memverifikasi hak kepemilikan akun.
-2. **Ketiadaan filter role pada route group** — rute khusus staf dan pengajar dapat diakses langsung oleh role lain karena tidak ada middleware penjaga gerbang.
-3. **Pendaftaran middleware salah format** — registrasi middleware masih mencoba mengimpor berkas lama `Kernel.php` yang sudah tidak digunakan pada struktur Laravel 12.
-4. **Nested route tidak terisolasi (Unscoped Bindings)** — sub-resource tugas dan materi dapat dimuat silang dengan ID mata kuliah yang tidak cocok.
-5. **Daftar index tidak tersaring berdasarkan peran** — semua pengguna melihat seluruh data secara global alih-alih data yang relevan dengan hak akses masing-masing (dosen hanya melihat kelasnya, mahasiswa hanya melihat kelas yang diambil).
+### 4. Apa yang dilakukan `Route::scopeBindings()`? Beri contoh URL yang lolos tanpa itu.
+* **Fungsi:** Memastikan bahwa pada rute bertingkat (*nested route*), model anak yang dipanggil benar-benar memiliki relasi dengan model induknya (`$course->assignments()->findOrFail($assignmentId)`).
+* **Contoh Kasus yang Lolos:**  
+  URL: `/dosen/courses/1/assignments/4`  
+  *(Course 1 adalah Pemrograman Web, sedangkan Tugas 4 milik Course 2 yaitu Kalkulus).*  
+  * **Tanpa `scopeBindings()`:** Merespons **`200 OK`** (tugas mata kuliah lain nyasar masuk di bawah kelas Course 1).
+  * **Dengan `scopeBindings()`:** Merespons **`404 Not Found`** (karena Tugas 4 bukan anak kandung dari Course 1).
 
----
+### 5. Di berkas mana middleware didaftarkan pada Laravel 12? Kenapa berbeda dari kebanyakan tutorial?
+* **Lokasi Pendaftaran:** Di berkas **`bootstrap/app.php`** di dalam closure `->withMiddleware()`:
+  ```php
+  ->withMiddleware(function (Middleware $middleware) {
+      $middleware->alias([
+          'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+      ]);
+  })
+  ```
+* **Penyebab Perbedaan:** Pada Laravel 11 dan 12, berkas `app/Http/Kernel.php` telah ditiadakan agar struktur proyek lebih ramping (*lean*), sehingga registrasi middleware dipusatkan langsung di `bootstrap/app.php`.
 
-
+### 6. Kenapa middleware `role:dosen` tidak cukup untuk mencegah dosen A mengedit mata kuliah dosen B?
+* **Penyebab:** Middleware `role:dosen` hanya bekerja di gerbang rute luar (*Role-Based Access Control*). Tugasnya hanya memvalidasi apakah peran pengguna yang login adalah `dosen`.
+* Karena Dosen A dan Dosen B keduanya berstatus dosen, keduanya lolos dari penjagaan middleware. Untuk mencegah Dosen A mengedit kelas Dosen B, wajib ada verifikasi kepemilikan objek (*Object-Level Authorization*) di tingkat controller:
+  ```php
+  abort_unless($course->lecturer_id === auth()->id(), 403);
+  ```
