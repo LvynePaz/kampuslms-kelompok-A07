@@ -20,7 +20,7 @@ Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('users', UserController::class);
 });

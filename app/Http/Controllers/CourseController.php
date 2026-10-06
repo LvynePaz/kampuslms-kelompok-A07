@@ -63,7 +63,7 @@ class CourseController extends Controller
     // Menampilkan detail satu mata kuliah
     public function show(Course $course)
     {
-        //abort_unless($this->userCanView($course), 403);
+        abort_unless($this->userCanView($course), 403);
 
         $routePrefix = explode('.', request()->route()->getName())[0] . '.';
 

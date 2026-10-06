@@ -119,4 +119,40 @@ Pada latihan eksplorasi branch `W05` ditemukan 5 kerentanan dan masalah arsitekt
 
 ---
 
+### 5.4 BUILD — Struktur Route KampusLMS
+
+Implementasi pada repositori `kampuslms-kelompok-A07`:
+
+1. `routes/web.php` mengelompokkan route admin, dosen, dan mahasiswa dengan prefix URL dan name prefix masing-masing. Route admin dilindungi `role:admin`.
+2. Middleware `EnsureUserHasRole` didaftarkan dengan alias `role` di `bootstrap/app.php`.
+3. Controller menggunakan implicit route model binding, misalnya `Course $course` dan `Assignment $assignment`, alih-alih mengambil model secara manual dengan `findOrFail($id)`.
+4. Route materi dan tugas dikelompokkan dengan `scopeBindings()` dan `shallow()`. Route `index` tetap nested (`/dosen/courses/{course}/assignments`), sedangkan route `show` menjadi shallow (`/dosen/assignments/{assignment}`). Pola yang sama berlaku untuk mahasiswa dan materi.
+5. Controller memeriksa kepemilikan course sebelum menampilkan course, materi, atau tugas. Kegagalan otorisasi menampilkan 403 tanpa menyebut pemilik atau isi data yang ditolak.
+6. Halaman 403 kustom memberi pesan umum yang tidak membocorkan informasi tentang resource.
+
+### 5.5 Peta Route dan Pemeriksaan Akses
+
+Parameter model yang penting pada route web:
+
+| Route | Parameter model | Pemeriksaan yang relevan |
+|---|---|---|
+| `GET /admin/courses/{course}` dan route resource admin lainnya | `{course}` / `{user}` | Middleware `role:admin`; model di-resolve melalui route model binding. |
+| `GET /dosen/courses/{course}` | `{course}` | Middleware `role:dosen` dan pemeriksaan dosen pengampu di controller. |
+| `GET /dosen/courses/{course}/assignments` | `{course}` | Nested route; pemeriksaan dosen pengampu sebelum daftar tugas dikembalikan. |
+| `GET /dosen/assignments/{assignment}` | `{assignment}` | Shallow route; controller mengambil course dari relasi tugas lalu memeriksa dosen pengampu. |
+| `GET /mahasiswa/courses/{course}` | `{course}` | Middleware `role:mahasiswa` dan pemeriksaan keikutsertaan mahasiswa di controller. |
+| `GET /mahasiswa/courses/{course}/assignments` | `{course}` | Nested route; pemeriksaan keikutsertaan mahasiswa sebelum daftar tugas dikembalikan. |
+| `GET /mahasiswa/assignments/{assignment}` | `{assignment}` | Shallow route; controller mengambil course dari relasi tugas lalu memeriksa keikutsertaan mahasiswa. |
+
+`scopeBindings()` membatasi model anak pada route nested agar sesuai dengan model induknya. Pada route `show` yang sudah shallow, parameter course memang tidak ada di URL; karena itu controller menerima `Assignment $assignment` dan mengambil course melalui `$assignment->course`.
+
+### 5.6 Checkpoint Minggu 5
+
+1. **Apa itu IDOR?** Pengguna yang sudah login mengakses atau memanipulasi resource milik pihak lain dengan mengganti identifier pada URL. Pencegahannya adalah pemeriksaan otorisasi di server, bukan sekadar menyembunyikan ID.
+2. **Apa yang dijamin route model binding?** Binding menemukan model atau menghasilkan 404; binding sendiri tidak menentukan apakah pengguna berhak mengakses model tersebut.
+3. **Apa fungsi `scopeBindings()`?** Untuk route nested, binding model anak dibatasi pada relasi model induknya sehingga pasangan induk-anak yang tidak sesuai akan menghasilkan 404.
+4. **Di mana alias middleware didaftarkan pada Laravel 12?** Di `bootstrap/app.php`, melalui `withMiddleware()`.
+5. **Mengapa `role:dosen` belum cukup untuk otorisasi?** Middleware memeriksa peran, bukan kepemilikan. Controller tetap harus memastikan bahwa dosen yang meminta akses memang pengampu course terkait.
+
+---
 

@@ -24,19 +24,24 @@ class AssignmentController extends Controller
         ]));
     }
 
-    public function show(Request $request, Assignment $assignment): JsonResponse
+    public function show(Request $request, Assignment $assignment)
     {
-        abort_unless($this->userCanAccessCourse($request, $assignment->course), 403);
+        $course = $assignment->course;
+        abort_unless($this->userCanAccessCourse($request, $course), 403);
 
-        return response()->json($assignment->only([
-            'id',
-            'title',
-            'instructions',
-            'due_at',
-            'max_score',
-            'allow_late',
-            'status',
-        ]));
+        if ($request->wantsJson()) {
+            return response()->json($assignment->only([
+                'id',
+                'title',
+                'instructions',
+                'due_at',
+                'max_score',
+                'allow_late',
+                'status',
+            ]));
+        }
+
+        return view('assignments.show', compact('course', 'assignment'));
     }
 
     private function userCanAccessCourse(Request $request, Course $course): bool
