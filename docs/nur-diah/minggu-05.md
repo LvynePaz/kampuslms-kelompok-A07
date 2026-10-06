@@ -72,9 +72,9 @@ Berdasarkan hasil `route:list, route` yang menerima parameter adalah:
 
 ## CHECKPOINT MINGGU 5
 
-- [ ] Apa itu IDOR? Peragakan satu contoh di aplikasi Anda, lalu tunjukkan perbaikannya.
-- [ ] Kenapa mengganti ID berurutan dengan UUID **bukan** perbaikan IDOR?
-- [ ] Route model binding menjamin apa, dan **tidak** menjamin apa?
-- [ ] Apa yang dilakukan `Route::scopeBindings()`? Beri contoh URL yang lolos tanpa itu.
-- [ ] Di berkas mana middleware didaftarkan pada Laravel 12? Kenapa berbeda dari kebanyakan tutorial?
-- [ ] Kenapa middleware `role:dosen` tidak cukup untuk mencegah dosen A mengedit mata kuliah dosen B?
+- [✓] Apa itu IDOR? Peragakan satu contoh di aplikasi Anda, lalu tunjukkan perbaikannya.
+- [✓] Kenapa mengganti ID berurutan dengan UUID **bukan** perbaikan IDOR?
+- [✓] Route model binding menjamin apa, dan **tidak** menjamin apa?
+- [✓] Apa yang dilakukan `Route::scopeBindings()`? Beri contoh URL yang lolos tanpa itu.
+- [✓] Di berkas mana middleware didaftarkan pada Laravel 12? Kenapa berbeda dari kebanyakan tutorial?
+- [✓] Kenapa middleware `role:dosen` tidak cukup untuk mencegah dosen A mengedit mata kuliah dosen B?

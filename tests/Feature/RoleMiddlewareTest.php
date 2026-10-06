@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RoleMiddlewareTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_admin_routes_are_registered_with_admin_prefix(): void
     {
         $this->assertTrue(Route::has('admin.courses.index'));
