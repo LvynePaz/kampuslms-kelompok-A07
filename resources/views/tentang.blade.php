@@ -196,7 +196,7 @@
             <span>Profil Kelompok A07</span>
         </div>
         <h1>Kelompok A07 — KampusLMS</h1>
-        <p>Institut Teknologi Kalimantan · Program Studi Sistem Informasi / Informatika · Mata Kuliah Pemrograman Web</p>
+        <p>Institut Teknologi Kalimantan · Program Studi Sistem Informasi · Mata Kuliah Pemrograman Web</p>
     </div>
 
     <div class="team-grid">
@@ -238,7 +238,7 @@
             </div>
             <div class="footer-card-text">
                 <h4>Proyek Pengembangan Web KampusLMS</h4>
-                <p>Dibangun secara kerja  dan kelompok </p>
+                <p>Dibangun secara kerja kelompok </p>
             </div>
         </div>
         <a href="{{ route('dashboard') }}" class="btn-back-dash">

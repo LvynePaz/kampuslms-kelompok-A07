@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('course_id')->constrained('courses')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('enrolled_at')->useCurrent();
+            $table->timestamp('enrolled_at')->nullable();
             $table->timestamps();
 
             $table->unique(['course_id', 'user_id']); // Unique composite cegah enroll ganda

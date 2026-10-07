@@ -20,7 +20,7 @@ Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('users', UserController::class);
 });
@@ -32,7 +32,8 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
             ->only(['index', 'show'])
             ->shallow();
         Route::resource('courses.assignments', AssignmentController::class)
-            ->only(['index', 'show']);
+            ->only(['index', 'show'])
+            ->shallow();
     });
 });
 
