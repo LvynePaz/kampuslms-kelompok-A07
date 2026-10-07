@@ -8,6 +8,17 @@ use App\Http\Controllers\Api\V1\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('throttle:api')->group(function () {
+    // Rute demonstrasi Checkpoint 1 (uji coba sebelum vs sesudah sanitasi):
+    Route::get('/users/{id}', function ($id) {
+        $user = \App\Models\User::findOrFail($id);
+
+        // SEBELUM: Model mentah bocor (password & token ikut keluar)
+        //return response()->json($user->makeVisible(['password', 'remember_token']));
+
+        // SESUDAH: Menggunakan UserResource (cukup aktifkan baris di bawah dan komentari baris di atas)
+        return new \App\Http\Resources\UserResource($user);
+    });
+
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     Route::middleware('auth:sanctum')->group(function () {
