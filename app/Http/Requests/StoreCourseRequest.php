@@ -26,7 +26,7 @@ class StoreCourseRequest extends FormRequest
             'code'        => ['required', 'string', 'max:20', 'unique:courses,code'],
             'name'        => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
-            'sks'         => ['required', 'integer', 'between:1,4'],
+            'sks'         => ['required', 'integer', 'between:1,6'],
             'lecturer_id' => ['required', 'exists:users,id'],
             'status'      => ['required', 'in:draft,active,archived'],
         ];
@@ -44,7 +44,7 @@ class StoreCourseRequest extends FormRequest
             'name.required'        => 'Nama mata kuliah wajib diisi.',
             'name.max'             => 'Nama mata kuliah maksimal 150 karakter.',
             'sks.required'         => 'Jumlah SKS wajib diisi.',
-            'sks.between'          => 'SKS harus antara 1 sampai 4.',
+            'sks.between'          => 'SKS harus antara 1 sampai 6.',
             'lecturer_id.required' => 'Dosen pengampu wajib dipilih.',
             'lecturer_id.exists'   => 'Dosen yang dipilih tidak ditemukan di database.',
             'status.required'      => 'Status mata kuliah wajib dipilih.',
