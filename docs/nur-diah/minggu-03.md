@@ -37,12 +37,11 @@ Karena relasinya memang **1:1** — satu submission cuma boleh punya **tepat sat
 ## FIX
 
 
-## CHECKPOINT MINGGU 3
-
-- [ ] Tunjukkan migrasi yang **Anda** tulis. Jelaskan setiap constraint di dalamnya.
-- [ ] Kenapa `course_user` punya unique composite? Peragakan apa yang terjadi kalau dihapus.
-- [ ] Apa itu mass assignment? Tunjukkan di kode Anda apa yang mencegahnya, lalu peragakan serangannya dengan `curl`.
-- [ ] Kenapa `role` tidak boleh ada di `$fillable`? Di mana ia diisi sebagai gantinya?
-- [ ] Kenapa `lecturer_id` memakai `restrictOnDelete` sementara `materials.course_id` memakai `cascadeOnDelete`?
-- [ ] Jalankan `php artisan migrate:refresh` di depan penguji. Harus berhasil tanpa error.
-- [ ] Tunjukkan satu bagian kode yang Anda tulis dengan bantuan AI. Apa yang Anda ubah dari keluaran aslinya, dan kenapa?
+## CHECKPOINT MINGGU
+- [✓] Tunjukkan migrasi yang **Anda** tulis. Jelaskan setiap constraint di dalamnya.
+- [✓] Kenapa `course_user` punya unique composite? Peragakan apa yang terjadi kalau dihapus.
+- [✓] Apa itu mass assignment? Tunjukkan di kode Anda apa yang mencegahnya, lalu peragakan serangannya dengan `curl`.
+- [✓] Kenapa `role` tidak boleh ada di `$fillable`? Di mana ia diisi sebagai gantinya?
+- [✓] Kenapa `lecturer_id` memakai `restrictOnDelete` sementara `materials.course_id` memakai `cascadeOnDelete`?
+- [✓] Jalankan `php artisan migrate:refresh` di depan penguji. Harus berhasil tanpa error.
+- [✓] Tunjukkan satu bagian kode yang Anda tulis dengan bantuan AI. Apa yang Anda ubah dari keluaran aslinya, dan kenapa?

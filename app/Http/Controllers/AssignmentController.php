@@ -24,9 +24,10 @@ class AssignmentController extends Controller
         ]));
     }
 
-    public function show(Request $request, Course $course, Assignment $assignment)
+    public function show(Request $request, Assignment $assignment)
     {
-        abort_unless($this->userCanAccessCourse($request, $assignment->course), 403);
+        $course = $assignment->course;
+        abort_unless($this->userCanAccessCourse($request, $course), 403);
 
         if ($request->wantsJson()) {
             return response()->json($assignment->only([
