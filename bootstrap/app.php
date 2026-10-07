@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 # ini ngurus middleware 
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectGuestsTo(fn () => null);
         $middleware->alias([
             'role' => App\Http\Middleware\EnsureUserHasRole::class,
         ]);
