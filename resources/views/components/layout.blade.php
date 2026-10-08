@@ -591,47 +591,17 @@
         </a>
         <div class="navbar-links">
             <a href="{{ route('dashboard') }}">Dashboard</a>
-
-            @auth
-                {{-- Menu Mata Kuliah Sesuai Role Pengguna --}}
-                <a href="{{ route(auth()->user()->role . '.courses.index') }}">Mata Kuliah</a>
-
-                {{-- Menu Khusus Admin --}}
-                @if (auth()->user()->role === 'admin')
-                    <details class="admin-menu">
-                        <summary>Menu Admin</summary>
-                        <div class="admin-menu-items">
-                            <a href="{{ route('admin.users.index') }}">Semua Pengguna</a>
-                            <a href="{{ route('admin.users.create') }}">Tambah Pengguna</a>
-                        </div>
-                    </details>
-                @endif
-            @endauth
-
-            <a href="{{ route('tentang') }}">Tentang</a>
-
-            @auth
-                {{-- Info Akun Aktif & Tombol Logout Resmi --}}
-                <div style="display: flex; align-items: center; gap: 10px; margin-left: 0.75rem;">
-                    <span style="color: #c8ddd3; font-size: 0.85rem; font-weight: 500;">
-                        {{ auth()->user()->name }}
-                        <span style="background: rgba(255,255,255,0.18); padding: 2px 7px; border-radius: 6px; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">
-                            {{ auth()->user()->role }}
-                        </span>
-                    </span>
-                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                        @csrf
-                        <button type="submit" style="background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.4); padding: 5px 12px; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                            Keluar
-                        </button>
-                    </form>
+            <a href="{{ auth()->check() ? route(auth()->user()->role . '.courses.index') : route('admin.courses.index') }}">Mata Kuliah</a>
+            @if (! auth()->check() || auth()->user()->role === 'admin')
+            <details class="admin-menu">
+                <summary>Mode Admin</summary>
+                <div class="admin-menu-items">
+                    <a href="{{ route('admin.users.index') }}">Semua Pengguna</a>
+                    <a href="{{ route('admin.users.create') }}">Tambah Pengguna</a>
                 </div>
-            @else
-                {{-- Tombol Masuk untuk Tamu (Guest) --}}
-                <a href="{{ route('login') }}" style="background: #ffffff; color: #1f352c; font-weight: 600; padding: 6px 16px; border-radius: 8px; margin-left: 0.5rem; text-decoration: none;">
-                    Masuk
-                </a>
-            @endauth
+            </details>
+            @endif
+            <a href="{{ route('tentang') }}">Tentang</a>
         </div>
     </nav>
 

@@ -6,16 +6,12 @@ use App\Models\Course;
 use App\Models\Material;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
-
 
 class MaterialController extends Controller
 {
     public function index(Request $request, Course $course): JsonResponse
     {
-
-        //validasi apakah user bisa mengakses matkul ini menggunakan Gate
-        Gate::authorize('view', $course);
+        abort_unless($this->userCanAccessCourse($request, $course), 403);
 
         return response()->json($course->materials()->get([
             'id',
@@ -30,10 +26,8 @@ class MaterialController extends Controller
 
     public function show(Request $request, Material $material): JsonResponse
     {
+        abort_unless($this->userCanAccessCourse($request, $material->course), 403);
 
-        //validasi apakah user bisa mengakses materi ini menggunakan Gate
-        Gate::authorize('view', $material);
-    
         return response()->json($material->only([
             'id',
             'title',
@@ -43,5 +37,13 @@ class MaterialController extends Controller
             'external_url',
             'created_at',
         ]));
+    }
+
+    private function userCanAccessCourse(Request $request, Course $course): bool
+    {
+        $user = $request->user();
+
+        return ($user->role === 'dosen' && $course->lecturer_id === $user->id)
+            || ($user->role === 'mahasiswa' && $course->students()->whereKey($user->id)->exists());
     }
 }
