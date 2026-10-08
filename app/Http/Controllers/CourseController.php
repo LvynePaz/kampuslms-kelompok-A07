@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+
 
 class CourseController extends Controller
 {
@@ -63,51 +65,41 @@ class CourseController extends Controller
     // Menampilkan detail satu mata kuliah
     public function show(Course $course)
     {
-        abort_unless($this->userCanView($course), 403);
-
+       //coursepolicy method view 
+        Gate::authorize('view', $course);
         $routePrefix = explode('.', request()->route()->getName())[0] . '.';
-
         return view('courses.show', compact('course', 'routePrefix'));
     }
 
     // Menampilkan form edit mata kuliah
     public function edit(Course $course)
     {
+       //coursepolicy method update 
+        Gate::authorize('update', $course);
         $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
-
         return view('courses.edit', compact('course', 'lecturers'));
     }
 
-    // Memperbarui data mata kuliah — validasi via UpdateCourseRequest
-    public function update(UpdateCourseRequest $request, Course $course)
-    {
-        $course->update($request->validated());
 
+    // Memperbarui data mata kuliah — validasi via UpdateCourseRequest
+     public function update(UpdateCourseRequest $request, Course $course)
+    {
+        //coursepolicy method update 
+        Gate::authorize('update', $course);
+        $course->update($request->validated());
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil diperbarui.');
     }
 
     // Menghapus mata kuliah
-    public function destroy(Course $course)
+     public function destroy(Course $course)
     {
+        //coursepolicy method delete 
+        Gate::authorize('delete', $course);
         $course->delete();
-
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');
-    }
-
-    private function userCanView(Course $course): bool
-    {
-        if (request()->routeIs('admin.*') && ! request()->user()) {
-            return true;
-        }
-
-        $user = request()->user();
-
-        return $user?->role === 'admin'
-            || ($user->role === 'dosen' && $course->lecturer_id === $user->id)
-            || ($user->role === 'mahasiswa' && $course->students()->whereKey($user->id)->exists());
     }
 }
