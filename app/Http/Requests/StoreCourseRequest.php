@@ -29,6 +29,8 @@ class StoreCourseRequest extends FormRequest
             'sks'         => ['required', 'integer', 'between:1,6'],
             'lecturer_id' => ['required', 'exists:users,id'],
             'status'      => ['required', 'in:draft,active,archived'],
+            'student_ids' => ['nullable', 'array'],
+            'student_ids.*' => ['exists:users,id'],
         ];
     }
 
