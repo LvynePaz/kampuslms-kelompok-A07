@@ -4,11 +4,13 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 use App\Models\Course;
 use App\Models\User;
 
+// 1. Halaman Depan / Dashboard Utama
 Route::get('/', function () {
     $courseCount = Course::count();
     $userCount = User::count();
@@ -20,6 +22,7 @@ Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
+// 2. Rute Kelompok A07 Berdasarkan Role
 Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('users', UserController::class);
@@ -49,16 +52,12 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
     });
 });
 
-// Fitur Login simulasi cp 5 
-Route::get('/login/{id}', function ($id) {
-    $user = \App\Models\User::findOrFail($id);
-    auth()->login($user);
-    
-    return redirect()->route($user->role . '.courses.index')
-        ->with('success', "Kamu sekarang login sebagai: {$user->name} (Role: {$user->role}, ID: {$user->id})");
-})->name('login-as');
+// 3. Rute Profil Pengguna (Breeze)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-Route::get('/logout', function () {
-    auth()->logout();
-    return redirect()->route('dashboard')->with('success', 'Berhasil logout!');
-})->name('logout');
+// 4. Sertakan seluruh rute login & logout resmi dari Breeze
+require __DIR__.'/auth.php';
