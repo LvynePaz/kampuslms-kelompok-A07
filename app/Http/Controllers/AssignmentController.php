@@ -6,12 +6,14 @@ use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
 {
     public function index(Request $request, Course $course): JsonResponse
     {
-        abort_unless($this->userCanAccessCourse($request, $course), 403);
+        //validasi apakah user bisa mengakses matkul ini menggunakan Gate
+        Gate::authorize('view', $course);
 
         return response()->json($course->assignments()->get([
             'id',
@@ -26,8 +28,11 @@ class AssignmentController extends Controller
 
     public function show(Request $request, Assignment $assignment)
     {
+
+        //validasi apakah user bisa mengakses tugas ini menggunakan Gate
+        Gate::authorize('view', $assignment);
+
         $course = $assignment->course;
-        abort_unless($this->userCanAccessCourse($request, $course), 403);
 
         if ($request->wantsJson()) {
             return response()->json($assignment->only([
@@ -42,13 +47,5 @@ class AssignmentController extends Controller
         }
 
         return view('assignments.show', compact('course', 'assignment'));
-    }
-
-    private function userCanAccessCourse(Request $request, Course $course): bool
-    {
-        $user = $request->user();
-
-        return ($user->role === 'dosen' && $course->lecturer_id === $user->id)
-            || ($user->role === 'mahasiswa' && $course->students()->whereKey($user->id)->exists());
     }
 }
