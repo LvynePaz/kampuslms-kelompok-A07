@@ -172,11 +172,6 @@
             <div style="margin-top: 2.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
                     <div class="section-title" style="margin-bottom: 0;">Materi Perkuliahan ({{ $course->materials->count() }})</div>
-                    @can('update', $course)
-                        <a href="{{ route('dosen.courses.materials.create', $course) }}" style="background: #2d4a3e; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                            + Tambah Materi
-                        </a>
-                    @endcan
                 </div>
 
                 @if ($course->materials->isEmpty())
@@ -213,11 +208,6 @@
             <div style="margin-top: 2.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
                     <div class="section-title" style="margin-bottom: 0;">Tugas Perkuliahan ({{ $course->assignments->count() }})</div>
-                    @can('update', $course)
-                        <a href="{{ route('dosen.courses.assignments.create', $course) }}" style="background: #2d4a3e; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                            + Buat Tugas Baru
-                        </a>
-                    @endcan
                 </div>
 
                 @if ($course->assignments->isEmpty())
