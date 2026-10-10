@@ -44,4 +44,34 @@ class MaterialController extends Controller
             'created_at',
         ]));
     }
+
+    public function create(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        return view('materials.create', compact('course'));
+    }
+
+    public function store(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        $validated = $request->validate([
+            'title'        => ['required', 'string', 'max:255'],
+            'type'         => ['required', 'in:file,link'],
+            'description'  => ['nullable', 'string'],
+            'external_url' => ['nullable', 'string', 'max:500'],
+        ], [
+            'title.required' => 'Judul materi wajib diisi.',
+            'type.required'  => 'Tipe materi wajib dipilih.',
+        ]);
+
+        $validated['uploaded_by'] = $request->user()->id;
+
+        $course->materials()->create($validated);
+
+        return redirect()
+            ->route('dosen.courses.show', $course)
+            ->with('success', 'Materi perkuliahan berhasil ditambahkan.');
+    }
 }

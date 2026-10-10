@@ -71,15 +71,15 @@ class AcademicSeeder extends Seeder
         }
 
         $studentNames = [
-            'Ahmad Fauzi', 'Budi Santoso', 'Citra Dewi', 'Dimas Pratama',
-            'Eka Saputra', 'Fani Rahmawati', 'Gilang Ramadhan', 'Hana Pertiwi',
-            'Indra Lesmana', 'Joko Susilo', 'Kartika Sari', 'Lukman Hakim',
-            'Maya Anggraini', 'Naufal Izzudin', 'Olivia Putri', 'Panji Gumilang',
-            'Qori Annisa', 'Rian Hidayat', 'Siti Nurhaliza', 'Teguh Wibowo',
-            'Umar Dani', 'Vina Melati', 'Wahyu Setiawan', 'Xaverius Yoga',
-            'Yogi Prasetyo', 'Zahra Amelia', 'Aditya Nugraha', 'Bella Safitri',
-            'Candra Wijaya', 'Dina Lestari', 'Fajar Ramli', 'Gita Gutawa',
-            'Haris Munandar', 'Intan Permata',
+            'Faris Parfume',
+            'Yisan Eftobal',
+            'Egan Duta',
+            'Nabil Kerja Keras',
+            'Devin Raja Proweb',
+            'Nova Ketua',
+            'Indah Frontend',
+            'Arwasyah',
+            'Nazwa Dpm',
         ];
 
         foreach ($studentNames as $idx => $name) {
@@ -287,10 +287,10 @@ class AcademicSeeder extends Seeder
             $course = $assignment->course;
             $enrolledStudents = $course->students;
 
-            // Di tugas yang lewat deadline (Tugas 1), 12-14 mahasiswa submit
-            // Di tugas aktif (Tugas 2), 6-8 mahasiswa submit duluan
+            // Di tugas yang lewat deadline (Tugas 1), 6-8 mahasiswa submit
+            // Di tugas aktif (Tugas 2), 3-5 mahasiswa submit duluan
             $isPast = $assignment->due_at->isPast();
-            $submitCount = $isPast ? rand(12, 14) : rand(6, 8);
+            $submitCount = $isPast ? rand(6, 8) : rand(3, 5);
 
             $submitters = $enrolledStudents->take($submitCount);
 

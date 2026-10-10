@@ -48,4 +48,36 @@ class AssignmentController extends Controller
 
         return view('assignments.show', compact('course', 'assignment'));
     }
+
+    public function create(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        return view('assignments.create', compact('course'));
+    }
+
+    public function store(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        $validated = $request->validate([
+            'title'        => ['required', 'string', 'max:255'],
+            'instructions' => ['nullable', 'string'],
+            'due_at'       => ['required', 'date'],
+            'max_score'    => ['required', 'integer', 'between:1,100'],
+            'status'       => ['required', 'in:draft,published'],
+        ], [
+            'title.required'     => 'Judul tugas wajib diisi.',
+            'due_at.required'    => 'Batas waktu pengumpulan wajib diisi.',
+            'max_score.required' => 'Nilai maksimal wajib diisi.',
+        ]);
+
+        $validated['created_by'] = $request->user()->id;
+
+        $course->assignments()->create($validated);
+
+        return redirect()
+            ->route('dosen.courses.show', $course)
+            ->with('success', 'Tugas kuliah berhasil dibuat.');
+    }
 }
