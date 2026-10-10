@@ -203,6 +203,20 @@
             </div>
 
             <div class="form-group">
+                <label>Daftarkan Mahasiswa ke Kelas Ini</label>
+                <div style="max-height: 200px; overflow-y: auto; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; padding: 12px; background: #fbfcfa;">
+                    @php $enrolledIds = old('student_ids', $course->students->pluck('id')->toArray()); @endphp
+                    @foreach ($students as $student)
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: normal; cursor: pointer; font-size: 0.9rem;">
+                            <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" {{ in_array($student->id, $enrolledIds) ? 'checked' : '' }} style="width: auto;">
+                            <span>{{ $student->name }} <small style="color: #647a6e;">({{ $student->nim_nip ?? $student->email }})</small></span>
+                        </label>
+                    @endforeach
+                </div>
+                <small style="color: #647a6e; display: block; margin-top: 4px;">Centang mahasiswa yang mengikuti mata kuliah ini.</small>
+            </div>
+
+            <div class="form-group">
                 <label for="description">Deskripsi</label>
 
                 <textarea

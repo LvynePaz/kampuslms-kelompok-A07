@@ -520,65 +520,6 @@
             </div>
         </div>
 
-        <!-- Card 3: Tim Pengembang -->
-        <div class="bento-card">
-            <div class="bento-header">
-                <div class="icon-bubble earth">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                    </svg>
-                </div>
-                <span class="card-pill-tag">Tim A07</span>
-            </div>
-            <div class="bento-body">
-                <div class="stat-value">4</div>
-                <div class="stat-name">Anggota Tim</div>
-                <p class="stat-caption">Mahasiswa pengembang proyek KampusLMS.</p>
-            </div>
-            <div class="bento-footer">
-                <div class="avatar-group" title="Tim Kelompok A07">
-                    <span class="avatar-pill">NK</span>
-                    <span class="avatar-pill">NH</span>
-                    <span class="avatar-pill">PA</span>
-                    <span class="avatar-pill">04</span>
-                </div>
-                <a href="{{ route('tentang') }}" class="footer-action-link">
-                    <span>Detail Tim</span>
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- Card 4: Progres Minggu -->
-        <div class="bento-card">
-            <div class="bento-header">
-                <div class="icon-bubble amber">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
-                <span class="card-pill-tag amber">Milestone</span>
-            </div>
-            <div class="bento-body">
-                <div class="stat-value">W03</div>
-                <div class="stat-name">Minggu Berjalan</div>
-                <p class="stat-caption">Fase penyempurnaan UI/UX dan basis data.</p>
-            </div>
-            <div class="bento-footer" style="padding-top: 0.6rem;">
-                <div class="micro-progress-wrapper">
-                    <div class="progress-track">
-                        <div class="progress-bar-fill" style="width: 25%;"></div>
-                    </div>
-                    <div class="progress-caption">
-                        <span>Minggu ke-3</span>
-                        <span>Tahap Aktif</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <!-- 3. HIGHLIGHTS & QUICK ACTIONS -->
