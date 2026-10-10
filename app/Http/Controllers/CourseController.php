@@ -46,50 +46,67 @@ class CourseController extends Controller
     public function create()
     {
         $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
+        $students = User::where('role', 'mahasiswa')->orderBy('name')->get();
 
-        return view('courses.create', compact('lecturers'));
+        return view('courses.create', compact('lecturers', 'students'));
     }
 
-    // Menyimpan mata kuliah baru — validasi via StoreCourseRequest
+    // Menyimpan mata kuliah baru beserta pendaftaran mahasiswa
     public function store(StoreCourseRequest $request)
     {
-        // $request->validated() hanya mengembalikan field yang lolos rules()
-        // — penawar mass assignment dari minggu 3
-        Course::create($request->validated());
+        $validated = $request->validated();
+        $studentIds = $validated['student_ids'] ?? [];
+        unset($validated['student_ids']);
+
+        $course = Course::create($validated);
+
+        if (!empty($studentIds)) {
+            $course->students()->attach($studentIds, ['enrolled_at' => now()]);
+        }
 
         return redirect()
             ->route('admin.courses.index')
-            ->with('success', 'Mata kuliah berhasil ditambahkan.');
+            ->with('success', 'Mata kuliah dan pendaftaran mahasiswa berhasil disimpan.');
     }
 
-    // Menampilkan detail satu mata kuliah
+    // Menampilkan detail satu mata kuliah beserta relasinya
     public function show(Course $course)
     {
-       //coursepolicy method view 
+        //coursepolicy method view 
         Gate::authorize('view', $course);
+        $course->load(['lecturer', 'materials.uploader', 'assignments', 'students']);
         $routePrefix = explode('.', request()->route()->getName())[0] . '.';
+
         return view('courses.show', compact('course', 'routePrefix'));
     }
 
     // Menampilkan form edit mata kuliah
     public function edit(Course $course)
     {
-       //coursepolicy method update 
+        //coursepolicy method update 
         Gate::authorize('update', $course);
         $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
-        return view('courses.edit', compact('course', 'lecturers'));
+        $students = User::where('role', 'mahasiswa')->orderBy('name')->get();
+        $course->load('students');
+
+        return view('courses.edit', compact('course', 'lecturers', 'students'));
     }
 
-
-    // Memperbarui data mata kuliah — validasi via UpdateCourseRequest
-     public function update(UpdateCourseRequest $request, Course $course)
+    // Memperbarui data mata kuliah beserta pendaftaran mahasiswa
+    public function update(UpdateCourseRequest $request, Course $course)
     {
         //coursepolicy method update 
         Gate::authorize('update', $course);
-        $course->update($request->validated());
+        $validated = $request->validated();
+        $studentIds = $validated['student_ids'] ?? [];
+        unset($validated['student_ids']);
+
+        $course->update($validated);
+        $course->students()->syncWithPivotValues($studentIds, ['enrolled_at' => now()]);
+
         return redirect()
             ->route('admin.courses.index')
-            ->with('success', 'Mata kuliah berhasil diperbarui.');
+            ->with('success', 'Mata kuliah dan daftar mahasiswa berhasil diperbarui.');
     }
 
     // Menghapus mata kuliah

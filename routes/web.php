@@ -32,10 +32,10 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
     Route::resource('courses', CourseController::class)->only(['index', 'show']);
     Route::scopeBindings()->group(function () {
         Route::resource('courses.materials', MaterialController::class)
-            ->only(['index', 'show'])
+            ->only(['index', 'show', 'create', 'store'])
             ->shallow();
         Route::resource('courses.assignments', AssignmentController::class)
-            ->only(['index', 'show'])
+            ->only(['index', 'show', 'create', 'store'])
             ->shallow();
     });
 });

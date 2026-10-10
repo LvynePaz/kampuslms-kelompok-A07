@@ -131,6 +131,12 @@
         ← Kembali ke Daftar Mata Kuliah
     </a>
 
+    @if (session('success'))
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; font-weight: 500;">
+            ✓ {{ session('success') }}
+        </div>
+    @endif
+
     <div class="detail-card">
         <div class="detail-header">
             <div class="code-badge">{{ $course['code'] }}</div>
@@ -160,7 +166,103 @@
 
             <div class="section-title">Deskripsi Mata Kuliah</div>
             {{-- {{ }} aman dari XSS — Laravel akan escape karakter berbahaya --}}
-            <div class="description-text">{{ $course['description'] }}</div>
+            <div class="description-text">{{ $course['description'] ?? 'Belum ada deskripsi untuk mata kuliah ini.' }}</div>
+
+            {{-- 1. DAFTAR MATERI PERKULIAHAN --}}
+            <div style="margin-top: 2.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                    <div class="section-title" style="margin-bottom: 0;">Materi Perkuliahan ({{ $course->materials->count() }})</div>
+                    @can('update', $course)
+                        <a href="{{ route('dosen.courses.materials.create', $course) }}" style="background: #2d4a3e; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                            + Tambah Materi
+                        </a>
+                    @endcan
+                </div>
+
+                @if ($course->materials->isEmpty())
+                    <div style="background: #fbfdfc; border: 1px dashed rgba(45, 74, 62, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center; color: #647a6e; font-size: 0.9rem;">
+                        Belum ada materi perkuliahan yang diunggah.
+                    </div>
+                @else
+                    <div style="display: grid; gap: 0.75rem;">
+                        @foreach ($course->materials as $mat)
+                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1a2f25; font-size: 0.95rem; margin-bottom: 3px;">
+                                        {{ $mat->title }}
+                                    </div>
+                                    @if ($mat->description)
+                                        <div style="font-size: 0.85rem; color: #5e7166; margin-bottom: 4px;">{{ $mat->description }}</div>
+                                    @endif
+                                    <span style="display: inline-block; background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                                        {{ $mat->type }}
+                                    </span>
+                                </div>
+                                @if ($mat->external_url)
+                                    <a href="{{ $mat->external_url }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
+                                        Buka Tautan ↗
+                                    </a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- 2. DAFTAR TUGAS PERKULIAHAN --}}
+            <div style="margin-top: 2.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                    <div class="section-title" style="margin-bottom: 0;">Tugas Perkuliahan ({{ $course->assignments->count() }})</div>
+                    @can('update', $course)
+                        <a href="{{ route('dosen.courses.assignments.create', $course) }}" style="background: #2d4a3e; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                            + Buat Tugas Baru
+                        </a>
+                    @endcan
+                </div>
+
+                @if ($course->assignments->isEmpty())
+                    <div style="background: #fbfdfc; border: 1px dashed rgba(45, 74, 62, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center; color: #647a6e; font-size: 0.9rem;">
+                        Belum ada tugas perkuliahan untuk kelas ini.
+                    </div>
+                @else
+                    <div style="display: grid; gap: 0.75rem;">
+                        @foreach ($course->assignments as $asg)
+                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1a2f25; font-size: 0.95rem; margin-bottom: 3px;">
+                                        {{ $asg->title }}
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: #5e7166;">
+                                        Deadline: <strong>{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</strong> &bull; Skor Maks: {{ $asg->max_score }}
+                                    </div>
+                                </div>
+                                <span style="display: inline-block; background: {{ $asg->status === 'published' ? '#ecfdf5' : '#f3f4f6' }}; color: {{ $asg->status === 'published' ? '#047857' : '#4b5563' }}; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;">
+                                    {{ ucfirst($asg->status) }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- 3. DAFTAR MAHASISWA TERDAFTAR --}}
+            <div style="margin-top: 2.25rem;">
+                <div class="section-title">Mahasiswa Terdaftar ({{ $course->students->count() }})</div>
+                @if ($course->students->isEmpty())
+                    <div style="background: #fbfdfc; border: 1px dashed rgba(45, 74, 62, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center; color: #647a6e; font-size: 0.9rem;">
+                        Belum ada mahasiswa yang terdaftar di kelas ini.
+                    </div>
+                @else
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.5rem;">
+                        @foreach ($course->students as $std)
+                            <span style="background: #f0f5f2; border: 1px solid rgba(45, 74, 62, 0.12); color: #1a2f25; padding: 5px 12px; border-radius: 8px; font-size: 0.84rem; display: inline-flex; align-items: center; gap: 6px;">
+                                <strong>{{ $std->name }}</strong>
+                                <small style="color: #647a6e;">({{ $std->nim_nip ?? $std->email }})</small>
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
