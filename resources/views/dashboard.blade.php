@@ -481,16 +481,64 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                 </div>
-                <span class="card-pill-tag">Kurikulum</span>
+                <span class="card-pill-tag">
+                    @auth
+                        @if (auth()->user()->role === 'mahasiswa')
+                            Akademik Anda
+                        @elseif (auth()->user()->role === 'dosen')
+                            Pengajaran
+                        @else
+                            Kurikulum
+                        @endif
+                    @else
+                        Kurikulum
+                    @endauth
+                </span>
             </div>
             <div class="bento-body">
-                <div class="stat-value">{{ $courseCount }}</div>
-                <div class="stat-name">Mata Kuliah</div>
-                <p class="stat-caption">Mata kuliah aktif terdaftar pada katalog sistem.</p>
+                <div class="stat-value">{{ $myCourseCount ?? $courseCount }}</div>
+                <div class="stat-name">
+                    @auth
+                        @if (auth()->user()->role === 'mahasiswa')
+                            Mata Kuliah Diikuti
+                        @elseif (auth()->user()->role === 'dosen')
+                            Mata Kuliah Diampu
+                        @else
+                            Mata Kuliah
+                        @endif
+                    @else
+                        Mata Kuliah
+                    @endauth
+                </div>
+                <p class="stat-caption">
+                    @auth
+                        @if (auth()->user()->role === 'mahasiswa')
+                            Mata kuliah aktif yang Anda ikuti pada semester ini.
+                        @elseif (auth()->user()->role === 'dosen')
+                            Mata kuliah aktif yang Anda ampu pada semester ini.
+                        @else
+                            Mata kuliah aktif terdaftar pada katalog sistem.
+                        @endif
+                    @else
+                        Mata kuliah aktif terdaftar pada katalog sistem.
+                    @endauth
+                </p>
             </div>
             <div class="bento-footer">
                 <a href="{{ auth()->check() ? route(auth()->user()->role . '.courses.index') : route('admin.courses.index') }}" class="footer-action-link">
-                    <span>Lihat Daftar</span>
+                    <span>
+                        @auth
+                            @if (auth()->user()->role === 'mahasiswa')
+                                Lihat Mata Kuliah Saya
+                            @elseif (auth()->user()->role === 'dosen')
+                                Kelola Kelas Saya
+                            @else
+                                Lihat Daftar
+                            @endif
+                        @else
+                            Lihat Daftar
+                        @endauth
+                    </span>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -542,7 +590,19 @@
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
-                        <span>Jelajahi Semua Mata Kuliah</span>
+                        <span>
+                            @auth
+                                @if (auth()->user()->role === 'mahasiswa')
+                                    Buka Mata Kuliah yang Diikuti
+                                @elseif (auth()->user()->role === 'dosen')
+                                    Buka Mata Kuliah yang Diampu
+                                @else
+                                    Jelajahi Semua Mata Kuliah
+                                @endif
+                            @else
+                                Jelajahi Semua Mata Kuliah
+                            @endauth
+                        </span>
                     </div>
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>

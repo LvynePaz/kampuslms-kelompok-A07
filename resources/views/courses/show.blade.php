@@ -1,3 +1,7 @@
+@php
+    $currentUserRole = auth()->user()?->role ?? 'mahasiswa';
+@endphp
+
 <x-layout title="Detail Mata Kuliah">
 
     <style>
@@ -126,10 +130,20 @@
         }
     </style>
 
-    {{-- Tombol Kembali menggunakan route() —  bukan hardcode '/courses' --}}
-    <a href="{{ route($routePrefix . 'courses.index') }}" class="back-link">
-        ← Kembali ke Daftar Mata Kuliah
-    </a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="{{ route($routePrefix . 'courses.index') }}" class="back-link" style="margin-bottom: 0;">
+            ← Kembali ke Daftar Mata Kuliah
+        </a>
+
+        @if (auth()->user()?->role === 'admin')
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ route('admin.courses.edit', $course) }}" class="btn-edit" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span>Edit Mata Kuliah</span>
+                </a>
+            </div>
+        @endif
+    </div>
 
     @if (session('success'))
         <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 18px; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; font-weight: 500;">
@@ -170,8 +184,16 @@
 
             {{-- 1. DAFTAR MATERI PERKULIAHAN --}}
             <div style="margin-top: 2.25rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
                     <div class="section-title" style="margin-bottom: 0;">Materi Perkuliahan ({{ $course->materials->count() }})</div>
+                    @can('update', $course)
+                        @if (auth()->user()?->role === 'dosen')
+                            <a href="{{ route('dosen.courses.materials.create', $course) }}" class="btn-primary" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                <span>Tambah Materi</span>
+                            </a>
+                        @endif
+                    @endcan
                 </div>
 
                 @if ($course->materials->isEmpty())
@@ -181,10 +203,16 @@
                 @else
                     <div style="display: grid; gap: 0.75rem;">
                         @foreach ($course->materials as $mat)
-                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                                 <div>
                                     <div style="font-weight: 600; color: #1a2f25; font-size: 0.95rem; margin-bottom: 3px;">
-                                        {{ $mat->title }}
+                                        @if (in_array($currentUserRole, ['dosen', 'mahasiswa']))
+                                            <a href="{{ route($currentUserRole . '.materials.show', $mat) }}" style="color: #1a2f25; text-decoration: none;">
+                                                {{ $mat->title }}
+                                            </a>
+                                        @else
+                                            {{ $mat->title }}
+                                        @endif
                                     </div>
                                     @if ($mat->description)
                                         <div style="font-size: 0.85rem; color: #5e7166; margin-bottom: 4px;">{{ $mat->description }}</div>
@@ -193,11 +221,52 @@
                                         {{ $mat->type }}
                                     </span>
                                 </div>
-                                @if ($mat->external_url)
-                                    <a href="{{ $mat->external_url }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
-                                        Buka Tautan ↗
-                                    </a>
-                                @endif
+                                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                    @php
+                                        // Cek apakah ada file fisik atau file:/// path lokal atau seeded rps
+                                        $hasFile = $mat->file_path || str_starts_with($mat->external_url ?? '', 'file:///');
+                                        // Cek apakah ada link web
+                                        $isWebLink = $mat->external_url && !str_starts_with($mat->external_url, 'file:///');
+                                    @endphp
+
+                                    @if ($hasFile)
+                                        <a href="{{ route('materials.file', $mat) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
+                                            Buka Berkas
+                                        </a>
+                                    @elseif ($isWebLink)
+                                        @php
+                                            $linkUrl = $mat->external_url;
+                                            if (str_contains($linkUrl, 'kampuslms.test')) {
+                                                $linkUrl = route('materials.file', $mat);
+                                            } elseif (!preg_match('~^(?:f|ht)tps?://~i', $linkUrl)) {
+                                                $linkUrl = 'https://' . $linkUrl;
+                                            }
+                                        @endphp
+                                        <a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
+                                            Buka Tautan
+                                        </a>
+                                    @endif
+
+                                    @can('update', $mat)
+                                        @if (auth()->user()?->role === 'dosen')
+                                            <a href="{{ route('dosen.materials.edit', $mat) }}" style="color: #4b5e28; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(75, 94, 40, 0.25); padding: 5px 10px; border-radius: 8px; background: #f7f9f2;">
+                                                Edit
+                                            </a>
+                                        @endif
+                                    @endcan
+
+                                    @can('delete', $mat)
+                                        @if (auth()->user()?->role === 'dosen')
+                                            <form action="{{ route('dosen.materials.destroy', $mat) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus materi ini?')" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" style="color: #991b1b; font-size: 0.82rem; font-weight: 600; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 8px; background: #fdf2f2; cursor: pointer; font-family: inherit;">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endcan
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -205,19 +274,33 @@
             </div>
 
             {{-- 2. DAFTAR TUGAS PERKULIAHAN --}}
+            @php
+                $currentUserRole = auth()->user()?->role ?? 'mahasiswa';
+                $displayedAssignments = $currentUserRole === 'mahasiswa'
+                    ? $course->assignments->where('status', 'published')
+                    : $course->assignments;
+            @endphp
             <div style="margin-top: 2.25rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
-                    <div class="section-title" style="margin-bottom: 0;">Tugas Perkuliahan ({{ $course->assignments->count() }})</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div class="section-title" style="margin-bottom: 0;">Tugas Perkuliahan ({{ $displayedAssignments->count() }})</div>
+                    @can('update', $course)
+                        @if (auth()->user()?->role === 'dosen')
+                            <a href="{{ route('dosen.courses.assignments.create', $course) }}" class="btn-primary" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                <span>Buat Tugas</span>
+                            </a>
+                        @endif
+                    @endcan
                 </div>
 
-                @if ($course->assignments->isEmpty())
+                @if ($displayedAssignments->isEmpty())
                     <div style="background: #fbfdfc; border: 1px dashed rgba(45, 74, 62, 0.2); border-radius: 12px; padding: 1.5rem; text-align: center; color: #647a6e; font-size: 0.9rem;">
                         Belum ada tugas perkuliahan untuk kelas ini.
                     </div>
                 @else
                     <div style="display: grid; gap: 0.75rem;">
-                        @foreach ($course->assignments as $asg)
-                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                        @foreach ($displayedAssignments as $asg)
+                            <div style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.08); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                                 <div>
                                     <div style="font-weight: 600; color: #1a2f25; font-size: 0.95rem; margin-bottom: 3px;">
                                         {{ $asg->title }}
@@ -226,9 +309,32 @@
                                         Deadline: <strong>{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</strong> &bull; Skor Maks: {{ $asg->max_score }}
                                     </div>
                                 </div>
-                                <span style="display: inline-block; background: {{ $asg->status === 'published' ? '#ecfdf5' : '#f3f4f6' }}; color: {{ $asg->status === 'published' ? '#047857' : '#4b5563' }}; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;">
-                                    {{ ucfirst($asg->status) }}
-                                </span>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="display: inline-block; background: {{ $asg->status === 'published' ? '#ecfdf5' : '#f3f4f6' }}; color: {{ $asg->status === 'published' ? '#047857' : '#4b5563' }}; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;">
+                                        {{ ucfirst($asg->status) }}
+                                    </span>
+
+                                    @if (in_array($currentUserRole, ['dosen', 'mahasiswa']))
+                                        <a href="{{ route($currentUserRole . '.assignments.show', $asg) }}" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
+                                            Buka Tugas
+                                        </a>
+                                    @endif
+
+                                    @can('update', $asg)
+                                        @if ($currentUserRole === 'dosen')
+                                            <a href="{{ route('dosen.assignments.edit', $asg) }}" style="color: #4b5e28; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(75, 94, 40, 0.25); padding: 5px 10px; border-radius: 8px; background: #f7f9f2;">
+                                                Edit
+                                            </a>
+                                            <form action="{{ route('dosen.assignments.destroy', $asg) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini?')" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" style="color: #991b1b; font-size: 0.82rem; font-weight: 600; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 8px; background: #fdf2f2; cursor: pointer; font-family: inherit;">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endcan
+                                </div>
                             </div>
                         @endforeach
                     </div>

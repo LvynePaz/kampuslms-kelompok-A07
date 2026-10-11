@@ -122,9 +122,28 @@
         }
     </style>
 
-    <a href="{{ url('/' . auth()->user()->role . '/courses/' . $course->id) }}" class="back-link">
-        ← Kembali ke Mata Kuliah: {{ $course->name }}
-    </a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="{{ route(auth()->user()->role . '.courses.show', $course) }}" class="back-link" style="margin-bottom: 0;">
+            ← Kembali ke Mata Kuliah: {{ $course->name }}
+        </a>
+
+        @can('update', $assignment)
+            @if (auth()->user()->role === 'dosen')
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <a href="{{ route('dosen.assignments.edit', $assignment) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; background: #f7f9f2; color: #4b5e28; border: 1px solid rgba(75, 94, 40, 0.2);">
+                        Edit Tugas
+                    </a>
+                    <form action="{{ route('dosen.assignments.destroy', $assignment) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini?')" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: #fdf2f2; color: #991b1b; border: 1px solid #fecaca; font-family: inherit;">
+                            Hapus Tugas
+                        </button>
+                    </form>
+                </div>
+            @endif
+        @endcan
+    </div>
 
     <div class="assignment-card">
         <div class="assignment-header">

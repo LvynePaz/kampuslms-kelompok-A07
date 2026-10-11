@@ -12,10 +12,17 @@ use App\Models\User;
 
 // 1. Halaman Depan / Dashboard Utama
 Route::get('/', function () {
+    $user = auth()->user();
     $courseCount = Course::count();
     $userCount = User::count();
 
-    return view('dashboard', compact('courseCount', 'userCount'));
+    $myCourseCount = match ($user?->role) {
+        'dosen'     => $user->taughtCourses()->count(),
+        'mahasiswa' => $user->courses()->count(),
+        default     => $courseCount,
+    };
+
+    return view('dashboard', compact('courseCount', 'userCount', 'myCourseCount'));
 })->name('dashboard');
 
 Route::get('/tentang', function () {
@@ -31,12 +38,8 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
 Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function () {
     Route::resource('courses', CourseController::class)->only(['index', 'show']);
     Route::scopeBindings()->group(function () {
-        Route::resource('courses.materials', MaterialController::class)
-            ->only(['index', 'show', 'create', 'store'])
-            ->shallow();
-        Route::resource('courses.assignments', AssignmentController::class)
-            ->only(['index', 'show', 'create', 'store'])
-            ->shallow();
+        Route::resource('courses.materials', MaterialController::class)->shallow();
+        Route::resource('courses.assignments', AssignmentController::class)->shallow();
     });
 });
 
@@ -52,8 +55,9 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
     });
 });
 
-// 3. Rute Profil Pengguna (Breeze)
+// 3. Rute Akses Berkas Materi & Profil Pengguna (Auth)
 Route::middleware('auth')->group(function () {
+    Route::get('/materials/{material}/file', [MaterialController::class, 'showFile'])->name('materials.file');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
