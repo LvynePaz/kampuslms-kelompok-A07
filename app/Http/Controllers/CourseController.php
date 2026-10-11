@@ -76,8 +76,9 @@ class CourseController extends Controller
         Gate::authorize('view', $course);
         $course->load(['lecturer', 'materials.uploader', 'assignments', 'students']);
         $routePrefix = explode('.', request()->route()->getName())[0] . '.';
+        $userRole = request()->user()?->role ?? 'admin';
 
-        return view('courses.show', compact('course', 'routePrefix'));
+        return view('courses.show', compact('course', 'routePrefix', 'userRole'));
     }
 
     // Menampilkan form edit mata kuliah

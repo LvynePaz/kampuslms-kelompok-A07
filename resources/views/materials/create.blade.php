@@ -22,7 +22,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('dosen.courses.materials.store', $course) }}" method="POST">
+            <form action="{{ route('dosen.courses.materials.store', $course) }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div style="margin-bottom: 1.25rem;">
@@ -37,16 +37,25 @@
                         Tipe Materi
                     </label>
                     <select id="type" name="type" required style="width: 100%; padding: 11px 14px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
-                        <option value="link" {{ old('type') === 'link' ? 'selected' : '' }}>Link Referensi / Video / Web</option>
-                        <option value="file" {{ old('type') === 'file' ? 'selected' : '' }}>Dokumen / Berkas Slide</option>
+                        <option value="file" {{ old('type') === 'file' ? 'selected' : '' }}>Dokumen / Berkas Slide (Unggah File)</option>
+                        <option value="link" {{ old('type') === 'link' ? 'selected' : '' }}>Link Referensi / Google Drive / Video / Web</option>
                     </select>
                 </div>
 
                 <div style="margin-bottom: 1.25rem;">
-                    <label for="external_url" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; color: #21332a;">
-                        Tautan / URL Materi (Opsional)
+                    <label for="material_file" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; color: #21332a;">
+                        Unggah Berkas Materi (PDF, DOCX, PPTX, ZIP - Maks. 25MB)
                     </label>
-                    <input type="url" id="external_url" name="external_url" value="{{ old('external_url') }}" placeholder="https://example.com/slide-materi.pdf" style="width: 100%; padding: 11px 14px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
+                    <input type="file" id="material_file" name="material_file" style="width: 100%; padding: 9px 12px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
+                    <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih berkas dari perangkat Anda jika ingin membagikan file slide atau dokumen secara langsung.</small>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="external_url" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; color: #21332a;">
+                        Tautan / URL Materi (Opsional jika mengunggah berkas)
+                    </label>
+                    <input type="text" id="external_url" name="external_url" value="{{ old('external_url') }}" placeholder="https://example.com/slide atau link Google Drive / YouTube" style="width: 100%; padding: 11px 14px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
+                    <small style="color: #647a6e; display: block; margin-top: 4px;">Tuliskan link jika materi berupa website, video YouTube, atau tautan Google Drive.</small>
                 </div>
 
                 <div style="margin-bottom: 1.75rem;">

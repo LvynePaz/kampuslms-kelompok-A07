@@ -80,4 +80,48 @@ class AssignmentController extends Controller
             ->route('dosen.courses.show', $course)
             ->with('success', 'Tugas kuliah berhasil dibuat.');
     }
+
+    public function edit(Request $request, Assignment $assignment)
+    {
+        Gate::authorize('update', $assignment);
+        $course = $assignment->course;
+
+        return view('assignments.edit', compact('course', 'assignment'));
+    }
+
+    public function update(Request $request, Assignment $assignment)
+    {
+        Gate::authorize('update', $assignment);
+        $course = $assignment->course;
+
+        $validated = $request->validate([
+            'title'        => ['required', 'string', 'max:255'],
+            'instructions' => ['nullable', 'string'],
+            'due_at'       => ['required', 'date'],
+            'max_score'    => ['required', 'integer', 'between:1,100'],
+            'status'       => ['required', 'in:draft,published'],
+        ], [
+            'title.required'     => 'Judul tugas wajib diisi.',
+            'due_at.required'    => 'Batas waktu pengumpulan wajib diisi.',
+            'max_score.required' => 'Nilai maksimal wajib diisi.',
+        ]);
+
+        $assignment->update($validated);
+
+        return redirect()
+            ->route('dosen.courses.show', $course)
+            ->with('success', 'Tugas kuliah berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, Assignment $assignment)
+    {
+        Gate::authorize('delete', $assignment);
+        $course = $assignment->course;
+
+        $assignment->delete();
+
+        return redirect()
+            ->route('dosen.courses.show', $course)
+            ->with('success', 'Tugas kuliah berhasil dihapus.');
+    }
 }

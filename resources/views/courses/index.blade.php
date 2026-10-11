@@ -3,7 +3,15 @@
     <div class="page-header">
         <div class="header-title-area">
             <h1>Daftar Mata Kuliah</h1>
-            <p>Kelola kurikulum dan mata kuliah aktif pada semester berjalan</p>
+            @if ($userRole === 'admin')
+                <p>Kelola kurikulum, penugasan dosen, dan pendaftaran mahasiswa pada semester berjalan</p>
+            @elseif ($userRole === 'dosen')
+                <p>Daftar mata kuliah yang Anda ampu pada semester berjalan</p>
+            @elseif ($userRole === 'mahasiswa')
+                <p>Daftar mata kuliah yang Anda ikuti pada semester berjalan</p>
+            @else
+                <p>Kelola kurikulum dan mata kuliah aktif pada semester berjalan</p>
+            @endif
         </div>
 
         @if ($userRole === 'admin')
@@ -131,6 +139,10 @@
                             @if (request('q') || request('status'))
                                 Tidak ada mata kuliah yang cocok dengan pencarian.
                                 <a href="{{ route($routePrefix . 'courses.index') }}" style="color:#2d4a3e;">Reset filter</a>
+                            @elseif ($userRole === 'mahasiswa')
+                                Anda belum terdaftar di mata kuliah manapun. Silakan hubungi Admin untuk pendaftaran kelas.
+                            @elseif ($userRole === 'dosen')
+                                Anda belum ditugaskan mengampu mata kuliah manapun.
                             @else
                                 Belum ada mata kuliah terdaftar. Silakan tambahkan mata kuliah baru.
                             @endif
