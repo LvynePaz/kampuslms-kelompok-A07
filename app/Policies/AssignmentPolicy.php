@@ -35,4 +35,13 @@ class AssignmentPolicy
         return $user->role === 'admin'
             || $assignment->course->lecturer_id === $user->id;
     }
+
+    /**
+     * Otorisasi pengumpulan tugas: hanya mahasiswa yang terdaftar di mata kuliah terkait.
+     */
+    public function submit(User $user, Assignment $assignment): bool
+    {
+        return $user->role === 'mahasiswa'
+            && $assignment->course->students()->whereKey($user->id)->exists();
+    }
 }

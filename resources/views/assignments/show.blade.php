@@ -173,6 +173,83 @@
 
             <div class="section-title">Instruksi Pengerjaan</div>
             <div class="instruction-box">{{ $assignment->instructions ?: 'Belum ada instruksi tambahan untuk tugas ini.' }}</div>
+
+            {{-- Bagian Pengumpulan Tugas untuk Mahasiswa (BUILD Butir 3 & 4) --}}
+            @if (auth()->user()->role === 'mahasiswa')
+                @php
+                    $mySubmission = $assignment->submissions()->where('user_id', auth()->id())->first();
+                    $isPastDue = $assignment->due_at && now()->gt($assignment->due_at);
+                    $canSubmit = ! $isPastDue || $assignment->allow_late;
+                @endphp
+
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(45, 74, 62, 0.1);">
+                    <div class="section-title">Pengumpulan Tugas Anda</div>
+
+                    @if (session('success'))
+                        <div style="padding: 12px 16px; background: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div style="padding: 12px 16px; background: #fdf2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                            @foreach ($errors->all() as $error)
+                                <div>{{ $error }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($mySubmission)
+                        <div style="background: #ffffff; border: 1px solid rgba(45, 74, 62, 0.15); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <div style="font-weight: 700; color: #1a2f25; font-size: 1rem; margin-bottom: 4px;">
+                                        📄 {{ $mySubmission->original_name }}
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: #647a6e;">
+                                        Dikumpulkan pada: {{ $mySubmission->submitted_at ? $mySubmission->submitted_at->translatedFormat('d M Y, H:i') : '-' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    @if ($mySubmission->is_late)
+                                        <span style="display: inline-block; padding: 4px 10px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            ⚠️ Terlambat
+                                        </span>
+                                    @else
+                                        <span style="display: inline-block; padding: 4px 10px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                                            ✓ Tepat Waktu
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1rem;">
+                                <a href="{{ route('submissions.download', $mySubmission) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #2f5d47; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+                                    ⬇️ Unduh Berkas Saya
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($canSubmit)
+                        <form action="{{ route('submissions.store', $assignment) }}" method="POST" enctype="multipart/form-data" style="background: #f7f9f7; border: 1px solid rgba(45, 74, 62, 0.12); border-radius: 12px; padding: 1.5rem;">
+                            @csrf
+                            <label for="submission-file" style="display: block; font-size: 0.85rem; font-weight: 700; color: #1a2f25; margin-bottom: 6px;">
+                                {{ $mySubmission ? 'Unggah Ulang Berkas Tugas (Menimpa Berkas Lama)' : 'Pilih Berkas Tugas (PDF, DOC, DOCX - Maks 5 MB)' }}
+                            </label>
+                            <input type="file" id="submission-file" name="file" required accept=".pdf,.doc,.docx" style="display: block; width: 100%; padding: 8px; border: 1px solid #c8d6ce; border-radius: 8px; background: #ffffff; margin-bottom: 1rem; font-size: 0.9rem;">
+
+                            <button type="submit" style="padding: 9px 18px; background: #1b3528; color: #ffffff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit;">
+                                {{ $mySubmission ? 'Perbarui Pengumpulan' : 'Kumpulkan Tugas' }}
+                            </button>
+                        </form>
+                    @else
+                        <div style="padding: 12px 16px; background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; border-radius: 8px; font-size: 0.9rem;">
+                            ⛔ Batas waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan susulan.
+                        </div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 
