@@ -58,6 +58,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
 // 3. Rute Akses Berkas Materi & Profil Pengguna (Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/materials/{material}/file', [MaterialController::class, 'showFile'])->name('materials.file');
+    Route::get('/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

@@ -28,6 +28,18 @@ class Course extends Model
         ];
     }
 
+    /**
+     * Hapus seluruh materi fisik terkait saat mata kuliah dihapus (penanganan cascade).
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Course $course) {
+            foreach ($course->materials as $material) {
+                $material->delete();
+            }
+        });
+    }
+
     public function lecturer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'lecturer_id');
