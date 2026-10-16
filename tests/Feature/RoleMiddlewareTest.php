@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -59,5 +60,49 @@ class RoleMiddlewareTest extends TestCase
             ->assertOk()
             ->assertSee($course->name)
             ->assertSee($assignment->title);
+    }
+
+    public function test_lecturer_can_view_submission_status_for_all_enrolled_students(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $assignment = Assignment::factory()->for($course)->create();
+        $submittedStudent = User::factory()->mahasiswa()->create(['name' => 'Ayu Sudah']);
+        $lateStudent = User::factory()->mahasiswa()->create(['name' => 'Bima Terlambat']);
+        $missingStudent = User::factory()->mahasiswa()->create(['name' => 'Citra Belum']);
+        $course->students()->attach([$submittedStudent->id, $lateStudent->id, $missingStudent->id]);
+
+        Submission::factory()->create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $submittedStudent->id,
+            'is_late' => false,
+        ]);
+        Submission::factory()->create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $lateStudent->id,
+            'is_late' => true,
+        ]);
+
+        $this->actingAs($lecturer)
+            ->get(route('dosen.assignments.submissions', $assignment))
+            ->assertOk()
+            ->assertSee('Ayu Sudah')
+            ->assertSee('Bima Terlambat')
+            ->assertSee('Citra Belum')
+            ->assertSee('Sudah mengumpulkan')
+            ->assertSee('Terlambat')
+            ->assertSee('Belum mengumpulkan');
+    }
+
+    public function test_only_the_assignment_lecturer_can_view_submission_status(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $assignment = Assignment::factory()->for($course)->create();
+
+        $this->actingAs($otherLecturer)
+            ->get(route('dosen.assignments.submissions', $assignment))
+            ->assertForbidden();
     }
 }

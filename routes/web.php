@@ -41,6 +41,8 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
         Route::resource('courses.materials', MaterialController::class)->shallow();
         Route::resource('courses.assignments', AssignmentController::class)->shallow();
     });
+    Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])
+        ->name('assignments.submissions');
 });
 
 Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->group(function () {
