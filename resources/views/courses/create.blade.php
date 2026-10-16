@@ -124,13 +124,18 @@
     <div class="form-card">
 
         @if ($errors->any())
-            <div style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                <strong style="display: block; margin-bottom: 4px;">Terdapat kesalahan pada isian form:</strong>
-                <ul style="margin: 0; padding-left: 20px;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="alert-error" style="margin-bottom: 1.5rem;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; margin-top: 2px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div style="flex: 1;">
+                    <strong style="display: block; margin-bottom: 4px;">Terdapat kesalahan pada isian form:</strong>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        @foreach (array_unique($errors->all()) as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
@@ -215,6 +220,13 @@
                     @endforeach
                 </div>
                 <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih mahasiswa yang ingin langsung didaftarkan ke mata kuliah ini.</small>
+
+                @error('student_ids')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
+                @error('student_ids.*')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">

@@ -48,7 +48,7 @@
                     </select>
                 </div>
 
-                @if ($material->file_path || $material->original_name)
+                @if ($material->file_path)
                     <div style="margin-bottom: 1.25rem; background: #f7faf8; border: 1px solid rgba(45, 74, 62, 0.12); border-radius: 10px; padding: 12px 16px;">
                         <div style="font-size: 0.82rem; font-weight: 700; color: #416454; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
                             Berkas Materi Saat Ini
@@ -56,8 +56,8 @@
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 0.92rem; color: #1a2f25;">
                                 <span style="font-weight: 600;">{{ $material->original_name ?: basename($material->file_path) }}</span>
-                                @if ($material->file_size)
-                                    <span style="color: #647a6e; font-size: 0.82rem;">({{ number_format($material->file_size / 1024, 1) }} KB)</span>
+                                @if ($material->formatted_file_size)
+                                    <span style="color: #647a6e; font-size: 0.82rem;">({{ $material->formatted_file_size }})</span>
                                 @endif
                             </div>
                             <a href="{{ route('materials.file', $material) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.25); padding: 4px 10px; border-radius: 6px; background: #ffffff;">

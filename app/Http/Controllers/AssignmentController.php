@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
@@ -118,7 +119,13 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
         $course = $assignment->course;
 
-        $assignment->delete();
+        DB::transaction(function () use ($assignment) {
+            $assignment->submissions()->get()->each(function ($submission) {
+                $submission->delete();
+            });
+
+            $assignment->delete();
+        });
 
         return redirect()
             ->route('dosen.courses.show', $course)

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class Submission extends Model
 {
@@ -21,6 +23,20 @@ class Submission extends Model
         'submitted_at',
         'is_late',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Submission $submission) {
+            if (empty($submission->file_path)) {
+                return;
+            }
+
+            $disk = Storage::disk('local');
+            if ($disk->exists($submission->file_path) && ! $disk->delete($submission->file_path)) {
+                throw new RuntimeException("Failed to delete submission file [{$submission->file_path}].");
+            }
+        });
+    }
 
     protected function casts(): array
     {

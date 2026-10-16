@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 
@@ -58,10 +59,21 @@ class CourseController extends Controller
         $studentIds = $validated['student_ids'] ?? [];
         unset($validated['student_ids']);
 
-        $course = Course::create($validated);
+        try {
+            DB::transaction(function () use ($validated, $studentIds) {
+                $course = Course::create($validated);
 
-        if (!empty($studentIds)) {
-            $course->students()->attach($studentIds, ['enrolled_at' => now()]);
+                if (!empty($studentIds)) {
+                    $course->students()->attach($studentIds, ['enrolled_at' => now()]);
+                }
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000 || str_contains($e->getMessage(), 'Duplicate')) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['student_ids' => 'Data mahasiswa duplikat']);
+            }
+            throw $e;
         }
 
         return redirect()
@@ -99,11 +111,13 @@ class CourseController extends Controller
         //coursepolicy method update 
         Gate::authorize('update', $course);
         $validated = $request->validated();
-        $studentIds = $validated['student_ids'] ?? [];
+        $studentIds = array_unique($validated['student_ids'] ?? []);
         unset($validated['student_ids']);
 
-        $course->update($validated);
-        $course->students()->syncWithPivotValues($studentIds, ['enrolled_at' => now()]);
+        DB::transaction(function () use ($course, $validated, $studentIds) {
+            $course->update($validated);
+            $course->students()->syncWithPivotValues($studentIds, ['enrolled_at' => now()]);
+        });
 
         return redirect()
             ->route('admin.courses.index')
@@ -115,7 +129,19 @@ class CourseController extends Controller
     {
         //coursepolicy method delete 
         Gate::authorize('delete', $course);
-        $course->delete();
+
+        DB::transaction(function () use ($course) {
+            $course->assignments()->with('submissions')->get()->each(function ($assignment) {
+                $assignment->submissions()->get()->each(function ($submission) {
+                    $submission->delete();
+                });
+
+                $assignment->delete();
+            });
+
+            $course->delete();
+        });
+
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');

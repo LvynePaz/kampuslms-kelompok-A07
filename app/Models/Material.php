@@ -23,6 +23,19 @@ class Material extends Model
         'external_url',
     ];
 
+    public function getFormattedFileSizeAttribute(): ?string
+    {
+        if (empty($this->file_path) || $this->file_size === null) {
+            return null;
+        }
+
+        $bytes = (int) $this->file_size;
+
+        return $bytes >= 1024 * 1024
+            ? number_format($bytes / (1024 * 1024), 1) . ' MB'
+            : number_format($bytes / 1024, 1) . ' KB';
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
