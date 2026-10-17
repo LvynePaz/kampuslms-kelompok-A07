@@ -55,6 +55,7 @@ class UpdateCourseRequest extends FormRequest
             'lecturer_id.exists'   => 'Dosen yang dipilih tidak ditemukan di database.',
             'status.required'      => 'Status mata kuliah wajib dipilih.',
             'status.in'            => 'Status hanya boleh: draft, active, atau archived.',
+            'student_ids.*.distinct' => 'Data mahasiswa yang didaftarkan tidak boleh duplikat.',
         ];
     }
 }

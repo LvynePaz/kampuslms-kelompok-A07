@@ -44,10 +44,10 @@
 
                 <div style="margin-bottom: 1.25rem;">
                     <label for="material_file" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; color: #21332a;">
-                        Unggah Berkas Materi (PDF, DOCX, PPTX, ZIP - Maks. 25MB)
+                        Unggah Berkas Materi (PDF, PPTX, DOCX - Maks. 20MB, Penyimpanan Privat)
                     </label>
-                    <input type="file" id="material_file" name="material_file" style="width: 100%; padding: 9px 12px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
-                    <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih berkas dari perangkat Anda jika ingin membagikan file slide atau dokumen secara langsung.</small>
+                    <input type="file" id="material_file" name="material_file" accept=".pdf,.pptx,.docx" style="width: 100%; padding: 9px 12px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
+                    <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih berkas dari perangkat Anda (format PDF, PPTX, DOCX maksimal 20 MB). Berkas akan disimpan di storage privat kampus yang aman.</small>
                 </div>
 
                 <div style="margin-bottom: 1.25rem;">

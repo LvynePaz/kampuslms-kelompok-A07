@@ -66,22 +66,33 @@ class MaterialController extends Controller
             'type'          => ['required', 'in:file,link'],
             'description'   => ['nullable', 'string'],
             'external_url'  => ['nullable', 'string', 'max:500'],
-            'material_file' => ['nullable', 'file', 'max:25600'],
+            'material_file' => ['nullable', 'file', 'mimes:pdf,pptx,docx', 'max:20480'],
         ], [
-            'title.required'     => 'Judul materi wajib diisi.',
-            'type.required'      => 'Tipe materi wajib dipilih.',
-            'material_file.file' => 'Berkas yang diunggah harus berupa file yang valid.',
-            'material_file.max'  => 'Ukuran berkas maksimal adalah 25MB.',
+            'title.required'      => 'Judul materi wajib diisi.',
+            'type.required'       => 'Tipe materi wajib dipilih.',
+            'material_file.file'  => 'Berkas yang diunggah harus berupa file yang valid.',
+            'material_file.mimes' => 'Berkas materi harus berformat PDF, PPTX, atau DOCX.',
+            'material_file.max'   => 'Ukuran berkas materi maksimal adalah 20MB.',
         ]);
 
-        // Jika dosen mengunggah file baru
+        if ($validated['type'] === 'link' && empty($validated['external_url'])) {
+            return back()->withErrors(['external_url' => 'Tautan eksternal wajib diisi jika tipe materi berupa tautan.'])->withInput();
+        }
+
+        // Jika dosen mengunggah file baru ke disk privat
         if ($request->hasFile('material_file')) {
-            if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-                Storage::disk('public')->delete($material->file_path);
+            if ($material->file_path) {
+                if (Storage::disk('local')->exists($material->file_path)) {
+                    Storage::disk('local')->delete($material->file_path);
+                }
+                if (Storage::disk('public')->exists($material->file_path)) {
+                    Storage::disk('public')->delete($material->file_path);
+                }
             }
 
             $file = $request->file('material_file');
-            $path = $file->store('materials', 'public');
+            // Simpan pada disk privat ('local' yang berakar di storage/app/private)
+            $path = $file->store('materials', 'local');
             $validated['file_path']     = $path;
             $validated['original_name'] = $file->getClientOriginalName();
             $validated['file_size']     = $file->getSize();
@@ -123,20 +134,30 @@ class MaterialController extends Controller
             'type'          => ['required', 'in:file,link'],
             'description'   => ['nullable', 'string'],
             'external_url'  => ['nullable', 'string', 'max:500'],
-            'material_file' => ['nullable', 'file', 'max:25600'],
+            'material_file' => ['nullable', 'file', 'mimes:pdf,pptx,docx', 'max:20480'],
         ], [
-            'title.required'     => 'Judul materi wajib diisi.',
-            'type.required'      => 'Tipe materi wajib dipilih.',
-            'material_file.file' => 'Berkas yang diunggah harus berupa file yang valid.',
-            'material_file.max'  => 'Ukuran berkas maksimal adalah 25MB.',
+            'title.required'      => 'Judul materi wajib diisi.',
+            'type.required'       => 'Tipe materi wajib dipilih.',
+            'material_file.file'  => 'Berkas yang diunggah harus berupa file yang valid.',
+            'material_file.mimes' => 'Berkas materi harus berformat PDF, PPTX, atau DOCX.',
+            'material_file.max'   => 'Ukuran berkas materi maksimal adalah 20MB.',
         ]);
+
+        if ($validated['type'] === 'file' && !$request->hasFile('material_file') && empty($validated['external_url'])) {
+            return back()->withErrors(['material_file' => 'Berkas materi (PDF/PPTX/DOCX) wajib diunggah untuk materi bertipe berkas.'])->withInput();
+        }
+
+        if ($validated['type'] === 'link' && empty($validated['external_url'])) {
+            return back()->withErrors(['external_url' => 'Tautan eksternal wajib diisi jika tipe materi berupa tautan.'])->withInput();
+        }
 
         $validated['uploaded_by'] = $request->user()->id;
 
-        // Jika dosen mengunggah file fisik
+        // Jika dosen mengunggah file fisik ke disk privat
         if ($request->hasFile('material_file')) {
             $file = $request->file('material_file');
-            $path = $file->store('materials', 'public');
+            // Simpan pada disk privat ('local' yang berakar di storage/app/private)
+            $path = $file->store('materials', 'local');
             $validated['file_path']     = $path;
             $validated['original_name'] = $file->getClientOriginalName();
             $validated['file_size']     = $file->getSize();
@@ -163,13 +184,94 @@ class MaterialController extends Controller
     }
 
     /**
-     * Buka atau unduh berkas materi secara aman (mencegah blokir file:/// pada browser).
+     * Unduh berkas materi secara aman lewat Policy.
+     * Hanya mahasiswa terdaftar, dosen pengampu, atau admin yang diizinkan.
+     */
+    public function download(Request $request, Material $material)
+    {
+        Gate::authorize('download', $material);
+
+        $filename = $material->original_name ?: basename($material->file_path ?? 'materi');
+
+        // 1. Berkas di disk privat ('local' berakar di storage/app/private)
+        if ($material->file_path && Storage::disk('local')->exists($material->file_path)) {
+            return Storage::disk('local')->download($material->file_path, $filename);
+        }
+
+        // 2. Berkas di storage publik Laravel (arsip unggahan sebelumnya)
+        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
+            return Storage::disk('public')->download($material->file_path, $filename);
+        }
+
+        // 3. Berkas lokal dari file:/// path
+        if ($material->external_url && str_starts_with($material->external_url, 'file:///')) {
+            $rawPath = preg_replace('~^file:///~i', '', $material->external_url);
+            $candidatePaths = [
+                $rawPath,
+                urldecode($rawPath),
+                str_replace('/', DIRECTORY_SEPARATOR, $rawPath),
+                str_replace('/', DIRECTORY_SEPARATOR, urldecode($rawPath)),
+            ];
+
+            foreach ($candidatePaths as $candidate) {
+                if (file_exists($candidate)) {
+                    return response()->download($candidate, basename($candidate));
+                }
+            }
+        }
+
+        // 4. Data dummy seeder (file fisik di storage belum di-generate)
+        if ($material->file_path) {
+            $dummyContent = "====================================================\n"
+                . "DOKUMEN MATERI PERKULIAHAN RESMI (UNDUHAN PRIVAT)\n"
+                . "====================================================\n\n"
+                . "Mata Kuliah : " . $material->course->name . " (" . $material->course->code . ")\n"
+                . "Judul Materi: " . $material->title . "\n"
+                . "Dosen       : " . ($material->course->lecturer?->name ?? 'Dosen Pengampu') . "\n\n"
+                . "Deskripsi   :\n" . ($material->description ?: 'Silabus dan panduan materi perkuliahan.') . "\n\n"
+                . "====================================================\n"
+                . "KampusLMS - Kelompok A07\n";
+
+            $ext = pathinfo($filename, PATHINFO_EXTENSION);
+            $downloadName = $ext ? $filename : ($filename . '.txt');
+
+            return response()->streamDownload(function () use ($dummyContent) {
+                echo $dummyContent;
+            }, $downloadName);
+        }
+
+        // 5. Tautan URL eksternal
+        if ($material->external_url) {
+            $url = $material->external_url;
+            if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                $url = 'https://' . $url;
+            }
+            return redirect()->away($url);
+        }
+
+        abort(404, 'Berkas materi tidak ditemukan.');
+    }
+
+    /**
+     * Buka / pratinjau berkas materi secara aman via Policy.
      */
     public function showFile(Request $request, Material $material)
     {
         Gate::authorize('view', $material);
 
-        // 1. File diunggah di storage publik Laravel
+        if ($request->boolean('download')) {
+            return $this->download($request, $material);
+        }
+
+        // 1. File diunggah di storage privat ('local' berakar di storage/app/private)
+        if ($material->file_path && Storage::disk('local')->exists($material->file_path)) {
+            return Storage::disk('local')->response(
+                $material->file_path,
+                $material->original_name ?: basename($material->file_path)
+            );
+        }
+
+        // 2. File diunggah di storage publik Laravel
         if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
             return Storage::disk('public')->response(
                 $material->file_path,
@@ -177,7 +279,7 @@ class MaterialController extends Controller
             );
         }
 
-        // 2. Berkas lokal dari file:/// path (seperti yang diunggah oleh user di laptopnya)
+        // 3. Berkas lokal dari file:/// path
         if ($material->external_url && str_starts_with($material->external_url, 'file:///')) {
             $rawPath = preg_replace('~^file:///~i', '', $material->external_url);
             $candidatePaths = [
@@ -198,7 +300,7 @@ class MaterialController extends Controller
             }
         }
 
-        // 3. Data seeder dummy (file_path ada tapi file fisik belum ada di disk)
+        // 4. Data seeder dummy (file_path ada tapi file fisik belum ada di disk)
         if ($material->file_path) {
             $filename = $material->original_name ?: basename($material->file_path);
             $dummyContent = "====================================================\n"
@@ -217,7 +319,7 @@ class MaterialController extends Controller
             ]);
         }
 
-        // 4. URL seeder kampuslms.test (hostname dummy)
+        // 5. URL seeder kampuslms.test (hostname dummy)
         if ($material->external_url && str_contains($material->external_url, 'kampuslms.test')) {
             $content = "Materi Perkuliahan: " . $material->title . "\n\n"
                 . "Mata Kuliah: " . $material->course->name . " (" . $material->course->code . ")\n"
@@ -228,7 +330,7 @@ class MaterialController extends Controller
             ]);
         }
 
-        // 5. Tautan URL web eksternal lainnya
+        // 6. Tautan URL web eksternal lainnya
         if ($material->external_url) {
             $url = $material->external_url;
             if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
@@ -245,8 +347,14 @@ class MaterialController extends Controller
         Gate::authorize('delete', $material);
         $course = $material->course;
 
-        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
+        // Hapus berkas fisik dari storage privat maupun publik
+        if ($material->file_path) {
+            if (Storage::disk('local')->exists($material->file_path)) {
+                Storage::disk('local')->delete($material->file_path);
+            }
+            if (Storage::disk('public')->exists($material->file_path)) {
+                Storage::disk('public')->delete($material->file_path);
+            }
         }
 
         $material->delete();
