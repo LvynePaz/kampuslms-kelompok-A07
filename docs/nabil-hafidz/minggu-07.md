@@ -1,149 +1,95 @@
 # Catatan Individu Minggu - 07 - Nabil Hafidz (10241055)
 
-## 7.3 Read → Break → Fix → Build
+*READ*
+
+1. Berkas yang menangani proses POST login adalah `app/Http/Controllers/Auth/AuthenticatedSessionController.php` pada method `store()`.
+   Rutenya didefinisikan di `routes/auth.php`:
+   ```php
+   Route::post('login', [AuthenticatedSessionController::class, 'store']);
+   ```
+   Ketika pengguna mengirimkan form login, request diarahkan ke method `store()`. Di sini kredensial divalidasi dan diotentikasi lewat form request `LoginRequest`, kemudian session di-regenerate sebelum diarahkan ke halaman dashboard.
+
+2. Pemanggilan `Auth::attempt()` berada di berkas `app/Http/Requests/Auth/LoginRequest.php` di dalam method `authenticate()`:
+   ```php
+   if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+       RateLimiter::hit($this->throttleKey());
+
+       throw ValidationException::withMessages([
+           'email' => trans('auth.failed'),
+       ]);
+   }
+   ```
+   Method `Auth::attempt()` mencocokkan input email dan password dengan data di tabel `users`. Jika gagal, rate limiter dinaikkan untuk membatasi percobaan login berikutnya guna mencegah serangan brute-force.
+
+3. Kode `session()->regenerate()` ditemukan di berkas `app/Http/Controllers/Auth/AuthenticatedSessionController.php` pada method `store()`:
+   ```php
+   $request->authenticate();
+   $request->session()->regenerate();
+   ```
+   Perintah ini digunakan untuk mencegah serangan *session fixation*. Sebelum login, pengguna sudah memiliki ID sesi bawaan sebagai tamu. Begitu pengguna berhasil login, ID sesi diganti dengan yang baru agar ID sesi lama tidak bisa disalahgunakan oleh pihak lain untuk membajak akun.
+
+4. Kata sandi di-hash secara otomatis menggunakan cast pada model `app/Models/User.php`:
+   ```php
+   protected function casts(): array
+   {
+       return [
+           'email_verified_at' => 'datetime',
+           'password' => 'hashed',
+       ];
+   }
+   ```
+   Dengan cast `'password' => 'hashed'`, setiap kali nilai password diisi atau diperbarui, Laravel langsung mengubahnya menjadi format hash bcrypt satu arah sebelum disimpan ke database, sehingga password tidak pernah tersimpan dalam bentuk teks biasa (plain text).
+
+5. Saya memeriksa DevTools (F12) pada menu Application → Cookies untuk domain aplikasi sebelum dan sesudah login:
+   * **Sebelum login:** Terdapat cookie `laravel_session` dengan nilai ID sesi acak tamu.
+   * **Sesudah login:** Nilai cookie `laravel_session` otomatis berganti menjadi string acak baru.
+   Hal ini membuktikan bahwa `session()->regenerate()` berhasil memperbarui ID sesi setelah autentikasi sukses.
+
+6. Ketika saya menekan tombol logout lalu menekan tombol back di browser:
+   * Tampilan dashboard sebelumnya sempat terlihat di layar karena browser memuatnya dari cache lokal memori (BFCache).
+   * Namun saat halaman di-refresh atau menu lain diklik, server langsung menolak dan mengarahkan kembali ke halaman login karena sesi di server sudah dihapus lewat `Auth::logout()` dan `session()->invalidate()`.
 
 ---
 
-### READ — Bedah Starter Kit & Mekanisme File Upload / Autentikasi (30 menit)
+*BREAK*
 
-#### 1. Berkas mana yang menangani POST login? Method apa?
-* **Berkas:** `app/Http/Controllers/Auth/AuthenticatedSessionController.php`
-* **Method:** `store(LoginRequest $request)`
-* **Rute:** `Route::post('login', [AuthenticatedSessionController::class, 'store'])` di dalam `routes/auth.php`.
-* **Penjelasan:** Request submit form login diarahkan ke method `store()`. Di sini request divalidasi dan diotentikasi melalui form request `LoginRequest`, kemudian session di-regenerate sebelum redirect ke dashboard.
-
----
-
-#### 2. Di baris mana Auth::attempt() atau setaranya dipanggil?
-* **Berkas:** `app/Http/Requests/Auth/LoginRequest.php`
-* **Method:** `authenticate()`
-* **Kodenya:**
-  ```php
-  if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-      RateLimiter::hit($this->throttleKey());
-
-      throw ValidationException::withMessages([
-          'email' => trans('auth.failed'),
-      ]);
-  }
-  ```
-* **Penjelasan:** Fungsi `Auth::attempt()` mencocokkan kredensial email dan password plaintext (yang di-hash secara otomatis menggunakan bcrypt) dengan tabel `users`. Jika gagal, penghitung rate limiter dinaikkan untuk mencegah *brute-force attack*.
+| # | Yang dicoba | Perilaku yang Terjadi | Penjelasan & Bahaya Keamanannya |
+|---|-------------|-----------------------|---------------------------------|
+| 1 | Hapus `session()->regenerate()` dari proses login di `AuthenticatedSessionController`. | Login tetap sukses, tetapi nilai cookie session di browser tidak berganti sama sekali. | **Celah Session Fixation.** Penyerang bisa menyusupkan ID session yang sudah diketahui sebelumnya dan ikut masuk ke akun pengguna setelah login. |
+| 2 | Hapus `Gate::authorize()` di method update controller, tetapi tombol Edit di Blade tetap dibungkus `@can`. | Tombol Edit di tampilan web memang tidak muncul, tetapi data mata kuliah tetap bisa diubah saat ditembak langsung dengan `PUT` via cURL. | **Otorisasi hanya di sisi UI, bukan server.** Pengamanan aplikasi web wajib dilakukan di controller menggunakan `Gate::authorize()`, bukan hanya menyembunyikan tombol di Blade. |
+| 3 | Kirim request `PUT` untuk mengubah mata kuliah milik Dosen B menggunakan akun Dosen A via cURL. | Server menolak dan mengembalikan respon **403 Forbidden**. | **Proteksi Policy berhasil.** `CoursePolicy` memeriksa kepemilikan data (`lecturer_id === user.id`), sehingga dosen tidak bisa mengotak-atik kelas dosen lain. |
+| 4 | Login sebagai Mahasiswa A, lalu coba akses URL submission milik Mahasiswa B (`GET /submissions/{id}`). | Server merespons dengan **403 Forbidden**. | **Pencegahan celah IDOR.** `SubmissionPolicy` memastikan berkas tugas hanya bisa dilihat oleh pemilik tugas, dosen pengampu, atau admin. |
+| 5 | Ubah query `CourseController@index` menjadi `Course::paginate(15)` tanpa filter role, lalu buka pakai akun mahasiswa. | Mahasiswa dapat melihat semua mata kuliah di kampus, termasuk mata kuliah dari jurusan lain yang tidak diikutinya. | **Kebocoran data di level daftar (List Leak).** Penyaringan data wajib dilakukan sejak awal pada query database berdasarkan role user yang aktif. |
+| 6 | Kirim parameter tambahan `role=admin` saat submit form edit profil atau update akun. | Nilai role di database tidak berubah (tetap role aslinya). | **Proteksi Mass Assignment.** Kolom `role` tidak dibuka di `$fillable` dan divalidasi ketat sehingga pengguna biasa tidak bisa menaikkan hak aksesnya sendiri (*privilege escalation*). |
+| 7 | Hapus cast `'password' => 'hashed'` di model `User`, lalu simpan user baru. | Password tersimpan dalam bentuk teks biasa (plain text) di database. | **Sangat berbahaya jika database bocor.** Password wajib selalu di-hash agar tidak dapat dibaca langsung oleh penyerang jika data bocor. |
+| 8 | Salin nilai cookie `laravel_session` dari browser A yang sudah login, lalu tempel ke browser B (Incognito) dan refresh. | Browser B langsung masuk ke akun yang sama tanpa diminta login. | **Bahaya pembajakan sesi (Session Hijacking).** Menunjukkan sesi sepenuhnya dikendalikan cookie, sehingga cookie harus diproteksi dengan atribut `HttpOnly` dan HTTPS. |
 
 ---
 
-#### 3. Temukan session()->regenerate(). Kenapa ia ada di situ?
-* **Berkas:** `app/Http/Controllers/Auth/AuthenticatedSessionController.php`
-* **Kodenya:**
-  ```php
-  $request->authenticate();
-  $request->session()->regenerate();
-  ```
-* **Kenapa ia ada di situ:** Perintah ini mencegah serangan **Session Fixation**. Tanpa regenerasi session, penyerang dapat menyuntikkan ID session tertentu sebelum korban login dan tetap menggunakan session yang sama setelah korban terautentikasi.
+*BUILD*
 
----
+Pada Milestone M2 ini, beberapa tugas implementasi keamanan dan otorisasi yang telah dikerjakan di proyek kelompok (`kampuslms-kelompok-A07`):
 
-#### 4. Di mana kata sandi di-hash? Cari cast hashed di model User.
-* **Berkas:** `app/Models/User.php`
-* **Kodenya:**
-  ```php
-  protected function casts(): array
-  {
-      return [
-          'email_verified_at' => 'datetime',
-          'password' => 'hashed',
-      ];
-  }
-  ```
-* **Penjelasan:** Cast `'password' => 'hashed'` memastikan nilai plaintext yang di-assign ke atribut `password` selalu di-hash menggunakan algoritma default Laravel (bcrypt/argon2) secara transparan sebelum disimpan ke database.
+1. **Autentikasi Starter Kit Breeze:**
+   Mengintegrasikan Breeze Blade untuk alur login, logout aman via method `POST` dengan proteksi token `@csrf`, regenerasi sesi, dan manajemen profil pengguna.
 
----
+2. **5 Policy Otorisasi:**
+   Menerapkan otorisasi berbasis peran dan kepemilikan untuk seluruh model:
+   * `CoursePolicy` (pengelolaan mata kuliah)
+   * `MaterialPolicy` (akses dan pengunduhan materi)
+   * `AssignmentPolicy` (pembuatan dan pengaturan tugas)
+   * `SubmissionPolicy` (pengumpulan dan peninjauan tugas)
+   * `GradePolicy` (penilaian tugas mahasiswa)
 
-#### 5. DevTools → Cookies sebelum dan sesudah login. Bandingkan nilai cookie session.
-* **Hasil:**
-  * Sebelum login: Cookie `laravel_session` bernilai string acak tamu.
-  * Sesudah login: Nilai string `laravel_session` berubah total menjadi ID sesi baru yang diterbitkan server.
-* **Kesimpulan:** Menunjukkan bahwa `session()->regenerate()` berhasil memperbarui identitas sesi pengguna di sisi client.
+3. **Integrasi Controller:**
+   Mengganti pengecekan manual lama dengan `Gate::authorize()` pada controller (`CourseController`, `MaterialController`, `AssignmentController`).
 
----
+4. **Filter Query Berdasarkan Peran:**
+   Menyaring query pada method `index()`:
+   * Admin: melihat seluruh daftar mata kuliah.
+   * Dosen: hanya melihat mata kuliah yang diampunya.
+   * Mahasiswa: hanya melihat mata kuliah yang telah diikutinya.
 
-#### 6. Logout, lalu tekan tombol back. Apa yang terjadi? Kenapa?
-* **Apa yang terjadi:** Browser menampilkan halaman dashboard sebelumnya sesaat dari cache lokal (BFCache).
-* **Kenapa:** Halaman tersebut dimuat dari memori cache browser, bukan dari request baru ke server. Begitu halaman di-refresh atau tautan diklik, server langsung merespons redirect ke halaman login karena sesi di server sudah dihancurkan (`Auth::logout()` dan `session()->invalidate()`).
-
----
-
-### BREAK — Delapan Kerusakan & Eksperimen Keamanan Berkas (50 menit)
-
-| # | Yang Dicoba | Perilaku yang Terjadi | Penjelasan & Bahaya Keamanannya |
-|---|---|---|---|
-| **1** | Hapus `session()->regenerate()` dari `AuthenticatedSessionController`. | Login tetap sukses, tetapi ID cookie session di browser tidak pernah berganti. | **Session Fixation:** Penyerang bisa membajak sesi jika mengetahui ID sesi pra-login korban. |
-| **2** | Hapus pengecekan Policy `Gate::authorize('download', $material)` pada pengunduhan materi. | Mahasiswa dari luar kelas atau tamu yang menebak ID materi langsung bisa mengunduh file privat. | **Celah IDOR (Insecure Direct Object Reference):** Mengakibatkan kebocoran dokumen kuliah privat/rahasia ke pihak yang tidak berhak. |
-| **3** | Simpan berkas materi di disk `public` alih-alih `local` (privat). | Berkas dapat diakses langsung oleh siapa saja via URL `http://domain/storage/materials/file.pdf` tanpa login dan tanpa melewati controller/policy. | **Bypass Otorisasi:** File di storage publik dapat di-crawl atau diakses langsung lewat web server (Nginx/Apache) tanpa kontrol aplikasi Laravel. |
-| **4** | Hapus validasi tipe MIME/ekstensi (`mimes:pdf,pptx,docx`). | Pengguna bisa mengunggah file berbahaya seperti `.exe`, `.php`, atau shell script. | **Remote Code Execution (RCE) & Malicious Upload:** Pengunggah dapat menyisipkan script berbahaya yang bisa dieksekusi server. |
-| **5** | Naikkan limit upload melebihi kapasitas server atau tanpa validasi `max:20480`. | Server berisiko mengalami kehabisan disk/RAM saat menerima berkas sangat besar. | **Denial of Service (DoS):** Penyerang dapat membanjiri ruang penyimpanan server dengan mengunggah berkas raksasa secara massal. |
-| **6** | Hapus event penghapusan berkas fisik saat record materi dihapus. | Record di database hilang, tetapi file fisik tetap tertinggal di folder `storage/app/private`. | **Orphaned Files (Storage Leak):** Membuang kapasitas disk server secara sia-sia dari waktu ke waktu (*resource exhaustion*). |
-| **7** | Sisipkan karakter path traversal `../../` pada original filename. | Tanpa sanitasi, file bisa tertulis ke direktori di luar target penyimpanan yang ditentukan. | **Arbitrary File Write / Path Traversal:** Laravel mengamankan ini dengan menggunakan hashing acak untuk path penyimpanan fisik. |
-| **8** | Akses endpoint unduh materi milik dosen B menggunakan akun Dosen A yang tidak mengajar mata kuliah tersebut. | Server langsung mengembalikan respons **HTTP 403 Forbidden**. | **Proteksi Policy Berjalan:** Dosen lain yang tidak mengampu mata kuliah terkait tidak diizinkan mengakses berkas materi. |
-
----
-
-### BUILD — Fitur Materi Perkuliahan (Tugas Poin 1 & 2 - Nabil Hafidz)
-
-Sesuai pembagian tugas, berikut implementasi fitur materi yang telah diselesaikan:
-
-#### 1. Unggah Materi oleh Dosen (Poin 1)
-* **Validasi Ketat Format & Ukuran:**
-  * Ekstensi & MIME yang diizinkan: **PDF, PPTX, dan DOCX**.
-  * Batas ukuran berkas: **Maksimal 20 MB** (`max:20480` KB).
-  * Pesan validasi berbahasa Indonesia yang jelas untuk setiap kegagalan input.
-* **Penyimpanan Disk Privat (Private Storage):**
-  * Berkas materi fisik disimpan pada disk privat `local` (`storage/app/private/materials/`), bukan di folder publik.
-  * Penambahan konfigurasi disk alias `'private'` di `config/filesystems.php`.
-  * Berkas **TIDAK BISA** diakses langsung melalui URL publik atau web server, melainkan wajib melalui otorisasi Controller & Policy.
-* **Alternatif Tautan Eksternal:**
-  * Dosen dapat memilih tipe `link` untuk menyematkan tautan materi eksternal (Google Drive, YouTube, website referensi).
-  * Tautan dinormalisasi secara otomatis (menambahkan skema `https://` jika belum ada).
-
-#### 2. Unduh Materi via Controller + Policy (Poin 2)
-* **Otorisasi Terpusat (`MaterialPolicy`):**
-  * Method `download()` dan `view()` pada `MaterialPolicy` memverifikasi bahwa pengguna yang meminta berkas adalah:
-    1. **Admin**, ATAU
-    2. **Dosen Pengampu** mata kuliah tersebut (`$material->course->lecturer_id === $user->id`), ATAU
-    3. **Mahasiswa yang Terdaftar** di mata kuliah tersebut (`$material->course->students()->whereKey($user->id)->exists()`).
-  * Mahasiswa yang tidak terdaftar otomatis menerima respons **HTTP 403 Forbidden**.
-  * Pengguna yang belum login diarahkan ke halaman login (**HTTP 302 Redirect**).
-* **Controller Responsif (`MaterialController`):**
-  * Method `download()`: Mengembalikan file dengan header `Content-Disposition: attachment` menggunakan `Storage::disk('local')->download()`.
-  * Method `showFile()`: Mendukung pratinjau inline (`response()`) serta pengunduhan paksa jika parameter `?download=1` disertakan.
-  * Rute terdaftar: `GET /materials/{material}/download` (`materials.download`) dan `GET /materials/{material}/file` (`materials.file`).
-
-#### 3. Penanganan Pembersihan Berkas Fisik & Kasus Cascade
-* **Pembersihan Berkas Fisik:**
-  * Pada `MaterialController::destroy()` dan hook Eloquent `Material::booted() static::deleting()`, berkas fisik di storage privat (`local`) maupun publik secara otomatis dihapus (`Storage::disk(...)->delete()`).
-* **Kasus Cascade:**
-  * Pada model `Course::booted() static::deleting()`, setiap materi di bawah mata kuliah yang dihapus dieksekusi penghapusannya secara rekursif sehingga berkas fisik tidak ada yang tertinggal (*no orphaned files*).
-
-#### 4. Tampilan `original_name` dan Ukuran Berkas Terbaca Manusia
-* **Accessor Eloquent `formatted_file_size`:**
-  * Menghitung byte menjadi unit yang mudah dibaca pengguna: `B`, `KB`, `MB`, `GB` (contoh: `14.65 MB`, `512 KB`).
-* **Pembaruan Tampilan Blade:**
-  * Halaman Detail Mata Kuliah (`resources/views/courses/show.blade.php`): Menampilkan nama berkas asli (`original_name`), ukuran berkas terformat, serta tombol **Unduh** dan **Buka**.
-  * Halaman Detail Materi (`resources/views/materials/show.blade.php`): Menampilkan metadata berkas lengkap dan tombol aksi unduh privat.
-  * Form Edit & Tambah Materi (`resources/views/materials/create.blade.php` & `edit.blade.php`): Menyediakan input berkas dengan batasan `accept=".pdf,.pptx,.docx"` dan petunjuk batas 20 MB.
-
----
-
-### Pengujian Otomatis (Automated Test Suite)
-
-Fitur materi telah diuji secara menyeluruh melalui test suite baru `tests/Feature/MaterialFeatureTest.php` dengan **10 skenario uji (46 assertions) lulus 100%**:
-
-1. `test_dosen_can_upload_pdf_material_to_private_disk_up_to_20mb` — Memastikan file PDF ~15 MB berhasil diunggah ke disk privat `local` dan metadata tersimpan.
-2. `test_dosen_can_upload_pptx_and_docx_materials` — Memverifikasi format PPTX dan DOCX diterima oleh validasi.
-3. `test_upload_rejects_files_larger_than_20mb` — Memverifikasi penolakan berkas >20 MB dengan pesan validasi error.
-4. `test_upload_rejects_invalid_file_extensions` — Memverifikasi berkas terlarang (.exe, script) ditolak.
-5. `test_dosen_can_create_material_with_external_link_alternative` — Memverifikasi pembuatan materi bertipe link eksternal.
-6. `test_enrolled_student_can_download_material` — Memverifikasi mahasiswa terdaftar berhasil mengunduh berkas.
-7. `test_unenrolled_student_is_forbidden_from_downloading_material` — Memverifikasi mahasiswa luar kelas ditolak dengan **HTTP 403 Forbidden**.
-8. `test_guest_is_redirected_to_login_when_downloading_material` — Memverifikasi tamu tanpa autentikasi diarahkan ke halaman login.
-9. `test_physical_file_is_deleted_when_material_is_deleted` — Memverifikasi penghapusan berkas fisik saat materi dihapus.
-10. `test_physical_file_is_deleted_when_parent_course_is_deleted_cascade` — Memverifikasi pembersihan berkas fisik saat mata kuliah dihapus bertingkat (*cascade*).
+5. **Pembaruan Antarmuka (Navbar & Blade):**
+   * Menggunakan direktif `@guest` untuk menampilkan tautan login bagi pengunjung yang belum masuk.
+   * Menggunakan direktif `@auth` untuk menampilkan identitas pengguna, lencana peran, menu mata kuliah dinamis, dan tombol logout yang aman.
