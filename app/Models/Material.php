@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use Illuminate\Support\Facades\Storage;
 
 class Material extends Model
@@ -46,6 +45,19 @@ class Material extends Model
         });
     }
 
+    public function getFormattedFileSizeAttribute(): ?string
+    {
+        if (empty($this->file_path) || $this->file_size === null) {
+            return null;
+        }
+
+        $bytes = (int) $this->file_size;
+
+        return $bytes >= 1024 * 1024
+            ? number_format($bytes / (1024 * 1024), 1) . ' MB'
+            : number_format($bytes / 1024, 1) . ' KB';
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
@@ -54,23 +66,5 @@ class Material extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
-    }
-
-    /**
-     * Konversi ukuran berkas ke format yang terbaca manusia (B, KB, MB, GB).
-     */
-    public function getFormattedFileSizeAttribute(): string
-    {
-        if (!$this->file_size) {
-            return '-';
-        }
-
-        $bytes = (float) $this->file_size;
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        for ($i = 0; $bytes >= 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-
-        return round($bytes, 2) . ' ' . $units[$i];
     }
 }

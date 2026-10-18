@@ -73,14 +73,16 @@ class ApiV1Test extends TestCase
             'created_by' => $lecturer->id,
         ]);
 
-        $submission = $this->actingAs($student)
+        $submissionResponse = $this->actingAs($student)
             ->postJson("/api/v1/assignments/{$assignment->id}/submissions", [
-                'file' => UploadedFile::fake()->create('answer.pdf', 100, 'application/pdf'),
+                'file' => UploadedFile::fake()->create('answer.pdf', 2048, 'application/pdf'),
                 'note' => 'Jawaban tugas',
             ])
             ->assertCreated()
             ->assertJsonPath('data.user_id', $student->id)
-            ->json('data.id');
+            ->assertJsonPath('data.original_name', 'answer.pdf')
+            ->assertJsonPath('data.file_size_human', '2.0 MB');
+        $submission = $submissionResponse->json('data.id');
 
         $this->actingAs($lecturer)
             ->putJson("/api/v1/submissions/{$submission}/grade", ['score' => 80, 'feedback' => 'Baik'])

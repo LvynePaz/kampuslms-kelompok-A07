@@ -167,10 +167,12 @@
                 <div class="info-item">
                     <div class="label">Nama Berkas / Tautan</div>
                     <div class="value" style="font-size: 0.95rem; word-break: break-all;">
-                        {{ $material->original_name ?: ($material->external_url ?: 'Berkas Perkuliahan') }}
+                        {{ $material->file_path
+                            ? ($material->original_name ?: basename($material->file_path))
+                            : ($material->external_url ?: 'Berkas Perkuliahan') }}
                     </div>
                 </div>
-                @if ($material->file_size)
+                @if ($material->formatted_file_size)
                     <div class="info-item">
                         <div class="label">Ukuran Berkas</div>
                         <div class="value">{{ $material->formatted_file_size }}</div>
