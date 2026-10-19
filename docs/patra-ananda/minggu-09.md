@@ -1,140 +1,156 @@
 # Catatan Individu Minggu - 09 - Patra Ananda (10241061)
 
-## 9.1 Konsep Unggahan Berkas dan Data Dinamis
-
-### Dua Jenis Berkas di KampusLMS
-
-Pemisahan tempat penyimpanan berkas adalah keputusan arsitektur paling mendasar pada sistem LMS:
-
-| Jenis Berkas | Contoh Berkas | Lokasi Penyimpanan | Jalur Akses | Aturan Keamanan |
-|---|---|---|---|---|
-| **Publik** | Foto profil pengguna, logo instansi | `storage/app/public` (terhubung ke `public/storage`) | URL statis langsung via web server | Bebas diakses tanpa login dan tanpa Policy |
-| **Privat** | Dokumen materi dosen, berkas tugas mahasiswa | `storage/app/private` (disk `local`) | Melalui Controller + Gate Policy | Wajib login, dicek hak aksesnya di server |
-
-Berkas materi dan tugas tidak boleh disimpan di `storage/app/public`. Jika berkas disimpan di sana, siapa pun yang mengetahui polanya bisa mengunduh berkas tanpa login, memotong seluruh Policy Laravel.
 
 ---
 
 ## 9.3 Read, Break, Fix, Build
 
-### READ: Menelusuri Sistem Berkas di Proyek (30 Menit)
+### READ: Menelusuri Jejak Satu Berkas di Sistem (30 Menit)
 
-Pengujian dilakukan dengan mengunggah berkas pengumpulan tugas mahasiswa (`tugas-m2-patra.pdf`):
+Saya menguji alur sistem dengan mengunggah satu berkas pengumpulan tugas mahasiswa (`tugas-m2-patra.pdf`):
 
-#### 1. Lokasi fisik berkas di server
-* **Path lengkap di sistem operasi:**  
+#### 1. Di mana lokasi fisik berkas tersebut tersimpan di harddisk?
+* **Jalur lengkap di komputer server:**  
   `c:\Users\ASUS TUF\Documents\KULIAH\SMSTR 5\PROWEB\PROJECT\kampuslms-kelompok-A07\storage\app\private\submissions\1\0RmruW1xozlyFx935vL1a58ElFUrjy6MQARXzMnu.pdf`
 * **Penjelasan:**  
-  Berkas masuk ke subfolder `submissions/{assignment_id}/` dengan nama acak 40 karakter hex demi mencegah benturan nama berkas dan serangan path traversal.
+  Berkas fisik masuk ke dalam subfolder `submissions/{id_tugas}/` dengan nama acak sepanjang 40 karakter. Sistem sengaja tidak menggunakan nama asli mahasiswa demi menjaga keamanan harddisk server.
 
-#### 2. Perbandingan path di database dengan lokasi fisik
-* **Di database (`submissions.file_path`):**  
+#### 2. Bandingkan path di database dengan lokasi fisik di harddisk
+* **Di tabel database (`submissions.file_path`):**  
   `submissions/1/0RmruW1xozlyFx935vL1a58ElFUrjy6MQARXzMnu.pdf`
-* **Di sistem berkas fisik:**  
+* **Di harddisk komputer:**  
   `storage/app/private/submissions/1/0RmruW1xozlyFx935vL1a58ElFUrjy6MQARXzMnu.pdf`
-* **Relasi:**  
-  Database hanya menyimpan path relatif terhadap root disk `local`. Lokasi fisik sesungguhnya ditentukan oleh konfigurasi disk di `config/filesystems.php`.
+* **Hubungan keduanya:**  
+  Database hanya mencatat alamat relatif dari folder utama disk `local`. Lokasi fisik lengkapnya diatur otomatis oleh konfigurasi Laravel di `config/filesystems.php`.
 
-#### 3. Percobaan akses langsung via browser
+#### 3. Coba akses berkas langsung lewat URL browser
 * **URL yang dicoba:**  
   `http://kampuslms-kelompok-a07.test/storage/submissions/1/0RmruW1xozlyFx935vL1a58ElFUrjy6MQARXzMnu.pdf`
 * **Hasil:**  
-  Mengembalikan kode status **HTTP 404 Not Found**.
-* **Penyebab:**  
-  Folder `public/storage` hanya berupa symbolic link ke `storage/app/public`. Folder `storage/app/private` tidak terhubung ke folder `public`, sehingga web server menolak melayani berkas tersebut secara langsung. Berkas privat hanya bisa diunduh jika melewati method `download()` di controller.
+  Muncul tampilan **HTTP 404 Not Found** (Halaman Tidak Ditemukan).
+* **Kenapa gagal?**  
+  Karena tautan web `/storage/...` hanya mengarah ke folder `storage/app/public`. Folder privat (`storage/app/private`) sengaja disembunyikan dan tidak memiliki pintu keluar langsung ke web server. Satu-satunya cara mengunduh berkas ini adalah melalui controller resmi aplikasi.
 
-#### 4. Perbedaan disk `local` dan `public` di `config/filesystems.php`
+#### 4. Apa beda disk `local` dan `public` di `config/filesystems.php`?
 * **Disk `local`:**  
-  Root folder berada di `storage_path('app/private')`. Tidak memiliki URL publik. Bertujuan menyimpan data sensitif yang membutuhkan otorisasi controller.
+  Mengarah ke folder `storage/app/private`. Disk ini tidak memiliki konfigurasi URL publik. Berkas di sini hanya bisa dibaca oleh script PHP di server.
 * **Disk `public`:**  
-  Root folder berada di `storage_path('app/public')` dan memiliki konfigurasi `'url' => env('APP_URL').'/storage'`. Berkas di disk ini bisa dilayani langsung oleh web server seperti Nginx atau Apache.
+  Mengarah ke folder `storage/app/public` dan memiliki alamat web `'url' => env('APP_URL').'/storage'`. Web server seperti Nginx atau Apache bisa langsung menyajikan berkas ini ke pengunjung tanpa memanggil PHP.
 
-#### 5. Fungsi `php artisan storage:link`
-* **Yang dibuat:**  
-  Membuat symlink (tautan simbolis) dari folder `public/storage` yang mengarah ke `storage/app/public`.
-* **Alasan materi dan tugas dilarang di sana:**  
-  Semua berkas di balik symlink tersebut menjadi dokumen publik. Tidak ada pemeriksaan peran, sesi login, atau kepemilikan data saat URL dikunjungi.
+#### 5. Apa fungsi perintah `php artisan storage:link`?
+* **Yang dikerjakan perintah ini:**  
+  Membuat jalan pintas (shortcut / symbolic link) dari folder luar `public/storage` ke folder dalam `storage/app/public`.
+* **Kenapa berkas tugas tidak boleh ada di sana?**  
+  Karena semua berkas di balik jalan pintas tersebut menjadi milik umum. Tidak ada proses login, tidak ada sesi, dan tidak ada aturan Policy yang bisa menghalangi orang untuk mengunduhnya.
 
 ---
 
-### BREAK: Delapan Kerusakan (50 Menit)
+### BREAK: Menguji Delapan Skenario Kerusakan (50 Menit)
 
-Pengujian dengan merusak konfigurasi sistem untuk melihat celah keamanan secara nyata:
+Berikut hasil pengujian langsung saat saya sengaja merusak atau mematikan fitur keamanan:
 
-| # | Skenario yang Dicoba | Pengamatan Perilaku | Risiko Keamanan dan Pencegahan |
+| # | Skenario yang Dicoba | Apa yang Terjadi di Layar | Bahaya dan Cara Mencegahnya |
 |---|---|---|---|
-| **1** | Memindahkan berkas tugas ke `storage/app/public`, lalu salin URL dan buka di Incognito tanpa login. | Berkas tugas PDF langsung terunduh utuh di browser tanpa meminta login. | **Kebocoran data massal.** Mahasiswa bisa menyalin tautan dan membagikannya ke grup luar. Solusi: Gunakan disk `local` (berakar di `storage/app/private`). |
-| **2** | Menghapus `Gate::authorize('view', $submission)` dari method `download()`. | Mahasiswa A bisa mengunduh tugas Mahasiswa B hanya dengan mengganti ID submission di URL: `/submissions/2/download`. | **Serangan IDOR (Insecure Direct Object Reference).** Solusi: Pasang `Gate::authorize('view', $submission)` di baris pertama method `download()`. |
-| **3** | Menggunakan `storeAs()` dengan nama asli, lalu mengirim nama berkas berbahaya `../../test.txt`. | Berkas berpotensi menembus keluar folder tujuan dan menimpa berkas sistem jika sanitasi path tidak ketat. | **Path Traversal.** Solusi: Selalu gunakan `$file->store()`, bukan `storeAs()`. Simpan nama asli hanya di kolom database `original_name`. |
-| **4** | Mengubah nama skrip PHP menjadi `shell.php.pdf`, lalu mengunggahnya pada validasi `extensions` vs `mimes`. | Validasi `extensions:pdf` mengizinkan berkas karena ekstensi akhirnya `.pdf`. Validasi `mimes:pdf` menolak berkas dengan pesan error validasi. | **Bypass File Upload.** Pemeriksaan ekstensi hanya membaca string nama. Aturan `mimes` membaca *magic bytes* (isi fisik berkas). Gunakan selalu `mimes:pdf,doc,docx`. |
-| **5** | Mengubah aturan validasi dari `max:5120` menjadi `max:5`, lalu mengunggah berkas ukuran 1 MB. | Unggahan gagal dengan pesan validasi bahwa ukuran berkas melebihi 5 kilobyte. | **Kesalahan satuan kapasitas.** Parameter validasi ukuran berkas di Laravel menggunakan satuan Kilobyte (KB), bukan Megabyte (MB). `max:5120` artinya 5120 KB = 5 MB. |
-| **6** | Mengatur `upload_max_filesize = 1M` di `php.ini`, lalu mengunggah berkas 3 MB dengan aturan Laravel `max:5120`. | Server langsung memutus request atau mengembalikan error HTTP 413 / error kosong sebelum validasi Laravel berjalan. | **Batas server mengalahkan batas aplikasi.** Pengaturan `upload_max_filesize` dan `post_max_size` di `php.ini` wajib lebih besar atau sama dengan validasi aplikasi Laravel. |
-| **7** | Mengganti `updateOrCreate` menjadi `create` biasa, lalu mengumpulkan tugas untuk kedua kalinya. | Database melempar error SQL `Integrity constraint violation: 1062 Duplicate entry` untuk composite key `(assignment_id, user_id)`. | **Duplikasi pengumpulan tugas.** Composite unique key di database menjaga integritas data, dan `updateOrCreate` di controller memastikan revisi tugas menimpa rekaman lama dengan rapi. |
-| **8** | Menghapus baris rekaman submission langsung lewat query SQL di database, lalu mengecek folder penyimpanan. | Baris di database hilang, tetapi berkas fisik PDF masih tersisa di folder `storage/app/private/submissions/1/`. | **Berkas yatim (Orphan Files).** Berkas sampah memenuhi kapasitas server. Solusi: Gunakan event model `deleting` atau hapus berkas fisik secara eksplisit menggunakan `Storage::disk('local')->delete(...)`. |
+| **1** | Memindahkan berkas tugas ke `storage/app/public`, lalu membuka tautannya di jendela penyamaran (Incognito) tanpa login. | Berkas PDF langsung terunduh lancar tanpa meminta login sama sekali. | **Kebocoran data tugas kelas.** Orang luar atau mahasiswa lain bisa mencuri tugas dengan mudah. Pencegahan: Simpan selalu berkas tugas di disk `local` (`storage/app/private`). |
+| **2** | Menghapus baris `Gate::authorize('view', $submission)` dari fungsi download di controller. | Mahasiswa A bisa mengunduh tugas milik Mahasiswa B hanya dengan mengganti angka ID di URL (misal dari `/submissions/1/download` menjadi `/submissions/2/download`). | **Celah IDOR (Insecure Direct Object Reference).** Siapa pun bisa mengintip berkas orang lain. Pencegahan: Pasang selalu `Gate::authorize('view', $submission)` sebelum file dikirim. |
+| **3** | Menyimpan berkas memakai fungsi `storeAs()` dengan nama asli, lalu mencoba mengunggah nama berkas berbahaya seperti `../../dokumen_rahasia.txt`. | Berkas berisiko keluar dari folder yang ditentukan dan menimpa dokumen penting milik sistem. | **Serangan Path Traversal.** Tanda `../` berarti mundur satu folder. Pencegahan: Selalu gunakan fungsi bawaan `$file->store()`, karena fungsi ini otomatis mengacak nama berkas menjadi hash unik yang aman. |
+| **4** | Mengubah nama skrip PHP jahat menjadi `hack.php.pdf`, lalu menguji aturan `extensions` dibandingkan dengan `mimes`. | Validasi `extensions:pdf` terkecoh dan meloloskan berkas karena nama akhirnya `.pdf`. Sebaliknya, aturan `mimes:pdf` menolak berkas tersebut. | **Penyusupan berkas berbahaya.** Aturan `extensions` cuma membaca teks di nama berkas (seperti membaca stiker di botol). Aturan `mimes` membaca tanda tangan biner asli (*magic bytes*). Pencegahan: Gunakan selalu validasi `mimes:pdf,doc,docx`. |
+| **5** | Mengubah aturan validasi dari `max:5120` menjadi `max:5`, lalu mencoba mengunggah berkas ukuran 1 MB. | Unggahan langsung ditolak dengan pesan bahwa ukuran berkas melebihi 5 kilobyte. | **Salah paham satuan ukuran.** Di Laravel, angka pada aturan `max` dihitung dalam satuan Kilobyte (KB), bukan Megabyte (MB). `max:5120` artinya 5120 KB = 5 MB. Kalau ditulis `max:5`, artinya cuma 5 KB. |
+| **6** | Mengatur `upload_max_filesize = 1M` di konfigurasi server `php.ini`, lalu mengunggah berkas 3 MB dengan aturan Laravel `max:5120`. | Layar langsung memunculkan pesan error kosong atau gagal kirim sebelum validasi Laravel sempat berjalan. | **Batas server mengalahkan batas aplikasi.** Satpam di gerbang kampus (`php.ini`) lebih galak daripada satpam ruang kelas (Laravel). Pastikan `upload_max_filesize` dan `post_max_size` di server disetel lebih besar atau sama dengan batas aplikasi. |
+| **7** | Mengganti perintah `updateOrCreate` menjadi `create` biasa, lalu mencoba mengumpulkan tugas untuk kedua kalinya. | Layar memunculkan error database `Duplicate entry` untuk pasangan `(assignment_id, user_id)`. | **Data ganda yang merusak sistem.** Kunci unik di database menjaga agar satu mahasiswa hanya punya satu tugas per tugas kuliah. Perintah `updateOrCreate` memastikan pengumpulan ulang akan memperbarui tugas lama secara rapi. |
+| **8** | Menghapus data submission langsung lewat query SQL database, lalu memeriksa folder penyimpanan berkas di komputer. | Baris di database hilang, tetapi berkas fisik PDF masih tertinggal menumpuk di folder `storage/app/private/`. | **Berkas yatim (Orphan Files).** Berkas yang tidak punya pemilik akan memakan kapasitas harddisk selamanya. Pencegahan: Hapus berkas fisik menggunakan fungsi `Storage::disk('local')->delete(...)` sebelum datanya dihapus dari database. |
 
 ---
 
-### FIX: Perbaikan Arsitektur Berkas di Laravel 12
+#### Pelajaran Paling Kritis dari Eksperimen Break:
 
-Tujuh perbaikan yang diterapkan pada basis kode proyek:
-
-1. **Penyimpanan Privat:** Seluruh berkas materi dan tugas dialihkan menggunakan disk `'local'` (`storage/app/private`).
-2. **Otorisasi Server:** Method `download()` memanggil `Gate::authorize('view', $submission)` untuk tugas dan `Gate::authorize('download', $material)` untuk materi.
-3. **Nama Berkas Acak:** Menggunakan `$file->store("submissions/{$assignment->id}", 'local')` yang menghasilkan hash acak, memisahkan nama fisik dengan kolom `original_name`.
-4. **Validasi Magic Bytes:** Menggunakan aturan `'mimes:pdf,doc,docx'` (bukan sekadar `extensions`).
-5. **Koreksi Ukuran Berkas:** Menggunakan kilobyte yang tepat, yaitu `max:5120` (5 MB) untuk submission dan `max:20480` (20 MB) untuk materi dosen.
-6. **Pembersihan Berkas Lama:** Saat mahasiswa mengunggah ulang tugas, berkas fisik lama dihapus dari disk sebelum berkas baru disimpan.
-7. **Pembersihan Berkas Terkait:** Controller menghapus berkas fisik saat data tugas atau materi dihapus dari sistem.
+Poin **Nomor 1 dan 2** membuktikan hal yang paling penting:  
+Banyak orang mengira jika tombol "Unduh" sudah disembunyikan dari layar mahasiswa lain, aplikasi sudah aman. Itu salah besar. Pengguna yang paham sedikit teknis bisa langsung menebak tautan berkas atau menembak URL download melalui Postman atau cURL. Keamanan berkas wajib dijaga di sisi server dengan menaruh berkas di folder privat dan memanggil `Gate::authorize()` sebelum berkas dikirimkan.
 
 ---
 
-### BUILD: Implementasi Fitur Minggu 9 di Kelompok A07
+## 9.3 FIX: Solusi Arsitektur Berkas di Laravel 12
 
-Berikut rincian implementasi teknis yang dibangun:
+Tujuh perbaikan yang telah diterapkan pada repositori KampusLMS Kelompok A07:
+
+1. **Memindahkan ke Disk Privat:** Seluruh berkas tugas dan materi disimpan menggunakan disk `'local'` (`storage/app/private`).
+2. **Menjaga Akses dengan Policy:** Method `download()` selalu memanggil otorisasi resmi:
+   ```php
+   Gate::authorize('view', $submission);
+   ```
+3. **Mengacak Nama Berkas Fisik:** Menggunakan `$file->store("submissions/{$assignment->id}", 'local')`. Nama acak ini menutup celah nama ganda dan path traversal. Nama asli disimpan terpisah di kolom `original_name`.
+4. **Validasi Isi Asli Berkas (Mimes):** Validasi menggunakan `'mimes:pdf,doc,docx'` agar sistem memeriksa struktur biner berkas, bukan sekadar tulisan ekstensinya.
+5. **Memperbaiki Hitungan Ukuran Berkas:** Menggunakan angka Kilobyte yang tepat: `max:5120` untuk tugas (5 MB) dan `max:20480` untuk materi dosen (20 MB).
+6. **Menghapus Berkas Fisik Lama saat Revisi Tugas:** Saat mahasiswa mengumpulkan ulang tugas, berkas fisik yang lama langsung dihapus dari harddisk sebelum berkas baru disimpan.
+7. **Membersihkan Berkas saat Data Dihapus:** Saat tugas atau mata kuliah dihapus, controller menghapus berkas-berkas fisiknya dari disk agar tidak menjadi berkas yatim.
+
+---
+
+## 9.3 BUILD: Penerapan Fitur Minggu 9 di Kelompok A07
+
+Berikut pekerjaan yang berhasil diselesaikan di branch `patra_61` dan `indah_59`:
 
 #### 1. Unggah Materi Kuliah oleh Dosen
-Dosen dapat mengunggah dokumen silabus dan materi pendukung dengan validasi format PDF, PPTX, atau DOCX hingga 20 MB, atau memasukkan tautan eksternal:
-* File: `app/Http/Controllers/MaterialController.php`
-* Method: `store()`, `update()`, dan Form Request otorisasi.
+* **Lokasi Berkas:** `app/Http/Controllers/MaterialController.php`
+* **Cara Kerja:** Dosen bisa mengunggah berkas materi berformat PDF, PPTX, atau DOCX hingga ukuran 20 MB, atau memasukkan tautan eksternal (misal Google Drive atau YouTube). Berkas fisik otomatis disimpan di disk privat `materials/`.
 
-#### 2. Unduh Materi dengan Otorisasi
-Mahasiswa hanya dapat mengunduh materi dari mata kuliah yang mereka ikuti. Tamu dan mahasiswa luar ditolak:
-* Policy: `app/Policies/MaterialPolicy.php` method `download()`.
-* Alur: `Gate::authorize('download', $material)` memverifikasi pendaftaran mahasiswa di mata kuliah.
+#### 2. Unduh Materi Berizin
+* **Lokasi Berkas:** `app/Policies/MaterialPolicy.php` dan `MaterialController@download`
+* **Cara Kerja:** Hanya mahasiswa yang benar-benar mengambil mata kuliah tersebut yang boleh mengunduh materi. Mahasiswa dari kelas lain atau tamu luar otomatis ditolak dengan pesan 403 Forbidden.
 
 #### 3. Pengumpulan Tugas Mahasiswa
-* Controller: `app/Http/Controllers/SubmissionController.php` method `store()`.
-* Proteksi:
-  * Memeriksa `Gate::authorize('submit', $assignment)`.
-  * Memeriksa batas waktu: jika `$assignment->allow_late` bernilai false dan waktu saat ini melewati deadline, pengumpulan langsung ditolak.
-  * Status keterlambatan dihitung di server: `'is_late' => now()->gt($assignment->due_at)`.
-  * Menghapus berkas fisik lama jika mahasiswa melakukan revisi tugas.
-  * Memperbarui baris database menggunakan `Submission::updateOrCreate()`.
+* **Lokasi Berkas:** `app/Http/Controllers/SubmissionController.php` method `store()`
+* **Fitur Utama:**
+  * Mengecek izin mahasiswa lewat `Gate::authorize('submit', $assignment)`.
+  * Menolak pengumpulan jika batas waktu sudah habis dan dosen menyetel `allow_late = false`.
+  * Menghitung status terlambat secara otomatis di server: `'is_late' => now()->gt($assignment->due_at)`.
+  * Menggunakan `updateOrCreate` agar tugas lama ditimpa dan berkas lama di harddisk dibersihkan.
 
 #### 4. Unduh Berkas Pengumpulan Tugas
-* Controller: `app/Http/Controllers/SubmissionController.php` method `download()`.
-* Proteksi:
-  * `Gate::authorize('view', $submission)` memastikan hanya pemilik tugas, dosen pengampu, dan admin yang dapat mengunduh.
-  * Pengecekan fisik: `abort_unless(Storage::disk('local')->exists($submission->file_path), 404)`.
-  * Mengembalikan stream download dengan nama asli pengguna: `Storage::disk('local')->download($submission->file_path, $submission->original_name)`.
+* **Lokasi Berkas:** `app/Http/Controllers/SubmissionController.php` method `download()`
+* **Fitur Utama:**
+  * Menjalankan `Gate::authorize('view', $submission)`. Hanya pemilik tugas, dosen pengampu, dan admin yang bisa mengunduh.
+  * Memastikan fisik berkas ada dengan `abort_unless(Storage::disk('local')->exists(...), 404)`.
+  * Mengirimkan berkas ke browser dengan nama asli yang sopan menggunakan `Storage::disk('local')->download(...)`.
 
-#### 5. Monitoring Pengumpulan Tugas untuk Dosen
-* Halaman: `resources/views/assignments/submissions.blade.php`.
-* Fitur: Menampilkan daftar seluruh mahasiswa di kelas, status pengumpulan, waktu submit, label terlambat, ukuran berkas yang mudah dibaca (`Number::fileSize()`), serta tombol unduh privat.
+#### 5. Halaman Monitoring Pengumpulan Tugas Dosen
+* **Lokasi Berkas:** `resources/views/assignments/submissions.blade.php`
+* **Fitur Utama:** Dosen bisa melihat tabel seluruh mahasiswa di kelas, mengetahui siapa yang sudah dan belum mengumpulkan, melihat label keterlambatan, melihat ukuran berkas yang mudah dibaca menggunakan fungsi `Number::fileSize()`, dan mengunduh berkas tugas mahasiswa secara aman.
 
 ---
 
-### CHECKPOINT 9.4: Rangkuman Evaluasi
+## 9.4 CHECKPOINT: Pertanyaan dan Jawaban Ujian
 
-1. **Kenapa submission tidak boleh disimpan di `storage/app/public`?**  
-   Folder publik dapat diakses langsung oleh siapa saja tanpa melewati autentikasi Laravel. Cukup dengan mengetahui URL berkas, pihak luar atau mahasiswa lain bisa mengunduh tugas teman sekelasnya.
-2. **Kenapa nama berkas fisik dibuat acak?**  
-   Nama berkas fisik acak mencegah benturan nama jika ada dua mahasiswa mengunggah nama berkas yang sama (`tugas.pdf`), serta menutup celah serangan path traversal seperti `../../nama_file`.
-3. **Apa beda validasi `mimes` dan `extensions`?**  
-   `extensions` hanya mencocokkan string ekstensi pada nama berkas. `mimes` membaca *magic bytes* atau signature biner di dalam berkas, sehingga skrip berbahaya seperti PHP yang diganti nama menjadi `.pdf` tetap tertolak.
-4. **Berapa ukuran `max:5120` dan apa yang bisa membatalkannya di server?**  
-   `max:5120` bernilai 5120 KB atau setara dengan 5 MB. Batasan ini bisa gagal jika konfigurasi `upload_max_filesize` atau `post_max_size` pada berkas `php.ini` bernilai lebih kecil dari 5 MB.
-5. **Apa yang mencegah mahasiswa mengunduh tugas mahasiswa lain?**  
-   Method `download()` memanggil `Gate::authorize('view', $submission)`. Di dalam `SubmissionPolicy@view`, sistem memvalidasi bahwa pengakses harus merupakan pemilik rekaman (`$submission->user_id === $user->id`), dosen pengampu, atau admin.
-6. **Kenapa `is_late` dihitung di server?**  
-   Waktu pada perangkat klien (browser) bisa dimanipulasi dengan mudah oleh pengguna melalui pengaturan jam sistem operasi. Penghitungan waktu di server (`now()->gt($assignment->due_at)`) menjamin data waktu bersifat valid dan konsisten.
+Berikut ringkasan jawaban cepat dan padat untuk sesi evaluasi dan ujian:
+
+### 1. Kenapa submission tidak boleh disimpan di `storage/app/public`? Peragakan kebocorannya.
+* **Jawaban:** Folder publik terhubung langsung ke web server lewat jalan pintas `public/storage`. Siapa pun yang tahu tautannya bisa mengunduh berkas tanpa perlu login dan tanpa pemeriksaan Policy.
+* **Cara Peragakan:** Jika berkas ditaruh di folder publik, kita bisa menyalin alamat URL-nya, lalu membukanya di jendela Incognito atau terminal cURL tanpa login. Berkas langsung terunduh utuh tanpa ada halangan.
+
+### 2. Kenapa nama berkas fisik dibuat acak? Serangan apa yang dicegah?
+* **Jawaban:** Supaya tidak terjadi benturan nama jika ada dua mahasiswa yang mengunggah berkas dengan nama yang sama (`tugas.pdf`).
+* **Serangan yang Dicegah:** Mencegah serangan *Path Traversal* (nama berkas jahat seperti `../../.env` yang bertujuan merusak berkas sistem server).
+
+### 3. Apa beda validasi `mimes` dan `extensions`? Mana yang lebih aman dan kenapa?
+* **Jawaban:** `extensions` hanya mencocokkan tulisan nama berkas di bagian belakang. `mimes` membaca struktur biner di dalam isi berkas (*magic bytes*).
+* **Mana yang Lebih Aman:** `mimes` jauh lebih aman. Berkas virus PHP yang diganti namanya menjadi `laporan.pdf` akan lolos jika memakai `extensions`, tetapi akan langsung ditolak jika memakai `mimes` karena isi aslinya tetap berupa skrip teks PHP.
+
+### 4. `max:5120` berarti berapa MB? Apa yang bisa membatalkannya di level server?
+* **Jawaban:** `max:5120` bernilai **5 Megabyte (5 MB)** karena satuan di Laravel adalah Kilobyte (5120 dibagi 1024 = 5).
+* **Yang Membatalkannya di Server:** Pengaturan `upload_max_filesize` dan `post_max_size` di berkas `php.ini`. Jika server PHP membatasi maksimal 2 MB, berkas 3 MB akan langsung ditolak sebelum sampai ke tangan Laravel.
+
+### 5. Tunjukkan di kode Anda apa yang mencegah mahasiswa mengunduh submission mahasiswa lain.
+* **Jawaban:** Di `SubmissionController@download`, baris pertama memanggil:
+  ```php
+  Gate::authorize('view', $submission);
+  ```
+  Lalu di `SubmissionPolicy@view`, ada aturan verifikasi:
+  ```php
+  return $user->role === 'admin'
+      || $submission->assignment->course->lecturer_id === $user->id
+      || $submission->user_id === $user->id;
+  ```
+  Kode ini memastikan bahwa pengunduh harus admin, dosen pengampu, atau mahasiswa pemilik berkas itu sendiri. Jika mahasiswa lain mencoba membuka tautan unduhannya, server langsung merespons dengan **403 Forbidden**.
+
+### 6. Kenapa `is_late` dihitung di server, bukan dikirim dari browser?
+* **Jawaban:** Karena jam di laptop pengguna bisa diubah dengan sangat mudah. Mahasiswa yang telat mengumpulkan tugas bisa memundurkan jam laptopnya sendiri sebelum mengklik kirim. Dengan menghitung waktu di server (`now()->gt($assignment->due_at)`), data waktu dijamin sah, adil, dan tidak bisa dimanipulasi.
