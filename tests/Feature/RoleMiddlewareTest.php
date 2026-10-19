@@ -60,4 +60,33 @@ class RoleMiddlewareTest extends TestCase
             ->assertSee($course->name)
             ->assertSee($assignment->title);
     }
+
+    public function test_student_cannot_see_or_view_draft_assignment(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $course->students()->attach($student->id);
+
+        $published = Assignment::factory()->for($course)->create([
+            'title' => 'Tugas Published Siap Kerjakan',
+            'status' => 'published',
+        ]);
+        $draft = Assignment::factory()->for($course)->create([
+            'title' => 'Tugas Draft Rahasia Dosen',
+            'status' => 'draft',
+        ]);
+
+        // Di halaman detail course mahasiswa, tugas draft TIDAK boleh muncul
+        $this->actingAs($student)
+            ->get(route('mahasiswa.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Tugas Published Siap Kerjakan')
+            ->assertDontSee('Tugas Draft Rahasia Dosen');
+
+        // Mengakses langsung URL tugas draft ditolak oleh Policy (403)
+        $this->actingAs($student)
+            ->get(route('mahasiswa.assignments.show', $draft))
+            ->assertForbidden();
+    }
 }

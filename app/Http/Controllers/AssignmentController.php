@@ -15,7 +15,12 @@ class AssignmentController extends Controller
         //validasi apakah user bisa mengakses matkul ini menggunakan Gate
         Gate::authorize('view', $course);
 
-        return response()->json($course->assignments()->get([
+        $query = $course->assignments();
+        if ($request->user()?->role === 'mahasiswa') {
+            $query->where('status', 'published');
+        }
+
+        return response()->json($query->get([
             'id',
             'title',
             'instructions',
