@@ -11,8 +11,16 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Course;
 use App\Models\User;
 
-// 1. Halaman Depan / Dashboard Utama
+// 1. Halaman Depan & Dashboard Utama
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return view('welcome');
+});
+
+Route::get('/dashboard', function () {
     $user = auth()->user();
     $courseCount = Course::count();
     $userCount = User::count();

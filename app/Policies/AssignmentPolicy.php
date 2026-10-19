@@ -16,7 +16,7 @@ class AssignmentPolicy
     {
         return $user->role === 'admin'
             || $assignment->course->lecturer_id === $user->id
-            || $assignment->course->students()->whereKey($user->id)->exists();
+            || ($assignment->course->students()->whereKey($user->id)->exists() && $assignment->status === 'published');
     }
 
     public function create(User $user): bool
