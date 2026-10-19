@@ -16,7 +16,12 @@ class AssignmentController extends Controller
         //validasi apakah user bisa mengakses matkul ini menggunakan Gate
         Gate::authorize('view', $course);
 
-        return response()->json($course->assignments()->get([
+        $query = $course->assignments();
+        if ($request->user()?->role === 'mahasiswa') {
+            $query->where('status', 'published');
+        }
+
+        return response()->json($query->get([
             'id',
             'title',
             'instructions',
@@ -48,6 +53,21 @@ class AssignmentController extends Controller
         }
 
         return view('assignments.show', compact('course', 'assignment'));
+    }
+
+    public function submissions(Assignment $assignment)
+    {
+        Gate::authorize('update', $assignment);
+
+        $assignment->load('course');
+        $students = $assignment->course->students()
+            ->with(['submissions' => fn ($query) => $query
+                ->where('assignment_id', $assignment->id)])
+            ->orderBy('name')
+            ->get();
+        $course = $assignment->course;
+
+        return view('assignments.submissions', compact('assignment', 'course', 'students'));
     }
 
     public function create(Request $request, Course $course)

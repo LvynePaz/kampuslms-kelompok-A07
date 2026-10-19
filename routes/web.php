@@ -11,8 +11,16 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Course;
 use App\Models\User;
 
-// 1. Halaman Depan / Dashboard Utama
+// 1. Halaman Depan & Dashboard Utama
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return view('welcome');
+});
+
+Route::get('/dashboard', function () {
     $user = auth()->user();
     $courseCount = Course::count();
     $userCount = User::count();
@@ -42,6 +50,8 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
         Route::resource('courses.materials', MaterialController::class)->shallow();
         Route::resource('courses.assignments', AssignmentController::class)->shallow();
     });
+    Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])
+        ->name('assignments.submissions');
 });
 
 Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->group(function () {

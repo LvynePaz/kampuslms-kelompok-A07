@@ -59,11 +59,16 @@ class CourseController extends Controller
             'page' => ['sometimes', 'integer', 'min:1'],
         ]);
 
-        $assignments = $course->assignments()
-            ->with('course.lecturer')
-            ->when(isset($filters['status']), fn ($query) => $query->where('status', $filters['status']))
-            ->orderByDesc('due_at')
-            ->paginate(15);
+        $user = $request->user();
+        $query = $course->assignments()->with('course.lecturer');
+
+        if ($user->role === 'mahasiswa') {
+            $query->where('status', 'published');
+        } elseif (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        $assignments = $query->orderByDesc('due_at')->paginate(15);
 
         return ApiResponse::collection($assignments, \App\Http\Resources\AssignmentResource::class);
     }

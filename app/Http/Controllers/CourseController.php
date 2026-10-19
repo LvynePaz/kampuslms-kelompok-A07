@@ -87,9 +87,19 @@ class CourseController extends Controller
     {
         //coursepolicy method view 
         Gate::authorize('view', $course);
-        $course->load(['lecturer', 'materials.uploader', 'assignments', 'students']);
+        $user = request()->user();
+        $course->load([
+            'lecturer',
+            'materials.uploader',
+            'assignments' => function ($query) use ($user) {
+                if ($user?->role === 'mahasiswa') {
+                    $query->where('status', 'published');
+                }
+            },
+            'students',
+        ]);
         $routePrefix = explode('.', request()->route()->getName())[0] . '.';
-        $userRole = request()->user()?->role ?? 'admin';
+        $userRole = $user?->role ?? 'admin';
 
         return view('courses.show', compact('course', 'routePrefix', 'userRole'));
     }

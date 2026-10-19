@@ -11,7 +11,11 @@ class StoreSubmissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $assignment = $this->route('assignment');
+
+        return $assignment instanceof \App\Models\Assignment
+            ? ($this->user()?->can('submit', $assignment) ?? false)
+            : ($this->user()?->role === 'mahasiswa');
     }
 
     /**

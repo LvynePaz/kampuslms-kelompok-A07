@@ -13,7 +13,11 @@ class UpdateCourseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $course = $this->route('course');
+
+        return $course instanceof \App\Models\Course
+            ? ($this->user()?->can('update', $course) ?? false)
+            : ($this->user()?->role === 'admin');
     }
 
     /**
