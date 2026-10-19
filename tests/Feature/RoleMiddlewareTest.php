@@ -72,9 +72,10 @@ class RoleMiddlewareTest extends TestCase
         $missingStudent = User::factory()->mahasiswa()->create(['name' => 'Citra Belum']);
         $course->students()->attach([$submittedStudent->id, $lateStudent->id, $missingStudent->id]);
 
-        Submission::factory()->create([
+        $ayuSubmission = Submission::factory()->create([
             'assignment_id' => $assignment->id,
             'user_id' => $submittedStudent->id,
+            'original_name' => 'laporan_ayu.pdf',
             'is_late' => false,
         ]);
         Submission::factory()->create([
@@ -91,7 +92,9 @@ class RoleMiddlewareTest extends TestCase
             ->assertSee('Citra Belum')
             ->assertSee('Sudah mengumpulkan')
             ->assertSee('Terlambat')
-            ->assertSee('Belum mengumpulkan');
+            ->assertSee('Belum mengumpulkan')
+            ->assertSee('laporan_ayu.pdf')
+            ->assertSee(route('submissions.download', $ayuSubmission));
     }
 
     public function test_only_the_assignment_lecturer_can_view_submission_status(): void

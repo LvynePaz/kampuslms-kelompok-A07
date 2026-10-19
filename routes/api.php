@@ -13,10 +13,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         $user = \App\Models\User::findOrFail($id);
 
         // SEBELUM: Model mentah bocor (password & token ikut keluar)
-       return response()->json($user->makeVisible(['password', 'remember_token']));
+        //return response()->json($user->makeVisible(['password', 'remember_token']));
 
         // SESUDAH: Menggunakan UserResource (cukup aktifkan baris di bawah dan komentari baris di atas)
-        //return new \App\Http\Resources\UserResource($user);
+        return new \App\Http\Resources\UserResource($user);
     });
 
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
