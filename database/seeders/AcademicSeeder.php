@@ -80,6 +80,27 @@ class AcademicSeeder extends Seeder
             'Indah Frontend',
             'Arwasyah',
             'Nazwa Dpm',
+            'Budi Pratama',
+            'Siti Rahmawati',
+            'Ahmad Fauzi',
+            'Dewi Lestari',
+            'Rizky Ramadhan',
+            'Putri Anggraini',
+            'Dimas Setiawan',
+            'Anisa Permata',
+            'Fajar Hidayat',
+            'Mega Utami',
+            'Bayu Saputra',
+            'Tiara Kusuma',
+            'Hendra Wijaya',
+            'Rina Marlina',
+            'Gilang Ramadhan',
+            'Citra Kirana',
+            'Aditya Nugraha',
+            'Wulan Dari',
+            'Taufik Hidayat',
+            'Larasati Dewi',
+            'Zulfikar Rahman',
         ];
 
         foreach ($studentNames as $idx => $name) {
@@ -162,10 +183,10 @@ class AcademicSeeder extends Seeder
             // Pastikan mahasiswa demo selalu terdaftar di setiap mata kuliah
             $enrolledStudentIds = [$students[0]->id];
 
-            // Tambahkan 18 mahasiswa acak lainnya agar tiap MK punya ≥ 19 mahasiswa
+            // Tambahkan 22 mahasiswa acak lainnya agar tiap MK punya ≥ 23 mahasiswa
             $otherStudents = array_slice($students, 1);
             shuffle($otherStudents);
-            $selected = array_slice($otherStudents, 0, 18);
+            $selected = array_slice($otherStudents, 0, 22);
 
             foreach ($selected as $st) {
                 $enrolledStudentIds[] = $st->id;
@@ -287,10 +308,11 @@ class AcademicSeeder extends Seeder
             $course = $assignment->course;
             $enrolledStudents = $course->students;
 
-            // Di tugas yang lewat deadline (Tugas 1), 6-8 mahasiswa submit
-            // Di tugas aktif (Tugas 2), 3-5 mahasiswa submit duluan
+            // Di tugas yang lewat deadline (Tugas 1), 10-14 mahasiswa submit
+            // Di tugas aktif (Tugas 2), 7-10 mahasiswa submit duluan
+            // Total dari 12 tugas: minimal > 100 submission
             $isPast = $assignment->due_at->isPast();
-            $submitCount = $isPast ? rand(6, 8) : rand(3, 5);
+            $submitCount = $isPast ? rand(10, 14) : rand(7, 10);
 
             $submitters = $enrolledStudents->take($submitCount);
 
