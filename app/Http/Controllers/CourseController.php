@@ -35,7 +35,8 @@ class CourseController extends Controller
 
         $courses = $query
             ->paginate(15)
-            ->withQueryString(); // filter tetap bertahan saat berpindah halaman
+            ->withQueryString(); 
+        // filter tetap bertahan saat berpindah halaman
 
         $routePrefix = explode('.', $request->route()->getName())[0] . '.';
         $userRole = $user?->role ?? 'admin';
@@ -139,7 +140,19 @@ class CourseController extends Controller
     {
         //coursepolicy method delete 
         Gate::authorize('delete', $course);
-        $course->delete();
+
+        DB::transaction(function () use ($course) {
+            $course->assignments()->with('submissions')->get()->each(function ($assignment) {
+                $assignment->submissions()->get()->each(function ($submission) {
+                    $submission->delete();
+                });
+
+                $assignment->delete();
+            });
+
+            $course->delete();
+        });
+
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');

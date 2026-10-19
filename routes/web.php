@@ -50,6 +50,8 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
         Route::resource('courses.materials', MaterialController::class)->shallow();
         Route::resource('courses.assignments', AssignmentController::class)->shallow();
     });
+    Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])
+        ->name('assignments.submissions');
 });
 
 Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->group(function () {
@@ -67,6 +69,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
 // 3. Rute Akses Berkas Materi, Tugas & Profil Pengguna (Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/materials/{material}/file', [MaterialController::class, 'showFile'])->name('materials.file');
+    Route::get('/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
     Route::post('/assignments/{assignment}/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
     Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])->name('submissions.download');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

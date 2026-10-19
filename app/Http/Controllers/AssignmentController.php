@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
@@ -52,6 +53,21 @@ class AssignmentController extends Controller
         }
 
         return view('assignments.show', compact('course', 'assignment'));
+    }
+
+    public function submissions(Assignment $assignment)
+    {
+        Gate::authorize('update', $assignment);
+
+        $assignment->load('course');
+        $students = $assignment->course->students()
+            ->with(['submissions' => fn ($query) => $query
+                ->where('assignment_id', $assignment->id)])
+            ->orderBy('name')
+            ->get();
+        $course = $assignment->course;
+
+        return view('assignments.submissions', compact('assignment', 'course', 'students'));
     }
 
     public function create(Request $request, Course $course)
@@ -123,7 +139,13 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
         $course = $assignment->course;
 
-        $assignment->delete();
+        DB::transaction(function () use ($assignment) {
+            $assignment->submissions()->get()->each(function ($submission) {
+                $submission->delete();
+            });
+
+            $assignment->delete();
+        });
 
         return redirect()
             ->route('dosen.courses.show', $course)

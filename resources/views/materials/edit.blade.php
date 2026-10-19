@@ -48,7 +48,7 @@
                     </select>
                 </div>
 
-                @if ($material->file_path || $material->original_name)
+                @if ($material->file_path)
                     <div style="margin-bottom: 1.25rem; background: #f7faf8; border: 1px solid rgba(45, 74, 62, 0.12); border-radius: 10px; padding: 12px 16px;">
                         <div style="font-size: 0.82rem; font-weight: 700; color: #416454; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
                             Berkas Materi Saat Ini
@@ -56,23 +56,28 @@
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 0.92rem; color: #1a2f25;">
                                 <span style="font-weight: 600;">{{ $material->original_name ?: basename($material->file_path) }}</span>
-                                @if ($material->file_size)
-                                    <span style="color: #647a6e; font-size: 0.82rem;">({{ number_format($material->file_size / 1024, 1) }} KB)</span>
+                                @if ($material->formatted_file_size)
+                                    <span style="color: #647a6e; font-size: 0.82rem;">({{ $material->formatted_file_size }})</span>
                                 @endif
                             </div>
-                            <a href="{{ route('materials.file', $material) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.25); padding: 4px 10px; border-radius: 6px; background: #ffffff;">
-                                Buka Berkas
-                            </a>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{{ route('materials.download', $material) }}" style="color: #ffffff; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid #2d4a3e; padding: 4px 10px; border-radius: 6px; background: #2d4a3e;">
+                                    Unduh
+                                </a>
+                                <a href="{{ route('materials.file', $material) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.25); padding: 4px 10px; border-radius: 6px; background: #ffffff;">
+                                    Buka Berkas
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @endif
 
                 <div style="margin-bottom: 1.25rem;">
                     <label for="material_file" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; color: #21332a;">
-                        Unggah Berkas Baru (Opsional - Maks. 25MB)
+                        Unggah Berkas Baru (Opsional - PDF, PPTX, DOCX - Maks. 20MB, Penyimpanan Privat)
                     </label>
-                    <input type="file" id="material_file" name="material_file" style="width: 100%; padding: 9px 12px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
-                    <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih berkas baru jika ingin mengganti berkas yang sudah ada. Biarkan kosong jika tidak ingin mengubah berkas.</small>
+                    <input type="file" id="material_file" name="material_file" accept=".pdf,.pptx,.docx" style="width: 100%; padding: 9px 12px; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 10px; font-family: inherit; font-size: 0.92rem; background: #fbfcfa;">
+                    <small style="color: #647a6e; display: block; margin-top: 4px;">Pilih berkas baru jika ingin mengganti berkas yang sudah ada (format PDF, PPTX, DOCX maksimal 20 MB). Biarkan kosong jika tidak ingin mengubah berkas.</small>
                 </div>
 
                 <div style="margin-bottom: 1.25rem;">

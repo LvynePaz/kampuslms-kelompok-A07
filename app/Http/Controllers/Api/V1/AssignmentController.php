@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssignmentController extends Controller
 {
@@ -62,7 +63,14 @@ class AssignmentController extends Controller
     {
         $assignment = Assignment::with('course')->findOrFail($id);
         $this->authorizeOwner($request, $assignment);
-        $assignment->delete();
+
+        DB::transaction(function () use ($assignment) {
+            $assignment->submissions()->get()->each(function ($submission) {
+                $submission->delete();
+            });
+
+            $assignment->delete();
+        });
 
         return response()->json(['data' => ['message' => 'Tugas berhasil dihapus.']]);
     }

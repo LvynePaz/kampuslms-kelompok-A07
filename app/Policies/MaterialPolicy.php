@@ -19,6 +19,11 @@ class MaterialPolicy
             || $material->course->students()->whereKey($user->id)->exists();
     }
 
+    public function download(User $user, Material $material): bool
+    {
+        return $this->view($user, $material);
+    }
+
     public function create(User $user): bool
     {
         return in_array($user->role, ['admin', 'dosen'], true);
