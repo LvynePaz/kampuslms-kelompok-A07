@@ -94,3 +94,12 @@
 | 5 | assignment berdasarkan `{assignment}` pada dosen | dosen bisa mencoba mengganti ID assignment untuk mengakses assignment yang tidak terkait dengannya | cek apakah assignment sesuai dengan course yang diampu sama dosen |
 
 ## BREAK
+
+| # | Yang dicoba | Yang harus anda amati | yang terjadi di proyek | hal yang perlu diamati berdasarkan hasil proyek |
+|---|---|---|---|---|
+| 1 | Login sebagai mahasiswa a. buka submission milik mahasiswa b dengan mengubah angka di url | IDOR nyata di aplikasi anda sendiri | **403 forbidden.** route unduh memerlukan login dan controller memeriksa policy | IDOR berhasil diblokir. mahasiswa cuma boleh mengakses submission milik sendiri, sedangkan dosen pengampu dan admin juga diizinkan |
+| 2 | Buka `/courses/1/assignments/99` di mana tugas 99 milik mata kuliah lain | Nested route tanpa scoping | **404 not found.** | url contoh tidak sesuai dengan route yang ada di proyek. route tugas menggunakan prefix `/dosen` atau `/mahasiswa`, dan route detail menggunakan `shallow()`, jadi urlnya tidak bersarang seperti contoh |
+| 3 | Aktifkan `Route::scopeBindings()`, ulangi nomor 2 | Bandingkan hasilnya | url tersebut tetap **404** | proyek sudah menggunakan `scopeBindings()` pada grup route bersarang. tetapi hasilnya belum menunjukkan pengaruh scoping karena url tsb memang tidak terdaftar. route detail tugas yang menggunakan `shallow()` tidak membawa parameter course, jadi akses objeknya diperiksa sama policy |
+| 4 | Daftarkan middleware di `app/Http/Kernel.php` seperti tutorial lama | Berkas itu tidak ada — kenali gejalanya | berkas `Kernel.php` tidak tersedia di lokasi tersebut | di laravel 12, alias middleware `role` didaftarkan di `bootstrap/app.php`, sedangkan implementasinya di `EnsureUserHasRole.php` |
+| 5 | Pasang `role:admin` pada grup, lalu akses sebagai dosen | 403 dari middleware | **403 forbidden.** | grup route admin menggunakan middleware `role:admin`, jadi dosen ditolak karena perannya tidak sesuai |
+| 6 | Sebagai dosen a, edit mata kuliah milik dosen b (keduanya lolos `role:dosen`) | Middleware saja tidak cukup | route web dosen sekarang tidak menyediakan halaman edit/update mata kuliah, jadi url edit di area dosen hasilnya **404** | kalau fitur edit/update tersedia, `CoursePolicy.php` cuma izinin admin atau dosen pengampu. dosen a akan ditolak dengan 403 saat mencoba mengedit mata kuliah dosen b. ini menunjukkan middleware berdasarkan role saja tidak cukup untuk membatasi akses ke data tertentu |
