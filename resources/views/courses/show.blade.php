@@ -217,9 +217,19 @@
                                     @if ($mat->description)
                                         <div style="font-size: 0.85rem; color: #5e7166; margin-bottom: 4px;">{{ $mat->description }}</div>
                                     @endif
-                                    <span style="display: inline-block; background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
-                                        {{ $mat->type }}
-                                    </span>
+                                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                        <span style="display: inline-block; background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                                            {{ $mat->type }}
+                                        </span>
+                                        @if ($mat->original_name)
+                                            <span style="font-size: 0.8rem; color: #5e7166; display: inline-flex; align-items: center; gap: 4px;">
+                                                📁 {{ $mat->original_name }}
+                                                @if ($mat->file_size)
+                                                    <span>({{ $mat->formatted_file_size }})</span>
+                                                @endif
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                                     @php
@@ -230,8 +240,12 @@
                                     @endphp
 
                                     @if ($hasFile)
-                                        <a href="{{ route('materials.file', $mat) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
-                                            Buka Berkas
+                                        <a href="{{ route('materials.download', $mat) }}" style="color: #ffffff; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid #2d4a3e; padding: 5px 12px; border-radius: 8px; background: #2d4a3e; display: inline-flex; align-items: center; gap: 4px;">
+                                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <a href="{{ route('materials.file', $mat) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-size: 0.82rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2); padding: 5px 12px; border-radius: 8px; background: #ffffff;">
+                                            Buka
                                         </a>
                                     @elseif ($isWebLink)
                                         @php

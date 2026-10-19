@@ -35,7 +35,8 @@ class CourseController extends Controller
 
         $courses = $query
             ->paginate(15)
-            ->withQueryString(); // filter tetap bertahan saat berpindah halaman
+            ->withQueryString(); 
+        // filter tetap bertahan saat berpindah halaman
 
         $routePrefix = explode('.', $request->route()->getName())[0] . '.';
         $userRole = $user?->role ?? 'admin';

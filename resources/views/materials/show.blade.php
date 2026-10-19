@@ -196,14 +196,19 @@
                         Akses Berkas Materi Perkuliahan
                     </div>
                     <div style="font-size: 0.88rem; color: #5e7166;">
-                        Silakan unduh atau akses tautan di samping untuk mempelajari materi kuliah ini.
+                        Berkas disimpan secara privat dan hanya dapat diunduh/dibuka oleh mahasiswa terdaftar di mata kuliah ini.
                     </div>
                 </div>
 
-                <div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     @if ($hasFile)
-                        <a href="{{ route('materials.file', $material) }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; background: #2d4a3e; color: #ffffff; padding: 10px 20px; border-radius: 10px; font-size: 0.92rem; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(45, 74, 62, 0.2);">
-                            Buka / Unduh Berkas
+                        <a href="{{ route('materials.download', $material) }}" style="display: inline-flex; align-items: center; gap: 8px; background: #2d4a3e; color: #ffffff; padding: 10px 20px; border-radius: 10px; font-size: 0.92rem; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(45, 74, 62, 0.2);">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Unduh Berkas</span>
+                        </a>
+                        <a href="{{ route('materials.file', $material) }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; background: #e8f1ec; color: #2d4a3e; padding: 10px 18px; border-radius: 10px; font-size: 0.92rem; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.2);">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <span>Buka di Tab Baru</span>
                         </a>
                     @elseif ($isWebLink)
                         @php
