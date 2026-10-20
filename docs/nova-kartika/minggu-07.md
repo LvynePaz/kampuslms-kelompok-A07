@@ -17,7 +17,7 @@
 6. Logout, lalu tekan tombol back. Apa yang terjadi? Kenapa?
    Jawab: setelah logout lalu menekan tombol back, halaman sebelumnya mungkin masih terlihat karena tersimpan di cache browser. tapi pas halaman yang membutuhkan login dibuka atau dimuat ulang, pengguna seharusnya diminta login lagi karena session sebelumnya sudah diakhiri. proses logout ada di method `destroy()` pada `AuthenticatedSessionController.php`, disitu session dihapus dan token session diperbarui supaya sesi sebelumnya tidak bisa dipakai lagi
 
-   ## BREAK
+## BREAK
 
 | # | Yang dicoba | Yang harus diamati | Jawaban / hasil di proyek saat ini |
 |---|---|---|---|
