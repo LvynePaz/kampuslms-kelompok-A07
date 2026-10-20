@@ -44,19 +44,19 @@
 
 | # | Yang dicoba | Yang harus Anda amati | Prediksi | Yang saya pelajari |
 |---|---|---|---|---|
-| 1 | Kembalikan `response()->json(User::all())` di satu endpoint uji | **Hash password tampil di layar** | | |
-| 2 |  Hapus `auth:sanctum` dari grup route, panggil tanpa token | Data terbuka untuk publik | | |
-| 3 | Panggil endpoint terlindungi dengan token yang sudah dihapus | 401 | | |
-| 4 | Login sebagai mahasiswa, panggil `POST /api/v1/assignments` | Berkas tersebut tidak ada pada proyek Laravel 12 | Harus 403, bukan 401 — periksa punya Anda | | |
-| 5 |Hapus eager loading, panggil daftar mata kuliah, lihat Telescope/Debugbar |  N+1 di API | | |
-| 6 | Hapus `throttle` dari login, jalankan 50 percobaan berturut-turut | Brute force tanpa hambatan | | |
-| 7 | Buat pesan login berbeda untuk email salah vs password salah | *User enumeration* — kenapa ini berbahaya | | |
+| 1 | Kembalikan `response()->json(User::all())` di satu endpoint uji |Hash password tampil di layar|Seluruh data di tabel users akan terkespesos utuh dalam format JSON tanpa ada batasan filter kolom|Mengembalikan model mentah berbahaya karena data yang tidak diperlukan dapat ikut terkirim ke client. API Resource lebih aman karena hanya mengirimkan kolom yang ditentukan|
+| 2 |  Hapus `auth:sanctum` dari grup route, panggil tanpa token | Data terbuka untuk publik |Request tanpa token berpotensi berhasil dan membuka data kepada publik|Middleware auth:sanctum digunakan untuk memastikan client memiliki identitas yang valid sebelum mengakses endpoint yang dilindungi|
+| 3 | Panggil endpoint terlindungi dengan token yang sudah dihapus | 401 |Request ditolak karena token tidak valid atau tidak dapat digunakan untuk mengenali pengguna|Status 401 menunjukkan bahwa pengguna belum terautentikasi. Setiap request API yang dilindungi perlu membawa token yang valid|
+| 4 | Login sebagai mahasiswa, panggil `POST /api/v1/assignments` | Berkas tersebut tidak ada pada proyek Laravel 12 | Harus 403, bukan 401 — periksa punya Anda |Server mengenali identitas pengguna (terautentikasi), namun menolak tindakan tersebut karena peran mahasiswa tidak memiliki hak akses (otorisasi) untuk membuat tugas|Perbedaan mendasar antara 401 (belum login/token tidak valid) dan 403 (sudah login tetapi tidak memiliki hak akses/otorisasi). Otorisasi peran wajib dijaga ketat di sisi server/API|
+| 5 |Hapus eager loading, panggil daftar mata kuliah, lihat Telescope/Debugbar |N+1 di API|Jumlah query database akan melonjak tajam sesuai dengan banyaknya jumlah baris data yang dipanggil|Eager loading, misalnya menggunakan with('lecturer'), membantu mengurangi query berulang. whenLoaded() pada API Resource juga memastikan relasi hanya disertakan ketika sudah dimuat|
+| 6 | Hapus `throttle` dari login, jalankan 50 percobaan berturut-turut | Brute force tanpa hambatan |Percobaan login dapat dilakukan berulang kali tanpa batasan yang seharusnya diterapkan oleh rate limiter|Throttling membatasi jumlah request untuk mengurangi risiko brute force. Berdasarkan materi, endpoint login menggunakan throttle:5,1, yaitu maksimal 5 percobaan dalam 1 menit sesuai konfigurasi tersebut|
+| 7 | Buat pesan login berbeda untuk email salah vs password salah | *User enumeration* — kenapa ini berbahaya |Penyerang dapat mengetahui keberadaan email dalam sistem melalui perbedaan pesan error|Pesan gagal login sebaiknya dibuat sama, misalnya “Email atau kata sandi salah.” Hal ini mencegah user enumeration, yaitu upaya mengidentifikasi akun yang terdaftar melalui response aplikasi|
 
 ## Checkpoint Minggu 6
 
-- [ ] Kenapa mengembalikan model mentah berbahaya? Peragakan kebocorannya.
-- [ ] Apa beda 401 dan 403? Tunjukkan di API Anda satu contoh masing-masing.
-- [ ] Kenapa `routes/api.php` tidak ada secara default di Laravel 12? Bagaimana mengaktifkannya?
-- [ ] Apa fungsi `whenLoaded()`? Apa yang terjadi tanpanya?
-- [ ] Kenapa pesan gagal login tidak boleh membedakan email salah dan password salah?
-- [ ] Kenapa endpoint login wajib di-*throttle*? Berapa nilai yang Anda pakai dan mengapa?
+- [✓] Kenapa mengembalikan model mentah berbahaya? Peragakan kebocorannya.
+- [✓] Apa beda 401 dan 403? Tunjukkan di API Anda satu contoh masing-masing.
+- [✓] Kenapa `routes/api.php` tidak ada secara default di Laravel 12? Bagaimana mengaktifkannya?
+- [✓] Apa fungsi `whenLoaded()`? Apa yang terjadi tanpanya?
+- [✓] Kenapa pesan gagal login tidak boleh membedakan email salah dan password salah?
+- [✓] Kenapa endpoint login wajib di-*throttle*? Berapa nilai yang Anda pakai dan mengapa?
