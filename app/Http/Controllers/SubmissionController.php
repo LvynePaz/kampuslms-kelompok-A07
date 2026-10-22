@@ -67,7 +67,7 @@ class SubmissionController extends Controller
      * Unduh submission: hanya pemiliknya, dosen pengampu, dan admin.
      * Mencegah IDOR via Policy dan memastikan berkas privat tidak dapat diakses langsung.
      */
-    public function download(Submission $submission): StreamedResponse
+    public function download(Submission $submission): \Symfony\Component\HttpFoundation\Response
     {
         // 1. Otorisasi lewat Policy (hanya pemilik, dosen pengampu, atau admin)
         Gate::authorize('view', $submission);
@@ -75,8 +75,8 @@ class SubmissionController extends Controller
         // 2. Pastikan berkas fisik benar-benar ada di disk privat
         abort_unless(Storage::disk('local')->exists($submission->file_path), 404, 'Berkas submission tidak ditemukan.');
 
-        // 3. Unduh berkas fisik menggunakan nama aslinya
-        return Storage::disk('local')->download(
+        // 3. Akses berkas di tab browser (inline) bukan unduh paksa (attachment)
+        return Storage::disk('local')->response(
             $submission->file_path,
             $submission->original_name
         );
