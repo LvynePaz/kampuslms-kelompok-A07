@@ -299,10 +299,14 @@
                     <div class="section-title" style="margin-bottom: 0;">Tugas Perkuliahan ({{ $displayedAssignments->count() }})</div>
                     @can('update', $course)
                         @if (auth()->user()?->role === 'dosen')
-                            <a href="{{ route('dosen.courses.assignments.create', $course) }}" class="btn-primary" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px;">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                <span>Buat Tugas</span>
-                            </a>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <a href="{{ route('dosen.courses.grades', $course) }}" class="btn-primary" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px; background: #3b604e;">
+                                    Rekap Nilai
+                                </a>
+                                <a href="{{ route('dosen.courses.assignments.create', $course) }}" class="btn-primary" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px;">
+                                    Buat Tugas
+                                </a>
+                            </div>
                         @endif
                     @endcan
                 </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\GradeController;
 use Illuminate\Support\Facades\Route;
 
 use App\Models\Course;
@@ -17,7 +18,7 @@ Route::get('/', function () {
         return redirect()->route('dashboard');
     }
 
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {
@@ -52,6 +53,10 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
     });
     Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])
         ->name('assignments.submissions');
+    Route::post('submissions/{submission}/grades', [GradeController::class, 'store'])
+        ->name('submissions.grades.store');
+    Route::get('courses/{course}/grades', [GradeController::class, 'courseGrades'])
+        ->name('courses.grades');
 });
 
 Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->group(function () {
@@ -64,6 +69,8 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->gr
             ->only(['index', 'show'])
             ->shallow();
     });
+    Route::get('grades', [GradeController::class, 'myGrades'])
+        ->name('grades.index');
 });
 
 // 3. Rute Akses Berkas Materi, Tugas & Profil Pengguna (Auth)
