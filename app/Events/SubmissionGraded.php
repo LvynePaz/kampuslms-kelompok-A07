@@ -2,15 +2,16 @@
 
 namespace App\Events;
 
-use App\Models\Grade;
+use App\Models\Submission;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class SubmissionGraded
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public Grade $grade)
+    public function __construct(public Submission $submission)
     {
     }
 }
