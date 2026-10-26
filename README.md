@@ -28,3 +28,42 @@ NUR DIAH INDAH CLARYZA - 10241059
 NOVA KARTIKA CANDRA - 10241057
 
 ----------------------
+
+## Queue Database
+
+Aplikasi menggunakan database queue. Pastikan environment berisi:
+
+```env
+QUEUE_CONNECTION=database
+```
+
+Jalankan migration agar tabel `jobs`, `job_batches`, dan `failed_jobs` tersedia:
+
+```bash
+php artisan migrate
+```
+
+Jalankan worker pada terminal terpisah:
+
+```bash
+php artisan queue:work database --tries=3 --backoff=10
+```
+
+Perintah untuk memeriksa dan menangani job yang gagal:
+
+```bash
+# Menampilkan job yang gagal
+php artisan queue:failed
+
+# Mencoba ulang satu job berdasarkan ID
+php artisan queue:retry <failed-job-id>
+
+# Mencoba ulang seluruh job yang gagal
+php artisan queue:retry all
+```
+
+Listener notifikasi nilai akan mencoba job hingga 3 kali dengan jeda 10 detik. Jika seluruh percobaan gagal, method `failed()` mencatat detail kegagalan ke log aplikasi. Log dapat diperiksa melalui:
+
+```bash
+php artisan pail
+```
