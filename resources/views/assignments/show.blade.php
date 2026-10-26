@@ -180,7 +180,7 @@
             {{-- Bagian Pengumpulan Tugas untuk Mahasiswa (BUILD Butir 3 & 4) --}}
             @if (auth()->user()->role === 'mahasiswa')
                 @php
-                    $mySubmission = $assignment->submissions()->where('user_id', auth()->id())->first();
+                    $mySubmission = $assignment->submissions()->where('user_id', auth()->id())->with('grade')->first();
                     $isPastDue = $assignment->due_at && now()->gt($assignment->due_at);
                     $canSubmit = ! $isPastDue || $assignment->allow_late;
                 @endphp
@@ -207,7 +207,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;">
                                 <div>
                                     <div style="font-weight: 700; color: #1a2f25; font-size: 1rem; margin-bottom: 4px;">
-                                        📄 {{ $mySubmission->original_name }}
+                                        {{ $mySubmission->original_name }}
                                     </div>
                                     <div style="font-size: 0.82rem; color: #647a6e;">
                                         Dikumpulkan pada: {{ $mySubmission->submitted_at ? $mySubmission->submitted_at->translatedFormat('d M Y, H:i') : '-' }}
@@ -216,19 +216,40 @@
                                 <div>
                                     @if ($mySubmission->is_late)
                                         <span style="display: inline-block; padding: 4px 10px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                            ⚠️ Terlambat
+                                            Terlambat
                                         </span>
                                     @else
                                         <span style="display: inline-block; padding: 4px 10px; background: #dcfce7; color: #15803d; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
-                                            ✓ Tepat Waktu
+                                            Tepat Waktu
                                         </span>
                                     @endif
                                 </div>
                             </div>
 
+                            @if ($mySubmission->grade)
+                                <div style="margin-top: 1.25rem; padding: 1.15rem 1.25rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                                        <div style="font-weight: 700; color: #166534; font-size: 0.92rem;">
+                                            Hasil Penilaian Dosen
+                                        </div>
+                                        <div style="font-size: 1.35rem; font-weight: 800; color: #15803d;">
+                                            {{ $mySubmission->grade->score }} <span style="font-size: 0.85rem; font-weight: 500; color: #647a6e;">/ {{ $assignment->max_score }}</span>
+                                        </div>
+                                    </div>
+                                    @if ($mySubmission->grade->feedback)
+                                        <div style="font-size: 0.88rem; color: #1e3a29; background: #ffffff; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(22, 101, 52, 0.15); margin-top: 0.5rem;">
+                                            <strong>Catatan Dosen:</strong> {{ $mySubmission->grade->feedback }}
+                                        </div>
+                                    @endif
+                                    <div style="margin-top: 0.4rem; font-size: 0.78rem; color: #647a6e;">
+                                        Dinilai pada: {{ $mySubmission->grade->graded_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                                    </div>
+                                </div>
+                            @endif
+
                             <div style="margin-top: 1rem;">
-                                <a href="{{ route('submissions.download', $mySubmission) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #2f5d47; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
-                                    ⬇️ Unduh Berkas Saya
+                                <a href="{{ route('submissions.download', $mySubmission) }}" style="display: inline-flex; align-items: center; padding: 8px 14px; background: #2f5d47; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+                                    Unduh Berkas Saya
                                 </a>
                             </div>
                         </div>
@@ -248,7 +269,7 @@
                         </form>
                     @else
                         <div style="padding: 12px 16px; background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; border-radius: 8px; font-size: 0.9rem;">
-                            ⛔ Batas waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan susulan.
+                            Batas waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan susulan.
                         </div>
                     @endif
                 </div>
