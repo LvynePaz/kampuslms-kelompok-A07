@@ -95,6 +95,44 @@
         .admin-menu-items a { display: block; color: var(--color-text-main); padding: .65rem .75rem; }
         .admin-menu-items a:hover { background: var(--color-sage-soft); color: var(--color-sage-deep); transform: none; }
 
+        /* LONCENG NOTIFIKASI & BADGE */
+        .nav-notif-bell {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(232, 241, 236, 0.9);
+            padding: 7px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-notif-bell:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .nav-notif-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 5px;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 9999px;
+            border: 2px solid #1f352c;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
         /* MAIN CONTENT */
         .main-content {
             max-width: 1120px;
@@ -615,6 +653,26 @@
             <a href="{{ route('tentang') }}">Tentang</a>
 
             @auth
+                {{-- Lonceng Notifikasi & Badge Jumlah Belum Dibaca (Butir 4 & 5) --}}
+                @php
+                    $navUnreadCount = auth()->user()->unreadNotifications()->count();
+                @endphp
+                <a href="{{ route('notifications.index') }}" 
+                   class="nav-notif-bell" 
+                   id="nav-notif-bell"
+                   title="Notifikasi" 
+                   aria-label="Kotak Masuk Notifikasi">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span id="nav-notif-badge" 
+                          class="nav-notif-badge"
+                          style="{{ $navUnreadCount > 0 ? 'display: inline-flex;' : 'display: none;' }}">
+                        {{ $navUnreadCount > 99 ? '99+' : $navUnreadCount }}
+                    </span>
+                </a>
+
                 {{-- Info Akun Aktif & Tombol Logout Resmi --}}
                 <div style="display: flex; align-items: center; gap: 10px; margin-left: 0.75rem;">
                     <span style="color: #c8ddd3; font-size: 0.85rem; font-weight: 500;">
@@ -671,6 +729,53 @@
     <footer class="footer">
         &copy; {{ date('Y') }} KampusLMS — Kelompok A07 | Pemrograman Web
     </footer>
+
+    @auth
+    {{-- Polling JavaScript Tiap 30 Detik Cek Unread Count Tanpa Refresh (Butir 4 & 5) --}}
+    <script>
+        (function() {
+            const badge = document.getElementById('nav-notif-badge');
+            if (!badge) return;
+
+            const unreadUrl = @json(route('notifications.unread_count'));
+
+            async function checkUnreadNotifications() {
+                try {
+                    const response = await fetch(unreadUrl, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    const count = Number(data.unread_count) || 0;
+
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.textContent = '0';
+                        badge.style.display = 'none';
+                    }
+
+                    // Sinkronisasi badge di halaman inbox jika elemen tersedia
+                    const inboxBadge = document.getElementById('inbox-unread-count');
+                    if (inboxBadge) {
+                        inboxBadge.textContent = count + ' belum dibaca';
+                    }
+                } catch (err) {
+                    // Abaikan gangguan koneksi sementara saat polling
+                }
+            }
+
+            // Jalankan polling setiap 30 detik (30000 ms) sesuai spesifikasi
+            setInterval(checkUnreadNotifications, 30000);
+        })();
+    </script>
+    @endauth
 
 </body>
 </html>
