@@ -77,9 +77,12 @@
         }
     </style>
 
-    <div style="margin-bottom: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route('dosen.assignments.show', $assignment) }}" style="color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
-            ← Kembali ke Detail Tugas
+            Kembali ke Detail Tugas
+        </a>
+        <a href="{{ route('dosen.courses.grades', $course) }}" style="display: inline-flex; align-items: center; padding: 7px 14px; background: #2d4a3e; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+            Rekap Nilai Mata Kuliah
         </a>
     </div>
 
@@ -89,6 +92,7 @@
             <p>{{ $course->name }} ({{ $course->code }}) &bull; {{ $assignment->title }}</p>
             <p style="margin-top: 0.35rem;">
                 Tenggat: {{ $assignment->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                &bull; Nilai Maksimal: {{ $assignment->max_score }}
                 &bull; {{ $students->count() }} mahasiswa terdaftar
             </p>
         </header>
@@ -104,11 +108,15 @@
                             <th>Status Pengumpulan</th>
                             <th>Waktu Pengumpulan</th>
                             <th>Berkas Tugas</th>
+                            <th>Nilai & Feedback</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($students as $student)
-                            @php($submission = $student->submissions->first())
+                            @php
+                                $submission = $student->submissions->first();
+                                $grade = $submission?->grade;
+                            @endphp
                             <tr>
                                 <td>
                                     <strong>{{ $student->name }}</strong>
@@ -129,10 +137,7 @@
                                 <td>
                                     @if ($submission)
                                         <div style="display: flex; flex-direction: column; gap: 3px;">
-                                            <a href="{{ route('submissions.download', $submission) }}" style="display: inline-flex; align-items: center; gap: 6px; color: #2d4a3e; font-weight: 600; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                                                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
+                                            <a href="{{ route('submissions.download', $submission) }}" target="_blank" rel="noopener noreferrer" style="color: #2d4a3e; font-weight: 600; text-decoration: underline;">
                                                 {{ $submission->original_name }}
                                             </a>
                                             <span style="font-size: 0.78rem; color: #647a6e;">
@@ -141,6 +146,55 @@
                                         </div>
                                     @else
                                         <span style="color: #94a3b8; font-size: 0.85rem;">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($submission)
+                                        <div>
+                                            @if ($grade)
+                                                <div style="display: inline-block; padding: 3px 8px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; color: #065f46; font-size: 0.82rem; font-weight: 700;">
+                                                    Nilai: {{ $grade->score }} / {{ $assignment->max_score }}
+                                                </div>
+                                                @if ($grade->feedback)
+                                                    <div style="margin-top: 4px; font-size: 0.78rem; color: #374151; max-width: 220px; word-break: break-word;">
+                                                        <em>"{{ $grade->feedback }}"</em>
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <span style="display: inline-block; padding: 2px 7px; background: #fef3c7; color: #92400e; border-radius: 5px; font-size: 0.78rem; font-weight: 600;">
+                                                    Belum dinilai
+                                                </span>
+                                            @endif
+
+                                            <details style="margin-top: 6px; position: relative;">
+                                                <summary style="cursor: pointer; color: #2d4a3e; font-size: 0.8rem; font-weight: 600;">
+                                                    {{ $grade ? 'Ubah Nilai / Feedback' : '+ Beri Nilai' }}
+                                                </summary>
+                                                <div style="margin-top: 6px; padding: 10px; background: #ffffff; border: 1px solid rgba(45, 74, 62, 0.18); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); min-width: 220px;">
+                                                    <form action="{{ route('dosen.submissions.grades.store', $submission) }}" method="POST">
+                                                        @csrf
+                                                        <input type="hidden" name="submission_id" value="{{ $submission->id }}">
+                                                        <div style="margin-bottom: 6px;">
+                                                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: #2d4a3e; margin-bottom: 2px;">
+                                                                Nilai (0 - {{ $assignment->max_score }}):
+                                                            </label>
+                                                            <input type="number" step="0.01" min="0" max="{{ $assignment->max_score }}" name="score" value="{{ old('submission_id') == $submission->id ? old('score') : $grade?->score }}" required style="width: 100%; padding: 4px 8px; border: 1px solid #c8d6ce; border-radius: 6px; font-size: 0.85rem; font-family: inherit;">
+                                                        </div>
+                                                        <div style="margin-bottom: 8px;">
+                                                            <label style="display: block; font-size: 0.74rem; font-weight: 700; color: #2d4a3e; margin-bottom: 2px;">
+                                                                Catatan Feedback:
+                                                            </label>
+                                                            <textarea name="feedback" rows="2" placeholder="Catatan untuk mahasiswa..." style="width: 100%; padding: 4px 8px; border: 1px solid #c8d6ce; border-radius: 6px; font-size: 0.8rem; font-family: inherit;">{{ old('submission_id') == $submission->id ? old('feedback') : $grade?->feedback }}</textarea>
+                                                        </div>
+                                                        <button type="submit" style="width: 100%; padding: 6px; background: #2d4a3e; color: #ffffff; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit;">
+                                                            {{ $grade ? 'Simpan Perubahan' : 'Kirim Nilai' }}
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    @else
+                                        <span style="color: #94a3b8; font-size: 0.82rem;">-</span>
                                     @endif
                                 </td>
                             </tr>
