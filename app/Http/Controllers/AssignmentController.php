@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AssignmentPublished;
 use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
@@ -96,7 +97,11 @@ class AssignmentController extends Controller
 
         $validated['created_by'] = $request->user()->id;
 
-        $course->assignments()->create($validated);
+        $assignment = $course->assignments()->create($validated);
+
+        if ($assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return redirect()
             ->route('dosen.courses.show', $course)
@@ -128,7 +133,12 @@ class AssignmentController extends Controller
             'max_score.required' => 'Nilai maksimal wajib diisi.',
         ]);
 
-        $assignment->update($validated);
+        $previousStatus = $assignment->status;
+        $updated = $assignment->update($validated);
+
+        if ($updated && $previousStatus !== 'published' && $assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return redirect()
             ->route('dosen.courses.show', $course)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Events\AssignmentPublished;
 use App\Http\Resources\AssignmentResource;
 use App\Http\Resources\SubmissionResource;
 use App\Models\Assignment;
@@ -36,6 +37,10 @@ class AssignmentController extends Controller
         ]);
         $assignment->load('course.lecturer');
 
+        if (($data['status'] ?? 'draft') === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
+
         return ApiResponse::item(new AssignmentResource($assignment), 201);
     }
 
@@ -53,8 +58,13 @@ class AssignmentController extends Controller
             'status' => ['sometimes', 'required', 'in:draft,published'],
         ]);
 
-        $assignment->update($data);
+        $previousStatus = $assignment->status;
+        $updated = $assignment->update($data);
         $assignment->load('course.lecturer');
+
+        if ($updated && $previousStatus !== 'published' && $assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return ApiResponse::item(new AssignmentResource($assignment));
     }

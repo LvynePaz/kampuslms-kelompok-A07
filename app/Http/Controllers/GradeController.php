@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SubmissionGraded;
 use App\Models\Course;
 use App\Models\Grade;
 use App\Models\Submission;
@@ -53,10 +54,7 @@ class GradeController extends Controller
             ]
         );
 
-        // Jika Event SubmissionGraded sudah dibuat oleh anggota kelompok (Nova), trigger otomatis
-        if (class_exists(\App\Events\SubmissionGraded::class)) {
-            \App\Events\SubmissionGraded::dispatch($grade);
-        }
+        SubmissionGraded::dispatch($submission);
 
         return back()->with('success', 'Nilai dan feedback berhasil disimpan.');
     }
