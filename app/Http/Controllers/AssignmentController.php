@@ -62,7 +62,8 @@ class AssignmentController extends Controller
         $assignment->load('course');
         $students = $assignment->course->students()
             ->with(['submissions' => fn ($query) => $query
-                ->where('assignment_id', $assignment->id)])
+                ->where('assignment_id', $assignment->id)
+                ->with('grade')])
             ->orderBy('name')
             ->get();
         $course = $assignment->course;
