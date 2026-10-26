@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Events\SubmissionGraded;
 use App\Http\Resources\GradeResource;
 use App\Http\Resources\SubmissionResource;
 use App\Models\Assignment;
@@ -79,6 +80,8 @@ class SubmissionController extends Controller
                 'graded_at' => now(),
             ]
         );
+
+        SubmissionGraded::dispatch($submission);
 
         return ApiResponse::item(
             new GradeResource($grade->load('grader')),
