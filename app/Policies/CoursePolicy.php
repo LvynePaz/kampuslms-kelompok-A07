@@ -49,4 +49,13 @@ class CoursePolicy
     {
         return $user->role === 'admin';
     }
+
+    /**
+     * Otorisasi rekap nilai kelas: hanya admin atau dosen pengampu mata kuliah terkait.
+     */
+    public function viewGrades(User $user, Course $course): bool
+    {
+        return $user->role === 'admin'
+            || $course->lecturer_id === $user->id;
+    }
 }

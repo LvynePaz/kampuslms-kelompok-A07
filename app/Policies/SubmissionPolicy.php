@@ -38,4 +38,13 @@ class SubmissionPolicy
         return $user->role === 'admin'
             || ($submission->user_id === $user->id && ! $submission->grade()->exists());
     }
+
+    /**
+     * Otorisasi pemberian nilai: hanya admin atau dosen pengampu mata kuliah terkait.
+     */
+    public function grade(User $user, Submission $submission): bool
+    {
+        return $user->role === 'admin'
+            || $submission->assignment->course->lecturer_id === $user->id;
+    }
 }

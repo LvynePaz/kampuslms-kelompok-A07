@@ -14,21 +14,15 @@ use Illuminate\View\View;
 class GradeController extends Controller
 {
     /**
-     * Butir 6 BUILD Minggu 10:
      * Dosen memberi nilai dan feedback pada tugas mahasiswa.
      * Menerapkan updateOrCreate (idempotent) agar tidak terjadi pelanggaran UNIQUE constraint.
      */
     public function store(Request $request, Submission $submission): RedirectResponse
     {
         $submission->loadMissing('assignment.course');
-        $course = $submission->assignment->course;
 
-        // Otorisasi: hanya dosen pengampu mata kuliah terkait atau admin
-        abort_unless(
-            $request->user()->role === 'admin' || $course->lecturer_id === $request->user()->id,
-            403,
-            'Anda tidak memiliki izin untuk memberikan nilai pada tugas ini.'
-        );
+        // Otorisasi: hanya dosen pengampu mata kuliah terkait atau admin (via SubmissionPolicy)
+        Gate::authorize('grade', $submission);
 
         $maxScore = (float) $submission->assignment->max_score;
 
@@ -65,13 +59,8 @@ class GradeController extends Controller
      */
     public function courseGrades(Course $course): View
     {
-        Gate::authorize('view', $course);
-
-        abort_unless(
-            auth()->user()->role === 'admin' || $course->lecturer_id === auth()->id(),
-            403,
-            'Anda tidak memiliki akses ke rekap nilai mata kuliah ini.'
-        );
+        // Otorisasi: hanya dosen pengampu mata kuliah terkait atau admin (via CoursePolicy)
+        Gate::authorize('viewGrades', $course);
 
         // Eager load assignments dan submissions+grades untuk mencegah N+1 query
         $assignmentIds = $course->assignments()->pluck('id');
