@@ -12,6 +12,7 @@ use App\Models\Submission;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use RuntimeException;
 
 class SubmissionController extends Controller
@@ -20,11 +21,7 @@ class SubmissionController extends Controller
     {
         $assignment = Assignment::with('course')->findOrFail($assignmentId);
         $user = $request->user();
-        abort_unless(
-            $user->role === 'mahasiswa'
-                && $assignment->course->students()->whereKey($user->id)->exists(),
-            403
-        );
+        Gate::authorize('submit', $assignment);
 
         $data = $request->validate([
             'file' => ['required', 'file', 'max:10240'],
@@ -59,12 +56,7 @@ class SubmissionController extends Controller
     public function grade(Request $request, int $id): JsonResponse
     {
         $submission = Submission::with('assignment.course')->findOrFail($id);
-        $user = $request->user();
-        abort_unless(
-            $user->role === 'dosen'
-                && $submission->assignment->course->lecturer_id === $user->id,
-            403
-        );
+        Gate::authorize('grade', $submission);
 
         $data = $request->validate([
             'score' => ['required', 'numeric', 'min:0', 'max:'.$submission->assignment->max_score],

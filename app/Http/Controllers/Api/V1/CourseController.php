@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
@@ -35,7 +36,7 @@ class CourseController extends Controller
             ->whereKey($id)
             ->firstOrFail();
 
-        $this->authorizeCourse($request, $course);
+        Gate::authorize('view', $course);
 
         return ApiResponse::item(new CourseResource($course));
     }
@@ -43,7 +44,7 @@ class CourseController extends Controller
     public function materials(Request $request, int $id): JsonResponse
     {
         $course = Course::findOrFail($id);
-        $this->authorizeCourse($request, $course);
+        Gate::authorize('view', $course);
 
         $materials = $course->materials()->with('uploader')->orderBy('id')->paginate(15);
 
@@ -53,7 +54,7 @@ class CourseController extends Controller
     public function assignments(Request $request, int $id): JsonResponse
     {
         $course = Course::findOrFail($id);
-        $this->authorizeCourse($request, $course);
+        Gate::authorize('view', $course);
         $filters = $request->validate([
             'status' => ['sometimes', 'in:draft,published'],
             'page' => ['sometimes', 'integer', 'min:1'],
@@ -71,14 +72,5 @@ class CourseController extends Controller
         $assignments = $query->orderByDesc('due_at')->paginate(15);
 
         return ApiResponse::collection($assignments, \App\Http\Resources\AssignmentResource::class);
-    }
-
-    private function authorizeCourse(Request $request, Course $course): void
-    {
-        $user = $request->user();
-        $allowed = ($user->role === 'dosen' && $course->lecturer_id === $user->id)
-            || ($user->role === 'mahasiswa' && $course->students()->whereKey($user->id)->exists());
-
-        abort_unless($allowed, 403);
     }
 }

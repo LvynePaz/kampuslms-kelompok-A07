@@ -259,7 +259,15 @@
                       d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             <h3>Kotak Masuk Kosong</h3>
-            <p>Anda belum memiliki notifikasi. Pemberitahuan tugas baru atau nilai yang dipublikasikan akan muncul di sini secara otomatis.</p>
+            <p>
+                @if (auth()->user()->role === 'mahasiswa')
+                    Anda belum memiliki notifikasi. Pemberitahuan tugas baru atau nilai yang dipublikasikan akan muncul di sini secara otomatis.
+                @elseif (auth()->user()->role === 'dosen')
+                    Anda belum memiliki notifikasi. Pemberitahuan pengumpulan tugas dari mahasiswa atau aktivitas perkuliahan akan muncul di sini secara otomatis.
+                @else
+                    Anda belum memiliki notifikasi. Pemberitahuan aktivitas akademik dan pembaruan sistem akan muncul di sini secara otomatis.
+                @endif
+            </p>
         </div>
     @else
         <div class="notif-list">
@@ -278,6 +286,22 @@
                                  || str_contains(strtolower($notification->type . ' ' . $title), 'tugas');
                     $isGrade = str_contains(strtolower($notification->type . ' ' . $title), 'grade') 
                             || str_contains(strtolower($notification->type . ' ' . $title), 'nilai');
+
+                    if (! $actionUrl) {
+                        if (isset($data['submission_id'])) {
+                            $actionUrl = route('mahasiswa.grades.index');
+                        } elseif (isset($data['assignment_id'])) {
+                            $actionUrl = route('mahasiswa.assignments.show', $data['assignment_id']);
+                        }
+                    }
+
+                    if (! $message) {
+                        if ($isGrade) {
+                            $message = 'Nilai dan evaluasi tugas telah dipublikasikan oleh dosen.';
+                        } elseif ($isAssignment) {
+                            $message = 'Tugas perkuliahan baru telah dipublikasikan.';
+                        }
+                    }
                 @endphp
 
                 <div class="notif-card {{ $isUnread ? 'unread' : 'read' }}">

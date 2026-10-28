@@ -12,13 +12,12 @@ use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        abort_unless($request->user()->role === 'dosen', 403);
-
         $data = $request->validate([
             'course_id' => ['required', 'integer', 'exists:courses,id'],
             'title' => ['required', 'string', 'max:255'],
@@ -30,7 +29,7 @@ class AssignmentController extends Controller
         ]);
 
         $course = Course::findOrFail($data['course_id']);
-        abort_unless($course->lecturer_id === $request->user()->id, 403);
+        Gate::authorize('update', $course);
 
         $assignment = Assignment::create($data + [
             'created_by' => $request->user()->id,
@@ -47,7 +46,7 @@ class AssignmentController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $assignment = Assignment::with('course')->findOrFail($id);
-        $this->authorizeOwner($request, $assignment);
+        Gate::authorize('update', $assignment);
 
         $data = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
@@ -72,7 +71,7 @@ class AssignmentController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $assignment = Assignment::with('course')->findOrFail($id);
-        $this->authorizeOwner($request, $assignment);
+        Gate::authorize('delete', $assignment);
 
         DB::transaction(function () use ($assignment) {
             $assignment->submissions()->get()->each(function ($submission) {
@@ -88,7 +87,7 @@ class AssignmentController extends Controller
     public function submissions(Request $request, int $id): JsonResponse
     {
         $assignment = Assignment::with('course')->findOrFail($id);
-        $this->authorizeOwner($request, $assignment);
+        Gate::authorize('update', $assignment);
 
         $submissions = $assignment->submissions()
             ->with(['student', 'grade.grader'])
@@ -96,14 +95,5 @@ class AssignmentController extends Controller
             ->paginate(15);
 
         return ApiResponse::collection($submissions, SubmissionResource::class);
-    }
-
-    private function authorizeOwner(Request $request, Assignment $assignment): void
-    {
-        abort_unless(
-            $request->user()->role === 'dosen'
-                && $assignment->course->lecturer_id === $request->user()->id,
-            403
-        );
     }
 }
