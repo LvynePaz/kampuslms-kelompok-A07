@@ -79,23 +79,47 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route('dosen.assignments.show', $assignment) }}" style="color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
-            Kembali ke Detail Tugas
+            ← Kembali ke Detail Tugas
         </a>
-        <a href="{{ route('dosen.courses.grades', $course) }}" style="display: inline-flex; align-items: center; padding: 7px 14px; background: #2d4a3e; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
-            Rekap Nilai Mata Kuliah
-        </a>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <a href="{{ route('dosen.courses.grades', $course) }}" style="display: inline-flex; align-items: center; padding: 7px 14px; background: #2d4a3e; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+                Rekap Nilai Mata Kuliah
+            </a>
+            <a href="{{ route('dosen.courses.grades.export', $course) }}" style="display: inline-flex; align-items: center; gap: 4px; padding: 7px 14px; background: #205c48; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+                📥 Ekspor Nilai (CSV)
+            </a>
+        </div>
     </div>
 
     <section class="monitoring-card">
         <header class="monitoring-header">
-            <h1>Daftar Pengumpulan</h1>
-            <p>{{ $course->name }} ({{ $course->code }}) &bull; {{ $assignment->title }}</p>
-            <p style="margin-top: 0.35rem;">
-                Tenggat: {{ $assignment->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
-                &bull; Nilai Maksimal: {{ $assignment->max_score }}
-                &bull; {{ $students->count() }} mahasiswa terdaftar
-            </p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1>Daftar Pengumpulan</h1>
+                    <p>{{ $course->name }} ({{ $course->code }}) &bull; {{ $assignment->title }}</p>
+                    <p style="margin-top: 0.35rem;">
+                        Tenggat: {{ $assignment->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                        &bull; Nilai Maksimal: {{ $assignment->max_score }}
+                        &bull; {{ $students->count() }} mahasiswa terdaftar
+                    </p>
+                </div>
+            </div>
         </header>
+
+        {{-- Fitur Diferensiasi No. 8: Impor Nilai Tugas dari File CSV --}}
+        <div style="padding: 0.9rem 1.75rem; background: #fbfdfc; border-bottom: 1px solid rgba(45, 74, 62, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <span style="font-weight: 700; color: #1a2f25; font-size: 0.85rem;">📥 Impor Nilai dari Berkas CSV:</span>
+                <span style="font-size: 0.78rem; color: #647a6e; margin-left: 0.35rem;">Format baris: <code>NIM,Nilai,Feedback</code></span>
+            </div>
+            <form action="{{ route('dosen.assignments.grades.import', $assignment) }}" method="POST" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                @csrf
+                <input type="file" name="csv_file" accept=".csv" required style="font-size: 0.8rem; max-width: 210px;">
+                <button type="submit" style="padding: 5px 12px; background: #234e3f; color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                    Unggah & Impor
+                </button>
+            </form>
+        </div>
 
         @if ($students->isEmpty())
             <div class="monitoring-empty">Belum ada mahasiswa terdaftar di mata kuliah ini.</div>
