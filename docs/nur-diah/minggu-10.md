@@ -1,0 +1,38 @@
+## READ
+1. Saat *queue worker* dimatikan dan dosen membuat tugas (*assignment*) baru, pekerjaan tersebut tidak langsung diproses melainkan akan tertahan dan tersimpan sebagai satu baris data (*pending job*) di dalam tabel `jobs`. Berdasarkan skema migrasinya, baris data tersebut berisi kolom **`id`** sebagai penanda unik pekerjaan, **`queue`** yang bernilai `'default'`, **`payload`** berupa teks JSON berukuran besar (*longText*) yang memuat seluruh metadata pekerjaan ter-serialisasi (seperti nama Listener `SendNewAssignmentNotification` dan ID tugas), serta **`available_at`** dan **`created_at`** yang mencatat *UNIX timestamp* waktu pembuatan dan kesiapan data. Karena tidak ada *worker* aktif yang mengambil dan mengeksekusi pekerjaan tersebut, kolom **`attempts`** akan tetap bernilai `0` (belum pernah dicoba) dan kolom **`reserved_at`** akan bernilai `NULL` (belum dikunci oleh proses mana pun). Baris ini akan terus tertahan di dalam database—dan dapat menumpuk jika ada pemicu antrean baru—sampai proses *queue worker* dinyalakan kembali menggunakan perintah `php artisan queue:work`.
+
+2. Kolom `payload` itu isinya seperti surat instruksi berformat teks JSON. Data ini dapat memuat informasi tentang class yang akan dijalankan, metode pemrosesan, serta data yang dibutuhkan pekerjaan tersebut. Untuk memeriksanya, buka kolom `payload` pada baris yang muncul di tabel `jobs`. 
+   Jika teks tersebut dibuka, maka akan ditemukan dua hal penting:
+   - Nama Listener: Bisa dilihat pada bagian `displayName` (contohnya: `App\Listeners\SendNewAssignmentNotification`). Ini memberi tahu sistem perintah apa yang harus dijalankan.
+   - ID Tugas (Assignment ID): Tersembunyi di dalam teks kode pada bagian `data.command`. Dari situ kamu bisa melihat angka ID tugas yang baru saja dibuat oleh dosen.
+
+3. Perintah `php artisan queue:work` akan menjalankan worker yang mengambil pekerjaan dari antrean dan mencoba memprosesnya. Terminal akan menampilkan tulisan *Processing* (sedang memproses) lalu *Processed* (selesai memproses). Setelah dicek kembali, tabel `jobs` di database, isinya akan otomatis bersih/kosong kembali. Hal ini karena Laravel secara otomatis menghapus daftar antrean yang sudah sukses dikerjakan agar database tidak penuh.
+
+4. Tabel `notifications` menggunakan struktur bawaan Laravel melalui fungsi `$table->morphs('notifiable')`. Kolom ini secara otomatis membuat dua kolom di dalam database, yaitu `notifiable_type` (berisi class model, misal `App\Models\User`) dan `notifiable_id` (ID dari pengguna tersebut).
+   Jumlah baris yang muncul di tabel `notifications` setelah queue worker selesai dijalankan adalah sama persis dengan jumlah mahasiswa yang terdaftar (*enrolled*) dalam mata kuliah tempat tugas tersebut dibuat.
+   Hal ini terjadi karena mekanisme notifikasi di Laravel bekerja secara individual per penerima. Ketika event pembuatan tugas baru memicu listener, sistem akan melakukan pengulangan (*looping*) ke seluruh mahasiswa di kelas tersebut dan membuatkan 1 baris *record* khusus untuk tiap-tiap mahasiswa dengan nilai `notifiable_id` yang mengarah ke ID akun mereka masing-masing. Jadi, jika di kelas tersebut ada 20 mahasiswa, maka tabel `notifications` akan bertambah 20 baris baru secara bersamaan.
+
+5. Kolom data di tabel `notifikasi` tugasnya hanya menyimpan data ringkas untuk ditampilkan di layar hp/*browser* mahasiswa (seperti judul tugas, nama matkul, dan tanggal *deadline*). Yang **TIDAK** boleh dimasukkan ke situ adalah data yang terlalu besar atau sensitif, seperti isi penuh deskripsi tugas (yang pakai kode HTML panjang), kata sandi, kunci rahasia aplikasi, atau seluruh data database yang di-copy bulat-bulat. Mengisi data berat/*sensitif* ke kolom ini bisa bikin database lelot dan berisiko bocor.
+
+## BREAK
+
+| # | Yang dicoba | Yang harus Anda amati | Prediksi | Yang saya pelajari |
+|---|---|---|---|---|
+| 1 | Set `QUEUE_CONNECTION=database`, jangan jalankan worker, buat tugas baru | **Gagal total tanpa satu pun pesan error** | Tugas tetap berhasil dibuat. Data antrean tertahan di tabel jobs tanpa ada error | Antrean database bekerja secara terpisah di belakang layar (asynchronous). Web hanya bertugas memasukkan pekerjaan ke daftar antrean, bukan menunggu sampai notifikasi selesai dikirim. Jika worker mati, notifikasi hanya tertunda, bukan sistemnya yang rusak |
+| 2 | Hapus `implements ShouldQueue` dari Listener, buat tugas untuk 40 mahasiswa | Rasakan sendiri lamanya | Web loading lama. Notifikasi ke 40 mahasiswa diproses langsung dalam satu request | `ShouldQueue` berfungsi memisahkan pekerjaan berat dari proses utama web. Jika dihapus, halaman web akan terasa lambat (*timeout*) dan merusak kenyamanan pengguna saat mengirim data ke banyak penerima |
+| 3 | Ganti `QUEUE_CONNECTION=sync`, ulangi nomor 2 | Bandingkan dengan nomor 1 dan 2 | Web langsung memproses di tempat. Hasilnya sama lambatnya seperti skenario nomor 2 | Mode `sync` hanya cocok untuk uji coba lokal. Di server asli (production), sync membuat aplikasi terasa lambat karena tidak ada proses antrean di belakang layar |
+| 4 | Buat Notification melempar exception, jalankan worker | Amati `tries` dan tabel `failed_jobs` | Diuji ulang 3 kali. Setelah gagal 3 kali, data dipindah ke tabel `failed_jobs` | Tabel `jobs` bukan tempat menyimpan pekerjaan gagal secara permanen. Jika pekerjaan terus gagal, Laravel memindahkannya ke `failed_jobs` agar developer bisa memeriksa sebab *error*-nya dan mencoba lagi nanti |
+| 5 | Hentikan worker di tengah pemrosesan job | Job kembali ke queue atau hilang? | Job tidak hilang. Setelah batas waktu habis, job otomatis siap diambil ulang | Sistem antrean punya mekanisme penyelamat (*timeout*). Menghentikan worker mendadak tidak akan menghilangkan pekerjaan, karena sistem akan mengantrekan ulang pekerjaan tersebut secara otomatis |
+| 6 | Masukkan nilai mahasiswa ke payload notifikasi, lalu buka tabel `notifications` sebagai admin | Kebocoran data permanen | Nilai tersimpan terbuka. Data di kolom data bisa dibaca siapa pun yang punya akses DB | Kolom notifikasi bukan tempat menyimpan data rahasia atau nilai akademik. Cukup simpan ringkasan informasi seperti judul dan ID tugas, lalu biarkan detailnya diakses melalui halaman khusus yang aman |
+| 7 | Panggil endpoint "tandai dibaca" dengan ID notifikasi orang lain | IDOR versi notifikasi | Aman (Akses Ditolak). Sistem mengembalikan respons `404 Not Found` | Keamanan otorisasi harus dibatasi berdasarkan akun pengguna yang sedang login, bukan cuma mencari ID secara bebas di database. Mengetahui ID notifikasi orang lain tidak otomatis membuat kita bisa mengubahnya |
+| 8 | Kalau memakai Reverb: ganti `PrivateChannel` menjadi `Channel`, langganan channel orang lain | Penyadapan realtime | dapat disadap	Tidak berlaku. Fitur broadcasting / Reverb belum digunakan di proyek ini | Data pribadi harus dikirim melalui saluran privat (*private channe*l) yang membutuhkan verifikasi izin. Saluran publik (*public channel*) tidak boleh dipakai untuk mengirim notifikasi pribadi atau data sensitif |
+
+## Chechkpoint Minggu 10
+
+- [ ] Apa yang terjadi kalau queue worker mati saat notifikasi dikirim? Peragakan.
+- [ ] Kenapa kegagalan itu tidak menghasilkan pesan error? Bagaimana Anda akan mengetahuinya di server produksi?
+- [ ] Apa beda `QUEUE_CONNECTION=sync` dan `database`? Kapan masing-masing dipakai?
+- [ ] Tunjukkan Listener yang **Anda** tulis. Apa akibatnya kalau `ShouldQueue` dihapus?
+- [ ] Kenapa nilai mahasiswa tidak boleh masuk payload notifikasi?
+- [ ] Tunjukkan apa yang mencegah mahasiswa menandai notifikasi orang lain sebagai sudah dibaca.
+- [ ] Tunjukkan satu bagian yang Anda tulis dengan bantuan AI. Apa yang Anda ubah, dan kenapa?
