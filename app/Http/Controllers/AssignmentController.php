@@ -62,9 +62,12 @@ class AssignmentController extends Controller
 
         $assignment->load('course');
         $students = $assignment->course->students()
+            ->select('users.id', 'users.name', 'users.nim_nip')
             ->with(['submissions' => fn ($query) => $query
                 ->where('assignment_id', $assignment->id)
-                ->with('grade')])
+                ->select('id', 'user_id', 'assignment_id', 'original_name', 'file_size', 'is_late', 'submitted_at')
+                ->with(['grade' => fn ($query) => $query
+                    ->select('id', 'submission_id', 'score', 'feedback')])])
             ->orderBy('name')
             ->get();
         $course = $assignment->course;
@@ -151,7 +154,7 @@ class AssignmentController extends Controller
         $course = $assignment->course;
 
         DB::transaction(function () use ($assignment) {
-            $assignment->submissions()->get()->each(function ($submission) {
+            $assignment->submissions()->select('id', 'file_path')->get()->each(function ($submission) {
                 $submission->delete();
             });
 
