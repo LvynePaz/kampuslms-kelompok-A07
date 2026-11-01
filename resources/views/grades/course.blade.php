@@ -80,13 +80,22 @@
 
     <section class="recap-card">
         <header class="recap-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
                     <h1>Rekap Nilai Perkuliahan</h1>
                     <p>{{ $course->name }} ({{ $course->code }}) &bull; Dosen: {{ $course->lecturer?->name ?? '-' }}</p>
                     <p style="margin-top: 0.35rem; font-size: 0.82rem; color: #647a6e;">
                         {{ $course->students->count() }} mahasiswa terdaftar &bull; {{ $course->assignments->count() }} tugas dibuat
                     </p>
+                </div>
+                <div>
+                    <a href="{{ route('dosen.courses.grades.export', $course) }}" 
+                       style="display: inline-flex; align-items: center; gap: 0.5rem; background: #234e3f; color: #ffffff; padding: 0.65rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.88rem; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.08); transition: all 0.2s;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Ekspor Nilai (CSV)
+                    </a>
                 </div>
             </div>
         </header>
