@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Events\SubmissionGraded;
+use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Grade;
+use App\Models\GradeExport;
 use App\Models\Submission;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GradeController extends Controller
 {
@@ -54,29 +58,39 @@ class GradeController extends Controller
     }
 
     /**
-     * Butir 7 BUILD Minggu 10:
+     * Butir 7 BUILD Minggu 10 & Optimisasi Performa Minggu 11:
      * Rekap nilai seluruh mahasiswa per mata kuliah untuk dosen pengampu / admin.
+     * Menerapkan Eager Loading selektif & eliminasi N+1 (Target BUILD 8: < 15 query).
      */
     public function courseGrades(Course $course): View
     {
         // Otorisasi: hanya dosen pengampu mata kuliah terkait atau admin (via CoursePolicy)
         Gate::authorize('viewGrades', $course);
 
-        // Eager load assignments dan submissions+grades untuk mencegah N+1 query
-        $assignmentIds = $course->assignments()->pluck('id');
+        // Optimisasi M11: Eager load lecturer, assignments, dan students dalam 1 siklus terarah
         $course->load([
-            'assignments' => fn ($query) => $query->orderBy('due_at'),
-            'students'    => fn ($query) => $query->orderBy('name')->with([
-                'submissions' => fn ($subQuery) => $subQuery->whereIn('assignment_id', $assignmentIds)->with('grade'),
-            ]),
+            'lecturer:id,name',
+            'assignments' => fn ($query) => $query->select('id', 'course_id', 'title', 'max_score', 'due_at')->orderBy('due_at'),
+            'students'    => fn ($query) => $query->select('users.id', 'users.name', 'users.nim_nip')->orderBy('name'),
+        ]);
+
+        // Pluck ID tugas langsung dari koleksi memori tanpa query SQL tambahan
+        $assignmentIds = $course->assignments->pluck('id');
+
+        // Eager load submissions dan grade hanya untuk tugas-tugas di kelas ini
+        $course->students->load([
+            'submissions' => fn ($subQuery) => $subQuery->select('id', 'assignment_id', 'user_id', 'submitted_at')
+                ->whereIn('assignment_id', $assignmentIds)
+                ->with(['grade:id,submission_id,score,feedback']),
         ]);
 
         return view('grades.course', compact('course'));
     }
 
     /**
-     * Butir 7 BUILD Minggu 10:
+     * Butir 7 BUILD Minggu 10 & Optimisasi Performa Minggu 11:
      * Rekap nilai seluruh tugas untuk mahasiswa yang sedang login.
+     * Menggunakan seleksi kolom spesifik untuk menghemat alokasi memori PHP.
      */
     public function myGrades(Request $request): View
     {
@@ -84,16 +98,208 @@ class GradeController extends Controller
 
         abort_unless($user->role === 'mahasiswa', 403, 'Akses khusus mahasiswa.');
 
-        // Eager load courses, assignments, dan submissions milik user saat ini
+        // Eager load courses, lecturer, assignments, dan submissions milik user saat ini
+        // Menerapkan pagination (BUILD butir 5) agar tidak memuat seluruh tabel ke memori
         $courses = $user->courses()
             ->with([
-                'lecturer',
-                'assignments' => fn ($query) => $query->where('status', 'published')
+                'lecturer:id,name',
+                'assignments' => fn ($query) => $query->select('id', 'course_id', 'title', 'max_score', 'due_at')
+                    ->where('status', 'published')
                     ->orderBy('due_at')
-                    ->with(['submissions' => fn ($subQuery) => $subQuery->where('user_id', $user->id)->with('grade')]),
+                    ->with(['submissions' => fn ($subQuery) => $subQuery->select('id', 'assignment_id', 'user_id')
+                        ->where('user_id', $user->id)
+                        ->with(['grade:id,submission_id,score,feedback'])]),
             ])
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('grades.my-grades', compact('courses'));
+    }
+
+    /**
+     * Fitur Diferensiasi No. 8 & Optimisasi Performa Minggu 11:
+     * Ekspor rekap nilai seluruh mahasiswa per mata kuliah ke format CSV.
+     * Bebas dari query N+1 berulang dan query ganda untuk ID tugas.
+     */
+    public function exportCourseGrades(Course $course): StreamedResponse
+    {
+        Gate::authorize('viewGrades', $course);
+
+        // Optimisasi M11: Muat data terarah tanpa query ganda
+        $course->load([
+            'assignments' => fn ($query) => $query->select('id', 'course_id', 'title', 'max_score', 'due_at')->orderBy('due_at'),
+            'students'    => fn ($query) => $query->select('users.id', 'users.name', 'users.nim_nip', 'users.email')->orderBy('name'),
+        ]);
+
+        $assignmentIds = $course->assignments->pluck('id');
+
+        $course->students->load([
+            'submissions' => fn ($subQuery) => $subQuery->select('id', 'assignment_id', 'user_id')
+                ->whereIn('assignment_id', $assignmentIds)
+                ->with(['grade:id,submission_id,score']),
+        ]);
+
+        $safeCode = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $course->code);
+        $filename = 'rekap_nilai_' . $safeCode . '_' . date('Ymd_His') . '.csv';
+
+        // Catat riwayat ekspor ke tabel baru (Fitur Diferensiasi No. 8)
+        GradeExport::create([
+            'course_id'    => $course->id,
+            'user_id'      => auth()->id(),
+            'type'         => 'export',
+            'filename'     => $filename,
+            'row_count'    => $course->students->count(),
+        ]);
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($course) {
+            $output = fopen('php://output', 'w');
+            // Tambahkan UTF-8 BOM agar rapi saat dibuka di Microsoft Excel
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Baris Header Kolom
+            $headerRow = ['No', 'NIM', 'Nama Mahasiswa', 'Email'];
+            foreach ($course->assignments as $asg) {
+                $headerRow[] = $asg->title . ' (Maks ' . $asg->max_score . ')';
+            }
+            $headerRow[] = 'Rata-rata';
+            fputcsv($output, $headerRow);
+
+            // Baris Data Tiap Mahasiswa
+            foreach ($course->students as $index => $student) {
+                $totalScore = 0;
+                $gradedCount = 0;
+
+                $row = [
+                    $index + 1,
+                    $student->nim_nip ?? '-',
+                    $student->name,
+                    $student->email,
+                ];
+
+                foreach ($course->assignments as $asg) {
+                    $sub = $student->submissions->firstWhere('assignment_id', $asg->id);
+                    if ($sub && $sub->grade) {
+                        $score = (float) $sub->grade->score;
+                        $row[] = $score;
+                        $totalScore += $score;
+                        $gradedCount++;
+                    } elseif ($sub) {
+                        $row[] = 'Belum Dinilai';
+                    } else {
+                        $row[] = '-';
+                    }
+                }
+
+                $avg = $gradedCount > 0 ? round($totalScore / $gradedCount, 2) : 0;
+                $row[] = $avg;
+
+                fputcsv($output, $row);
+            }
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Fitur Diferensiasi No. 8:
+     * Impor nilai tugas mahasiswa dari berkas CSV.
+     */
+    public function importAssignmentGrades(Request $request, Assignment $assignment): RedirectResponse
+    {
+        Gate::authorize('update', $assignment);
+
+        $request->validate([
+            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ], [
+            'csv_file.required' => 'Berkas CSV nilai wajib diunggah.',
+            'csv_file.mimes'    => 'Berkas harus berupa file CSV berekstensi .csv.',
+            'csv_file.max'      => 'Ukuran berkas CSV maksimal 2 MB.',
+        ]);
+
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getRealPath(), 'r');
+
+        // Lewati BOM UTF-8 jika ada
+        $firstThree = fread($handle, 3);
+        if ($firstThree !== "\xEF\xBB\xBF") {
+            rewind($handle);
+        }
+
+        $importedCount = 0;
+        // Baca baris header pertama
+        $header = fgetcsv($handle);
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (empty($row) || ! isset($row[0])) {
+                continue;
+            }
+
+            $identifier = trim($row[0]); // NIM atau Email
+            $scoreVal = isset($row[1]) ? trim($row[1]) : null;
+            $feedback = isset($row[2]) ? trim($row[2]) : null;
+
+            if ($scoreVal === null || $scoreVal === '') {
+                continue;
+            }
+
+            $score = (float) $scoreVal;
+
+            $student = User::select('id', 'nim_nip', 'email')
+                ->where('nim_nip', $identifier)
+                ->orWhere('email', $identifier)
+                ->first();
+
+            if (! $student) {
+                continue;
+            }
+
+            // Pastikan submission tersedia
+            $submission = Submission::firstOrCreate(
+                ['assignment_id' => $assignment->id, 'user_id' => $student->id],
+                [
+                    'file_path'     => 'submissions/imported.txt',
+                    'original_name' => 'imported_via_csv.txt',
+                    'file_size'     => 0,
+                    'submitted_at'  => now(),
+                    'is_late'       => false,
+                ]
+            );
+
+            // Simpan / update nilai secara idempotent
+            Grade::updateOrCreate(
+                ['submission_id' => $submission->id],
+                [
+                    'graded_by' => auth()->id(),
+                    'score'     => min($score, (float) $assignment->max_score),
+                    'feedback'  => $feedback,
+                    'graded_at' => now(),
+                ]
+            );
+
+            $importedCount++;
+        }
+
+        fclose($handle);
+
+        // Catat riwayat impor ke tabel baru (Fitur Diferensiasi No. 8)
+        GradeExport::create([
+            'course_id' => $assignment->course_id,
+            'user_id'   => auth()->id(),
+            'type'      => 'import',
+            'filename'  => $file->getClientOriginalName(),
+            'row_count' => $importedCount,
+        ]);
+
+        return back()->with('success', "Berhasil mengimpor {$importedCount} nilai tugas mahasiswa dari berkas CSV.");
     }
 }

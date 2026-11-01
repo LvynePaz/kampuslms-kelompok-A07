@@ -58,6 +58,11 @@ Route::prefix('dosen')->name('dosen.')->middleware('role:dosen')->group(function
         ->name('submissions.grades.store');
     Route::get('courses/{course}/grades', [GradeController::class, 'courseGrades'])
         ->name('courses.grades');
+    // Fitur Diferensiasi No. 8: Impor/Ekspor CSV Data Nilai
+    Route::get('courses/{course}/grades/export', [GradeController::class, 'exportCourseGrades'])
+        ->name('courses.grades.export');
+    Route::post('assignments/{assignment}/grades/import', [GradeController::class, 'importAssignmentGrades'])
+        ->name('assignments.grades.import');
 });
 
 Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('role:mahasiswa')->group(function () {

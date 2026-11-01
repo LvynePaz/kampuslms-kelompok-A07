@@ -110,7 +110,7 @@
     <div class="grades-summary-grid">
         <div class="stat-card">
             <div class="label">Mata Kuliah Diikuti</div>
-            <div class="value">{{ $courses->count() }}</div>
+            <div class="value">{{ $courses->total() }}</div>
         </div>
         <div class="stat-card">
             <div class="label">Total Tugas Tersedia</div>
@@ -226,5 +226,9 @@
                 @endif
             </section>
         @endforeach
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
+            {{ $courses->links() }}
+        </div>
     @endif
 </x-layout>

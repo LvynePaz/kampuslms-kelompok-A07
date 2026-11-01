@@ -35,7 +35,8 @@ class SubmissionController extends Controller
         $path = $file->store("submissions/{$assignment->id}", 'local');
 
         // 4. Jika sebelumnya mahasiswa sudah mengumpulkan, bersihkan berkas fisik lama agar tidak jadi berkas yatim
-        $existing = Submission::where('assignment_id', $assignment->id)
+        $existing = Submission::select('id', 'file_path')
+            ->where('assignment_id', $assignment->id)
             ->where('user_id', $request->user()->id)
             ->first();
 
