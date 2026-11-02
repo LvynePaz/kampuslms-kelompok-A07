@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\DashboardController;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +39,9 @@ class Course extends Model
                 $material->delete();
             }
         });
+
+        static::saved(fn () => DashboardController::invalidateGlobalStats());
+        static::deleted(fn () => DashboardController::invalidateGlobalStats());
     }
 
     public function lecturer(): BelongsTo

@@ -99,7 +99,8 @@ $userCount = Cache::remember('dashboard.user_count', 3600, fn () => User::count(
 $myCourseCount = Cache::remember("dashboard.user_{$user->id}_courses_count", 600, fn () => ...);
 ```
 
-### 2. Strategi Invalidasi Cache:
+### 2. Strategi Invalidasi Cache Otomatis:
+* **Lifecycle Hooks (`booted()`):** Model `Course` dan `User` menggunakan event `saved` dan `deleted` untuk otomatis memanggil `DashboardController::invalidateGlobalStats()`. Ini menjamin cache selalu terhapus saat ada perubahan data di web, API, atau seeder.
 * **`DashboardController::invalidateGlobalStats()`**: Membersihkan cache `'dashboard.course_count'` dan `'dashboard.user_count'` saat ada mata kuliah baru dibuat/dihapus atau akun pengguna baru didaftarkan.
 * **`DashboardController::invalidateUserStats(User $user)`**: Membersihkan cache personal mata kuliah user tertentu ketika terjadi penambahan atau pencabutan pendaftaran kelas (*enrollment*).
 
@@ -112,3 +113,18 @@ Telah dilakukan audit menyeluruh pada seluruh berkas di direktori `app/`, `route
 * **Hasil Audit:** **0 pemanggilan `env()` di luar direktori `config/` (100% Bersih).**
 * Seluruh konfigurasi diakses secara resmi menggunakan pembantu `config('app.name')`, `config('database.default')`, dll.
 * **Status `php artisan config:cache`:** Aman dijalankan di lingkungan produksi tanpa risiko variabel konfigurasi mengembalikan nilai `NULL`.
+
+---
+
+## 7. Data yang Sengaja TIDAK Di-cache dan Alasannya (BUILD 6 & Checkpoint 11)
+
+Tidak semua data di aplikasi boleh di-cache. Bagian berikut **sengaja tidak di-cache** demi menjaga integritas data dan pengalaman pengguna (*user experience*):
+
+1. **Kotak Masuk Notifikasi & Badge Lonceng (`notifications.unread_count`):**
+   * *Alasan:* Notifikasi bersifat dinamis dan real-time. Jika di-cache, mahasiswa tidak akan langsung tahu saat ada tugas baru atau nilai baru yang baru saja dirilis dosen.
+2. **Status Pengumpulan Tugas & Nilai Mahasiswa (`submissions`, `grades`):**
+   * *Alasan:* Berhubungan langsung dengan tenggat waktu (*deadline*) dan transparansi akademik. Menampilkan data nilai basi akibat cache berpotensi merugikan mahasiswa dan menimbulkan sengketa keterlambatan pengumpulan.
+3. **Pesan Kilat (*Flash Message*) dan Error Validasi Form:**
+   * *Alasan:* Bersifat *ephemeral* (hanya berlaku 1 request siklus sesi pengguna) sehingga haram di-cache secara global.
+4. **Detail Hak Akses & Sesi Autentikasi Pengguna (`User::role`):**
+   * *Alasan:* Perubahan status akun atau pencabutan role harus langsung berdampak seketika demi keamanan otorisasi sistem (*Gate & Policy*).

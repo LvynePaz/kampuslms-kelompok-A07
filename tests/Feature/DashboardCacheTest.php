@@ -12,6 +12,8 @@ use Tests\TestCase;
 
 class DashboardCacheTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_dashboard_uses_cache_remember_and_reduces_queries(): void
     {
         Cache::flush();
@@ -60,6 +62,23 @@ class DashboardCacheTest extends TestCase
 
         $this->assertFalse(Cache::has('dashboard.course_count'));
         $this->assertFalse(Cache::has('dashboard.user_count'));
+    }
+
+    public function test_cache_is_invalidated_automatically_when_course_is_created(): void
+    {
+        Cache::put('dashboard.course_count', 999, 3600);
+        $this->assertTrue(Cache::has('dashboard.course_count'));
+
+        $lecturer = User::where('role', 'dosen')->first() ?? User::factory()->create(['role' => 'dosen']);
+        Course::create([
+            'code' => 'TEST'.rand(100, 999),
+            'name' => 'Test Auto Cache Invalidation',
+            'sks' => 3,
+            'lecturer_id' => $lecturer->id,
+            'status' => 'active',
+        ]);
+
+        $this->assertFalse(Cache::has('dashboard.course_count'));
     }
 }
 
