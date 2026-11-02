@@ -19,6 +19,7 @@ class CourseController extends Controller
         $user = $request->user();
         $query = Course::query()
             ->with('lecturer')
+            ->withCount(['students', 'assignments'])
             ->when($user?->role === 'dosen', fn ($query) =>
                 $query->where('lecturer_id', $user->id))
             ->when($user?->role === 'mahasiswa', fn ($query) =>
@@ -47,8 +48,8 @@ class CourseController extends Controller
     // Menampilkan form tambah mata kuliah
     public function create()
     {
-        $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
-        $students = User::where('role', 'mahasiswa')->orderBy('name')->get();
+        $lecturers = User::where('role', 'dosen')->select('id', 'name', 'email')->orderBy('name')->get();
+        $students = User::where('role', 'mahasiswa')->select('id', 'name', 'nim_nip', 'email')->orderBy('name')->get();
 
         return view('courses.create', compact('lecturers', 'students'));
     }
@@ -109,9 +110,9 @@ class CourseController extends Controller
     {
         //coursepolicy method update 
         Gate::authorize('update', $course);
-        $lecturers = User::where('role', 'dosen')->orderBy('name')->get();
-        $students = User::where('role', 'mahasiswa')->orderBy('name')->get();
-        $course->load('students');
+        $lecturers = User::where('role', 'dosen')->select('id', 'name', 'email')->orderBy('name')->get();
+        $students = User::where('role', 'mahasiswa')->select('id', 'name', 'nim_nip', 'email')->orderBy('name')->get();
+        $course->load('students:id');
 
         return view('courses.edit', compact('course', 'lecturers', 'students'));
     }

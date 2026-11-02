@@ -61,6 +61,8 @@
                     <th>Kode</th>
                     <th>Nama Mata Kuliah</th>
                     <th>SKS</th>
+                    <th>Mahasiswa</th>
+                    <th>Tugas</th>
                     <th>Status</th>
                     <th>Dosen Pengampu</th>
                     <th>Aksi</th>
@@ -83,6 +85,9 @@
                         <td>
                             <span class="badge-sks">{{ $course->sks }} SKS</span>
                         </td>
+
+                        <td>{{ $course->students_count }}</td>
+                        <td>{{ $course->assignments_count }}</td>
 
                         <td>
                             @php
@@ -135,7 +140,7 @@
 
                 @empty
                     <tr>
-                        <td colspan="6" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             @if (request('q') || request('status'))
                                 Tidak ada mata kuliah yang cocok dengan pencarian.
                                 <a href="{{ route($routePrefix . 'courses.index') }}" style="color:#2d4a3e;">Reset filter</a>
@@ -159,4 +164,3 @@
     </div>
 
 </x-layout>
-
