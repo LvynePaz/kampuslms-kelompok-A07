@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\DashboardController;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -50,6 +51,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => DashboardController::invalidateGlobalStats());
+        static::deleted(fn () => DashboardController::invalidateGlobalStats());
     }
 
     // Kursus yang diajar (sebagai dosen)

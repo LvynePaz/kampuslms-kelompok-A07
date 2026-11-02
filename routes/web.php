@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
@@ -22,19 +23,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    $courseCount = Course::count();
-    $userCount = User::count();
-
-    $myCourseCount = match ($user?->role) {
-        'dosen'     => $user->taughtCourses()->count(),
-        'mahasiswa' => $user->courses()->count(),
-        default     => $courseCount,
-    };
-
-    return view('dashboard', compact('courseCount', 'userCount', 'myCourseCount'));
-})->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::get('/tentang', function () {
     return view('tentang');

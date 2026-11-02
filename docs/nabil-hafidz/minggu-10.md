@@ -1,46 +1,24 @@
-# Catatan Individu Minggu 10 — Nabil Hafidz (`nabil_55`)
+*READ*
 
-**Topik:** Pemrosesan Latar Belakang (Queue) & In-App Notification  
-**Fokus Tugas Kelompok (Nomor 3 / Butir 4 & 5):** Lonceng Navbar, Kotak Masuk (Inbox) Notifikasi, Polling Berkala JavaScript, & Proteksi Anti-IDOR.
+1. Saat worker dimatikan dan tugas baru berstatus published dibuat, tabel jobs terisi 1 baris antrean. Kolom attempts masih 0 dan reserved_at masih NULL, yang menunjukkan bahwa pekerjaan pengiriman notifikasi sudah dijadwalkan oleh Laravel tetapi masih 'mengantre' karena tidak ada worker yang berjalan
 
----
+2. Di kolom payload, nama Listener sangat mudah dikenali lewat properti `displayName`, yaitu `App\Listeners\SendAssignmentPublishedNotification`. Sedangkan ID tugasnya dapat dikenali di bagian serialize objek model `App\Models\Assignment` di dalam properti `command`. Trait `SerializesModels` hanya menyimpan identifier ID-nya saja agar payload tetap ringan
 
-## 1. Implementasi Komponen & File Terkait
+3. Setelah `php artisan queue:work` dijalankan, antrean listener `SendAssignmentPublishedNotification` diproses terlebih dahulu. Begitu listener berjalan, ia men-dispatch `NewAssignmentNotification` untuk setiap mahasiswa yang kemudian diproses satu per satu hingga statusnya `Processed`. Saat tabel jobs diperiksa kembali, isinya sudah kosong karena semua job yang sukses langsung dihapus dari antrean oleh Laravel
 
-| Komponen / Fitur | File Target | Deskripsi Pekerjaan |
-|---|---|---|
-| **Notification Controller** | `app/Http/Controllers/NotificationController.php` | - `index()`: Menampilkan inbox notifikasi terpaginasi.<br>- `unreadCount()`: Endpoint JSON untuk polling jumlah notifikasi belum dibaca.<br>- `markAsRead()`: Menandai notifikasi telah dibaca secara **Anti-IDOR**.<br>- `markAllAsRead()`: Menandai seluruh notifikasi user sebagai telah dibaca. |
-| **Routing Web** | `routes/web.php` | Mendaftarkan 4 endpoint notifikasi di dalam grup middleware `auth`: `/notifications`, `/notifications/unread-count`, `/notifications/{id}/read`, dan `/notifications/read-all`. |
-| **Lonceng & Badge Navbar** | `resources/views/components/layout.blade.php` | Memasang ikon lonceng SVG interaktif dan badge merah dinamis berisi jumlah notifikasi belum dibaca (`unread_count`). |
-| **Polling JavaScript** | `resources/views/components/layout.blade.php` | Menjalankan interval `setInterval(checkUnreadNotifications, 30000)` setiap 30 detik tanpa me-refresh halaman untuk menyinkronkan badge notifikasi di navbar. |
-| **Tampilan Inbox** | `resources/views/notifications/index.blade.php` | Antarmuka kotak masuk notifikasi bertema Sage Harmony dengan indikator kartu *unread* vs *read*, tombol "Buka Detail", "Tandai Dibaca", dan state kotak masuk kosong (*empty state*). |
-| **Automated Testing** | `tests/Feature/NotificationFeatureTest.php` | Memverifikasi seluruh alur notifikasi, otorisasi tamu (guest redirect), polling unread count, dan pengujian ketat keamanan **Anti-IDOR**. |
+4. Tabel `notifications` bertambah sejumlah mahasiswa yang terdaftar di kelas tersebut (misal 10 baris). Setiap baris memiliki `notifiable_id` yang berbeda-beda sesuai ID user mahasiswa, membuktikan bahwa satu aksi pembuatan tugas berhasil didistribusikan ke seluruh mahasiswa yang relevan tanpa duplikasi
 
----
+5. Kolom `data` hanya menyimpan `assignment_id` dan `title`. Tidak ada data berlebih atau informasi sensitif seperti nilai, feedback, atau kunci jawaban. Struktur ini sudah tepat dan aman karena notifikasi database hanya perlu menyimpan informasi secukupnya untuk keperluan tampilan antarmuka (UI)
 
-## 2. Penjelasan Teknis & Proteksi Anti-IDOR
+*BREAK*
 
-### Mengapa `$request->user()->notifications()->findOrFail($id)` Kebal IDOR?
-- Jika pencarian notifikasi dilakukan langsung melalui Model global `Notification::findOrFail($id)` atau `DB::table('notifications')->where('id', $id)`, penyerang dapat mengganti `$id` via URL/POST untuk menandai atau memanipulasi notifikasi milik mahasiswa lain (*Insecure Direct Object Reference*).
-- Dengan memanggil method relasi `$request->user()->notifications()`, query SQL yang dieksekusi Laravel secara otomatis menyertakan klausa `WHERE notifiable_type = 'App\Models\User' AND notifiable_id = ?`.
-- Ketika Pengguna A mencoba memasukkan ID notifikasi milik Pengguna B, query mengembalikan 0 baris sehingga `findOrFail()` secara otomatis memicu `ModelNotFoundException` dan menghasilkan HTTP **404 Not Found**.
-
----
-
-## 3. Hasil Pengujian Otomatis (Feature Test)
-
-Perintah pengujian yang dijalankan:
-```bash
-php artisan test --filter=NotificationFeatureTest
-```
-
-Hasil:
-- `✓ guest cannot access notifications and is redirected to login`
-- `✓ authenticated user can view notifications inbox`
-- `✓ unread count polling endpoint returns json count`
-- `✓ user can mark notification as read`
-- `✓ user can mark all notifications as read`
-- `✓ idor protection user cannot mark other users notification`
-- `✓ navbar renders bell icon and unread badge for authenticated user`
-
-**Status:** 7 passed (22 assertions), seluruh 78 test aplikasi lolos 100%.
+| # | Yang dicoba | Yang harus Anda amati | Perilaku yang Terjadi | Penjelasan & Bahaya Keamanannya / Yang Dipelajari |
+|---|-------------|-----------------------|-----------------------|---------------------------------------------------|
+| 1 | Set `QUEUE_CONNECTION=database`, jangan jalankan worker, buat tugas baru | **Gagal total tanpa satu pun pesan error** | Tugas baru berhasil disimpan dan muncul di UI tanpa pesan error, tetapi notifikasi tidak pernah sampai ke mahasiswa. Di database, ada 1 job antrean pending di tabel `jobs` dan tabel `notifications` kosong. | Antrean asinkron (`database`) menunda eksekusi ke background. Tanpa worker (`php artisan queue:work`), job hanya tertahan di database dan tidak akan dieksekusi. Ini bukan error aplikasi, melainkan sifat alami queue yang menunggu worker aktif. |
+| 2 | Hapus `implements ShouldQueue` dari Listener, buat tugas untuk 40 mahasiswa | **Rasakan sendiri lamanya** | Request pembuatan tugas terasa sedikit lebih lambat saat disubmit karena listener langsung berjalan seketika. Namun, karena notifikasi (`NewAssignmentNotification`) masih memakai `ShouldQueue`, notifikasi untuk 40 mahasiswa tetap dipecah menjadi 40 job baru yang mengantre di tabel `jobs`. | Menghapus `ShouldQueue` dari listener hanya membuat pemanggilan event listener berjalan sinkron. Jika di dalamnya memanggil notification yang masih `implements ShouldQueue`, proses pengiriman notifikasinya tetap didelegasikan ke queue worker. |
+| 3 | Ganti `QUEUE_CONNECTION=sync`, ulangi nomor 2 | **Bandingkan dengan nomor 1 dan 2** | Halaman web loading/freeze cukup lama saat form tugas disimpan. Setelah selesai, seluruh 40 notifikasi langsung tersimpan di tabel `notifications` saat itu juga, dan tabel `jobs` tetap kosong (0 baris). | Driver `sync` menjalankan seluruh rantai proses (controller -> listener -> 40 notifikasi) secara sinkron dalam satu siklus request HTTP. Semakin banyak data mahasiswa, response time semakin lambat dan berisiko terkena *maximum execution timeout*. |
+| 4 | Buat Notification melempar exception, jalankan worker | **Amati `tries` dan tabel `failed_jobs`** | Worker mencoba memproses job berulang kali hingga batas maksimal percobaan (`tries = 3`) dengan status `FAIL`. Setelah gagal 3 kali, job dikeluarkan dari tabel `jobs` dan dicatat ke tabel `failed_jobs` lengkap dengan stack trace error-nya. | Properti `$tries` mencegah infinite retry loop saat terjadi kegagalan permanen. Tabel `failed_jobs` menjadi tempat penampungan audit log kegagalan agar pengembang bisa menganalisis bug dan me-retry antrean setelah perbaikan. |
+| 5 | Hentikan worker di tengah pemrosesan job | **Job kembali ke queue atau hilang?** | Job tidak hilang dan tidak masuk ke `failed_jobs`. Saat worker dimatikan mendadak, job tetap ada di tabel `jobs` dengan status `reserved_at` terisi. Setelah batas waktu `retry_after` (default 90 detik) habis, kuncian dilepas dan job otomatis kembali siap diproses saat worker dinyalakan lagi. | Mekanisme *at-least-once delivery* Laravel. Adanya locking (`reserved_at`) dan batas waktu `retry_after` memastikan job yang terputus di tengah jalan akibat kegagalan worker/server mati tidak hilang dan tetap bisa diproses ulang. |
+| 6 | Masukkan nilai mahasiswa ke payload notifikasi, lalu buka tabel `notifications` sebagai admin | **Kebocoran data permanen** | Nilai tugas mahasiswa (misal: `87.50`) tersimpan permanen di kolom `data` pada tabel `notifications`. Jika tabel database diakses oleh admin atau diekspos melalui endpoint notifikasi global, nilai pribadi mahasiswa dapat dilihat oleh pihak yang tidak berhak. | Pelanggaran prinsip *Data Minimization*. Menyimpan data sensitif (seperti nilai, token, atau password) ke dalam payload notifikasi menyebabkan kebocoran privasi permanen. Notifikasi database seharusnya hanya memuat metadata esensial (ID tugas dan judul). |
+| 7 | Panggil endpoint "tandai dibaca" dengan ID notifikasi orang lain | **IDOR versi notifikasi** | Pengguna A dapat memanipulasi atau menandai notifikasi milik Pengguna B jika sistem langsung memanggil `Notification::find($id)` tanpa memeriksa relasi pengguna yang login. Pada sistem yang aman dengan validasi kepemilikan (`auth()->user()->notifications()->findOrFail($id)`), aksi ini menghasilkan `404 Not Found` atau `403 Forbidden`. | Kerentanan IDOR (*Insecure Direct Object Reference*). Setiap aksi mutasi pada data notifikasi wajib divalidasi kepemilikannya melalui relasi user yang sedang terotentikasi atau menggunakan Policy, bukan mengambil record notifikasi secara global. |
+| 8 | Kalau memakai Reverb: ganti `PrivateChannel` menjadi `Channel`, langganan channel orang lain | **Penyadapan realtime** | Pada kanal publik (`Channel`), klien WebSocket di browser mana pun dapat mendengarkan (*listen*) siaran event tanpa perlu token autentikasi di `channels.php`. Akibatnya, siapapun dapat menyadap pesan dan data notifikasi orang lain secara realtime hanya dengan mengetahui nama channel-nya. | Bahaya penyadapan data (*Eavesdropping*). `Channel` bersifat publik dan terbuka bebas, sedangkan `PrivateChannel` menerapkan autentikasi izin akses. Seluruh siaran realtime yang memuat data personal wajib menggunakan `PrivateChannel`. |
