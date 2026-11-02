@@ -71,11 +71,11 @@
 
 ## Checkpoint Minggu 7
 
-- [ ] Apa beda autentikasi dan otorisasi? Tunjukkan satu contoh masing-masing di kode Anda.
-- [ ] Tunjukkan Policy yang **Anda** tulis. Jelaskan tiap barisnya.
-- [ ] Kenapa `@can` di Blade tidak cukup? Peragakan dengan mengakses URL langsung.
-- [ ] Buka `docs/keamanan.md`. Pilih satu baris, jelaskan bagaimana ia ditutup, lalu buktikan dengan `curl`.
-- [ ] Kenapa kata sandi di-hash, bukan dienkripsi? Apa konsekuensinya untuk fitur lupa password?
-- [ ] Apa fungsi `session()->regenerate()` saat login?
-- [ ] Kenapa daftar mata kuliah tidak boleh diambil semua lalu disaring di view?
-- [ ] Tunjukkan satu bagian yang Anda tulis dengan bantuan AI. Apa yang Anda ubah, dan kenapa?
+- [✓] Apa beda autentikasi dan otorisasi? Tunjukkan satu contoh masing-masing di kode Anda.
+- [✓] Tunjukkan Policy yang **Anda** tulis. Jelaskan tiap barisnya.
+- [✓] Kenapa `@can` di Blade tidak cukup? Peragakan dengan mengakses URL langsung.
+- [✓] Buka `docs/keamanan.md`. Pilih satu baris, jelaskan bagaimana ia ditutup, lalu buktikan dengan `curl`.
+- [✓] Kenapa kata sandi di-hash, bukan dienkripsi? Apa konsekuensinya untuk fitur lupa password?
+- [✓] Apa fungsi `session()->regenerate()` saat login?
+- [✓] Kenapa daftar mata kuliah tidak boleh diambil semua lalu disaring di view?
+- [✓] Tunjukkan satu bagian yang Anda tulis dengan bantuan AI. Apa yang Anda ubah, dan kenapa?
