@@ -86,7 +86,9 @@
                             <span class="badge-sks">{{ $course->sks }} SKS</span>
                         </td>
 
-                        <td>{{ $course->students_count }}</td>
+                       <td>{{ $course->students_count }}</td> 
+                    {{-- <td>{{ count($course->students) }}</td> --}}
+                        
                         <td>{{ $course->assignments_count }}</td>
 
                         <td>
