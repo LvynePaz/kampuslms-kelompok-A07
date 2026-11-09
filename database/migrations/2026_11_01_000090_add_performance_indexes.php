@@ -36,10 +36,28 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('grades', fn (Blueprint $table) => $table->dropIndex('grades_graded_by_index'));
-        Schema::table('submissions', fn (Blueprint $table) => $table->dropIndex('submissions_user_assignment_index'));
-        Schema::table('materials', fn (Blueprint $table) => $table->dropIndex('materials_course_created_index'));
-        Schema::table('course_user', fn (Blueprint $table) => $table->dropIndex('course_user_user_course_index'));
-        Schema::table('courses', fn (Blueprint $table) => $table->dropIndex('courses_status_lecturer_index'));
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Schema::table('grades', fn (Blueprint $table) => $table->dropIndex('grades_graded_by_index'));
+        } catch (\Throwable $e) {}
+
+        try {
+            Schema::table('submissions', fn (Blueprint $table) => $table->dropIndex('submissions_user_assignment_index'));
+        } catch (\Throwable $e) {}
+
+        try {
+            Schema::table('materials', fn (Blueprint $table) => $table->dropIndex('materials_course_created_index'));
+        } catch (\Throwable $e) {}
+
+        try {
+            Schema::table('course_user', fn (Blueprint $table) => $table->dropIndex('course_user_user_course_index'));
+        } catch (\Throwable $e) {}
+
+        try {
+            Schema::table('courses', fn (Blueprint $table) => $table->dropIndex('courses_status_lecturer_index'));
+        } catch (\Throwable $e) {}
+
+        Schema::enableForeignKeyConstraints();
     }
 };
