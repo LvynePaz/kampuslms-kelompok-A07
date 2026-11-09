@@ -45,6 +45,11 @@
             z-index: 100;
         }
 
+        .navbar-toggle,
+        .navbar-mobile-menu {
+            display: none;
+        }
+
         .navbar-brand {
             color: #ffffff;
             font-weight: 700;
@@ -597,6 +602,112 @@
 
         /* RESPONSIVE */
         @media (max-width: 700px) {
+            .navbar {
+                height: auto;
+                min-height: 64px;
+                padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+            }
+
+            .navbar-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                padding: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
+                cursor: pointer;
+            }
+
+            .navbar-toggle svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .navbar-links {
+                display: none;
+            }
+
+            .navbar-mobile-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                display: none;
+                flex-direction: column;
+                gap: 0.35rem;
+                padding: 0.75rem 1rem 1rem;
+                background: linear-gradient(135deg, #1f352c 0%, #294438 60%, #345446 100%);
+                box-shadow: 0 8px 14px rgba(27, 46, 38, 0.2);
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .navbar-mobile-menu.is-open {
+                display: flex;
+            }
+
+            .navbar-mobile-menu > a,
+            .navbar-mobile-admin a {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: rgba(232, 241, 236, 0.92);
+                text-decoration: none;
+                overflow-wrap: anywhere;
+            }
+
+            .navbar-mobile-menu > a:hover,
+            .navbar-mobile-admin a:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: #ffffff;
+            }
+
+            .navbar-mobile-admin {
+                padding: 0.35rem 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.12);
+            }
+
+            .navbar-mobile-admin summary {
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: rgba(232, 241, 236, 0.92);
+                cursor: pointer;
+                list-style: none;
+            }
+
+            .navbar-mobile-admin summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .navbar-mobile-account {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                margin-top: 0.35rem;
+                padding: 0.85rem 0.25rem 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.12);
+            }
+
+            .navbar-mobile-identity {
+                min-width: 0;
+                color: #c8ddd3;
+                font-size: 0.85rem;
+                font-weight: 500;
+                overflow-wrap: anywhere;
+            }
+
+            .navbar-mobile-logout {
+                flex: 0 0 auto;
+            }
+
             .page-header {
                 align-items: flex-start;
                 flex-direction: column;
@@ -628,6 +739,14 @@
         <a href="{{ route('dashboard') }}" class="navbar-brand">
             KampusLMS <span>A07</span>
         </a>
+        <button type="button" class="navbar-toggle" id="navbar-toggle"
+                aria-controls="navbar-mobile-menu" aria-expanded="false"
+                aria-label="Buka menu navigasi">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
         <div class="navbar-links">
             <a href="{{ route('dashboard') }}">Dashboard</a>
 
@@ -696,7 +815,87 @@
                 </a>
             @endauth
         </div>
+        <div class="navbar-mobile-menu" id="navbar-mobile-menu" role="group" aria-label="Menu navigasi mobile">
+            <a href="{{ route('dashboard') }}">Dashboard</a>
+            @auth
+                <a href="{{ route(auth()->user()->role . '.courses.index') }}">Mata Kuliah</a>
+
+                @if (auth()->user()->role === 'mahasiswa')
+                    <a href="{{ route('mahasiswa.grades.index') }}">Nilai Saya</a>
+                @endif
+
+                @if (auth()->user()->role === 'admin')
+                    <details class="navbar-mobile-admin">
+                        <summary>Menu Admin</summary>
+                        <a href="{{ route('admin.users.index') }}">Semua Pengguna</a>
+                        <a href="{{ route('admin.users.create') }}">Tambah Pengguna</a>
+                    </details>
+                @endif
+            @endauth
+
+            <a href="{{ route('tentang') }}">Tentang</a>
+
+            @auth
+                <a href="{{ route('notifications.index') }}" class="nav-notif-bell"
+                   title="Notifikasi" aria-label="Kotak Masuk Notifikasi">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span id="nav-notif-badge-mobile" class="nav-notif-badge"
+                          style="{{ $navUnreadCount > 0 ? 'display: inline-flex;' : 'display: none;' }}">
+                        {{ $navUnreadCount > 99 ? '99+' : $navUnreadCount }}
+                    </span>
+                </a>
+
+                <div class="navbar-mobile-account">
+                    <span class="navbar-mobile-identity">
+                        {{ auth()->user()->name }} · {{ auth()->user()->role }}
+                    </span>
+                    <form method="POST" action="{{ route('logout') }}" class="navbar-mobile-logout">
+                        @csrf
+                        <button type="submit" style="background: rgba(220, 38, 38, 0.2); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.4); padding: 7px 12px; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                            Keluar
+                        </button>
+                    </form>
+                </div>
+            @else
+                <a href="{{ route('login') }}">Masuk</a>
+            @endauth
+        </div>
     </nav>
+
+    <script>
+    (function() {
+        const toggle = document.getElementById('navbar-toggle');
+        const menu = document.getElementById('navbar-mobile-menu');
+        if (!toggle || !menu) return;
+
+        function closeMenu() {
+            menu.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Buka menu navigasi');
+        }
+
+        toggle.addEventListener('click', function() {
+            const isOpen = menu.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            toggle.setAttribute('aria-label', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+        });
+
+        menu.addEventListener('click', function(event) {
+            if (event.target.closest('a')) closeMenu();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeMenu();
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 700) closeMenu();
+        });
+    })();
+    </script>
 
     <main class="main-content">
         {{-- Flash message global — berlaku untuk seluruh halaman --}}
@@ -736,7 +935,9 @@
     <script>
         (function() {
             const badge = document.getElementById('nav-notif-badge');
-            if (!badge) return;
+            const mobileBadge = document.getElementById('nav-notif-badge-mobile');
+            const badges = [badge, mobileBadge].filter(Boolean);
+            if (badges.length === 0) return;
 
             const unreadUrl = @json(route('notifications.unread_count'));
 
@@ -754,13 +955,10 @@
                     const data = await response.json();
                     const count = Number(data.unread_count) || 0;
 
-                    if (count > 0) {
-                        badge.textContent = count > 99 ? '99+' : count;
-                        badge.style.display = 'inline-flex';
-                    } else {
-                        badge.textContent = '0';
-                        badge.style.display = 'none';
-                    }
+                    badges.forEach(function(item) {
+                        item.textContent = count > 99 ? '99+' : count;
+                        item.style.display = count > 0 ? 'inline-flex' : 'none';
+                    });
 
                     // Sinkronisasi badge di halaman inbox jika elemen tersedia
                     const inboxBadge = document.getElementById('inbox-unread-count');
