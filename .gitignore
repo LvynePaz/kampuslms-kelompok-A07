@@ -1,6 +1,6 @@
 /.phpunit.cache
 /node_modules
-/public/build
+# /public/build (Diikutsertakan agar aset Vite Tailwind tersedia di Docker Railway)
 /public/hot
 /public/storage
 /storage/*.key
