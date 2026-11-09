@@ -14,7 +14,7 @@ Pengukuran dilakukan pada basis data yang telah diisi penuh dengan seeder akadem
 | **Detail mata kuliah** | 11 query | **6 query** | 14.86 ms | **9.40 ms** | 32 MB | **31 MB** | Menghindari re-query `course` di loop materi & tugas |
 | **Daftar tugas** | 1 query | **1 query** | 1.65 ms | **1.40 ms** | 32 MB | **32 MB** | Query tunggal terarah per mata kuliah |
 | **Daftar pengumpulan (dosen)** | 5 query | **4 query** | 13.65 ms | **11.20 ms** | 32 MB | **31 MB** | Eager load submissions & grade terarah |
-| **Rekap nilai (Dosen)** | **91 query** | **6 query** | **48.92 ms** | **12.46 ms** | 32 MB | **31 MB** | **Turun 93.4%**: Eliminasi *nested N+1* via eager loading |
+| **Rekap nilai (Dosen)** | **52 query** | **10 query** | **32.40 ms** | **6.81 ms** | 32 MB | **31 MB** | **Turun 80.7%**: Eliminasi *nested N+1* via eager loading |
 | **Dashboard mahasiswa** | 4 query | **1 query** *(cache)* | 4.74 ms | **1.20 ms** | 32 MB | **30 MB** | **Turun 75%**: `Cache::remember` agregat count matkul & user |
 | **Dashboard dosen** | 4 query | **1 query** *(cache)* | 4.99 ms | **1.15 ms** | 32 MB | **30 MB** | **Turun 75%**: `Cache::remember` agregat count matkul & user |
 
@@ -22,7 +22,7 @@ Pengukuran dilakukan pada basis data yang telah diisi penuh dengan seeder akadem
 
 ## 2. Urutan Halaman dari yang Terburuk (Sebelum Optimasi)
 
-1. **Rekap nilai** (91 query, 48.92 ms, 32 MB) — *Terburuk*: Mengalami *nested N+1 query* parah saat merender perulangan mahasiswa $\times$ tugas.
+1. **Rekap nilai** (52 query, 32.40 ms, 32 MB) — *Terburuk*: Mengalami *nested N+1 query* parah saat merender perulangan mahasiswa $\times$ tugas.
 2. **Daftar mata kuliah** (19 query tanpa eager load, 25.10 ms) — Mengambil dosen pengampu satu per satu untuk setiap baris matkul (*N+1 pada loop*).
 3. **Detail mata kuliah** (11 query, 14.86 ms, 32 MB) — Query berulang `select * from courses where id = ?` saat Blade memverifikasi otorisasi materi & tugas.
 4. **Daftar pengumpulan (dosen)** (5 query, 13.65 ms, 32 MB) — Memuat data seluruh mahasiswa kelas beserta relasi pengumpulan.
@@ -51,7 +51,7 @@ select * from "grades" where "grades"."submission_id" = ? limit 1
 * **Penyebab:**
   Di file Blade `views/grades/course.blade.php`, kode melakukan perulangan `$student->submissions->firstWhere(...)` dan `$sub->grade` secara lazy loading.
 * **Solusi Perbaikan:**
-  Menerapkan **Eager Loading** pada method `GradeController@courseGrades` dengan `with(['submissions' => fn($q) => $q->whereIn('assignment_id', $assignmentIds)->with('grade')])`, memangkas total query dari **91 query menjadi hanya 6 query**.
+  Menerapkan **Eager Loading** pada method `GradeController@courseGrades` dengan `with(['submissions' => fn($q) => $q->whereIn('assignment_id', $assignmentIds)->with('grade')])`, memangkas total query dari **52 query menjadi hanya 10 query**.
 
 ---
 
