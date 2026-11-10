@@ -94,7 +94,13 @@ class CourseController extends Controller
             'materials.uploader',
             'materials.course',
             'assignments' => function ($query) use ($user) {
-                $query->with('course');
+                $query->with(['course', 'submissions' => function ($subQuery) use ($user) {
+                    if ($user?->role === 'mahasiswa') {
+                        $subQuery->where('user_id', $user->id)->with('grade');
+                    } else {
+                        $subQuery->with(['student', 'grade']);
+                    }
+                }]);
                 if ($user?->role === 'mahasiswa') {
                     $query->where('status', 'published');
                 }
