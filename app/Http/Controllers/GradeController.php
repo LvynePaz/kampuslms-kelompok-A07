@@ -99,19 +99,17 @@ class GradeController extends Controller
         abort_unless($user->role === 'mahasiswa', 403, 'Akses khusus mahasiswa.');
 
         // Eager load courses, lecturer, assignments, dan submissions milik user saat ini
-        // Menerapkan pagination (BUILD butir 5) agar tidak memuat seluruh tabel ke memori
         $courses = $user->courses()
             ->with([
-                'lecturer:id,name',
+                'lecturer:id,name,nim_nip',
                 'assignments' => fn ($query) => $query->select('id', 'course_id', 'title', 'max_score', 'due_at')
                     ->where('status', 'published')
                     ->orderBy('due_at')
-                    ->with(['submissions' => fn ($subQuery) => $subQuery->select('id', 'assignment_id', 'user_id')
+                    ->with(['submissions' => fn ($subQuery) => $subQuery->select('id', 'assignment_id', 'user_id', 'is_late', 'submitted_at')
                         ->where('user_id', $user->id)
                         ->with(['grade:id,submission_id,score,feedback'])]),
             ])
-            ->paginate(5)
-            ->withQueryString();
+            ->get();
 
         return view('grades.my-grades', compact('courses'));
     }

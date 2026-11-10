@@ -1,42 +1,148 @@
-<x-layout title="Rekap Nilai Saya">
+<x-layout title="Nilai Saya">
     <style>
-        .grades-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+        .page-intro {
+            margin-bottom: 1.5rem;
         }
-        .stat-card {
-            background: #ffffff;
-            border: 1px solid rgba(45, 74, 62, 0.08);
-            border-radius: 14px;
-            padding: 1.25rem 1.5rem;
-            box-shadow: 0 4px 16px -2px rgba(35, 62, 49, 0.04);
-        }
-        .stat-card .label {
-            font-size: 0.78rem;
-            color: #647a6e;
+        .page-intro h1 {
+            font-size: 1.75rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
+            color: #1a2f25;
             margin-bottom: 4px;
         }
-        .stat-card .value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1a2f25;
+        .page-intro p {
+            color: #647a6e;
+            font-size: 0.9rem;
         }
 
-        .course-card {
+        /* USER PROFILE STRIP (SESUAI GAMBAR 1) */
+        .student-profile-strip {
             background: #ffffff;
-            border: 1px solid rgba(45, 74, 62, 0.08);
+            border: 1px solid rgba(45, 74, 62, 0.1);
+            border-radius: 14px;
+            padding: 1rem 1.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(35, 62, 49, 0.03);
+        }
+        .student-profile-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .student-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #2d4a3e;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .student-meta h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1a2f25;
+            margin: 0;
+        }
+        .student-meta p {
+            font-size: 0.82rem;
+            color: #5e7166;
+            margin: 0;
+        }
+
+        /* COURSE SELECTOR (DROPDOWN & PILLS SESUAI GAMBAR 1) */
+        .course-filter-card {
+            background: #ffffff;
+            border: 1px solid rgba(45, 74, 62, 0.12);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 14px rgba(35, 62, 49, 0.04);
+        }
+        .course-filter-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #243c32;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .course-select-dropdown {
+            width: 100%;
+            max-width: 520px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(45, 74, 62, 0.25);
+            background: #fbfdfc;
+            color: #1a2f25;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .course-select-dropdown:focus {
+            border-color: #2d4a3e;
+            box-shadow: 0 0 0 3px rgba(45, 74, 62, 0.12);
+        }
+
+        .course-pills-wrap {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-top: 0.85rem;
+            padding-bottom: 4px;
+        }
+        .course-pills-wrap::-webkit-scrollbar {
+            display: none;
+        }
+        .course-pill {
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(45, 74, 62, 0.18);
+            background: #f7f9f7;
+            color: #3b5246;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .course-pill:hover {
+            background: #eef5f1;
+            color: #1a2f25;
+        }
+        .course-pill.active {
+            background: #2d4a3e;
+            color: #ffffff;
+            border-color: #2d4a3e;
+        }
+
+        /* COURSE GRADE REPORT (SATU MATA KULIAH TAMPIL PENUH) */
+        .course-report-box {
+            background: #ffffff;
+            border: 1px solid rgba(45, 74, 62, 0.1);
             border-radius: 16px;
             box-shadow: 0 4px 20px -2px rgba(35, 62, 49, 0.05);
-            margin-bottom: 1.75rem;
+            margin-bottom: 2rem;
             overflow: hidden;
+            display: none; /* diatur oleh JS */
         }
-        .course-card-header {
-            padding: 1.25rem 1.5rem;
+        .course-report-box.is-active {
+            display: block;
+        }
+
+        .course-report-header {
+            padding: 1.35rem 1.75rem;
             background: #f7f9f7;
             border-bottom: 1px solid rgba(45, 74, 62, 0.08);
             display: flex;
@@ -45,86 +151,102 @@
             flex-wrap: wrap;
             gap: 0.75rem;
         }
-        .course-card-header h2 {
-            margin: 0;
-            font-size: 1.15rem;
+        .course-report-title h2 {
+            margin: 0 0 4px;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #1a2f25;
         }
-        .course-card-header p {
+        .course-report-title p {
             margin: 0;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             color: #5e7166;
         }
 
+        /* MINI SUMMARY TIAP MATKUL */
+        .course-stat-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1.25rem 1.75rem;
+            background: #ffffff;
+            border-bottom: 1px solid rgba(45, 74, 62, 0.08);
+        }
+        .course-stat-item {
+            background: #fbfdfc;
+            border: 1px solid rgba(45, 74, 62, 0.08);
+            border-radius: 10px;
+            padding: 0.85rem 1.15rem;
+        }
+        .course-stat-item .label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #647a6e;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 3px;
+        }
+        .course-stat-item .value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1a2f25;
+        }
+
+        /* TABEL ITEM PENILAIAN (SESUAI GAMBAR 1) */
         .grades-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
             font-size: 0.88rem;
         }
-        .grades-table th,
-        .grades-table td {
-            padding: 0.85rem 1.25rem;
-            border-bottom: 1px solid rgba(45, 74, 62, 0.08);
-        }
         .grades-table th {
             color: #4a6354;
             background: #fbfdfc;
-            font-size: 0.76rem;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+            padding: 11px 16px;
+            border-bottom: 1px solid rgba(45, 74, 62, 0.1);
         }
-        .grades-table tbody tr:last-child td {
-            border-bottom: 0;
+        .grades-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(45, 74, 62, 0.06);
+            color: #1a2f25;
+            vertical-align: middle;
+        }
+        .grades-table tr:hover td {
+            background: #fbfdfc;
+        }
+        .grades-table .total-row td {
+            background: #f0f5f2;
+            font-weight: 700;
+            color: #1b3528;
+            border-top: 2px solid rgba(45, 74, 62, 0.2);
+            border-bottom: none;
+            padding: 14px 16px;
         }
     </style>
 
-    <div style="margin-bottom: 1.5rem;">
-        <h1 style="font-size: 1.75rem; font-weight: 700; color: #1a2f25; margin-bottom: 4px;">
-            Rekap Nilai Perkuliahan
-        </h1>
-        <p style="color: #647a6e; font-size: 0.9rem;">
-            Ringkasan seluruh tugas dan nilai evaluasi akademik Anda di KampusLMS.
-        </p>
+    <div class="page-intro">
+        <h1>Rekap Nilai Perkuliahan</h1>
+        <p>Laporan nilai evaluasi akademik per mata kuliah yang Anda ikuti.</p>
     </div>
 
-    @php
-        $totalAssignments = 0;
-        $totalGraded = 0;
-        $sumScore = 0;
-
-        foreach ($courses as $c) {
-            foreach ($c->assignments as $a) {
-                $totalAssignments++;
-                $sub = $a->submissions->first();
-                if ($sub?->grade) {
-                    $totalGraded++;
-                    $sumScore += $sub->grade->score;
-                }
-            }
-        }
-        $avgScore = $totalGraded > 0 ? $sumScore / $totalGraded : null;
-    @endphp
-
-    <div class="grades-summary-grid">
-        <div class="stat-card">
-            <div class="label">Mata Kuliah Diikuti</div>
-            <div class="value">{{ $courses->total() }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Total Tugas Tersedia</div>
-            <div class="value">{{ $totalAssignments }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Tugas Telah Dinilai</div>
-            <div class="value" style="color: #047857;">{{ $totalGraded }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Rata-rata Nilai Saya</div>
-            <div class="value" style="color: #1b3528;">
-                {{ $avgScore !== null ? number_format($avgScore, 2) : '-' }}
+    {{-- IDENTITAS MAHASISWA (SESUAI GAMBAR 1: LIHAT LAPORAN PENGGUNA) --}}
+    <div class="student-profile-strip">
+        <div class="student-profile-left">
+            <div class="student-avatar">
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
             </div>
+            <div class="student-meta">
+                <h2>{{ auth()->user()->name }}</h2>
+                <p>NIM: {{ auth()->user()->nim_nip ?? '-' }} &bull; Mahasiswa</p>
+            </div>
+        </div>
+        <div>
+            <span style="background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;">
+                {{ $courses->count() }} Mata Kuliah Terdaftar
+            </span>
         </div>
     </div>
 
@@ -133,70 +255,141 @@
             Anda belum terdaftar pada mata kuliah apa pun.
         </div>
     @else
+        {{-- FILTER PILIH MATA KULIAH (AGAR NILAI DILIHAT PER MATKUL, BUKAN DITUMPUK SEMUA) --}}
+        <div class="course-filter-card">
+            <label for="course-select" class="course-filter-label">
+                Pilih Mata Kuliah yang Ingin Dilihat Nilainya:
+            </label>
+            <select id="course-select" class="course-select-dropdown" aria-label="Pilih mata kuliah">
+                @foreach ($courses as $c)
+                    <option value="course-{{ $c->id }}">
+                        {{ $c->name }} ({{ $c->code }})
+                    </option>
+                @endforeach
+                <option value="all-courses">
+                    Tampilkan Semua Mata Kuliah
+                </option>
+            </select>
+
+            <div class="course-pills-wrap" role="tablist">
+                @foreach ($courses as $c)
+                    <button type="button" class="course-pill {{ $loop->first ? 'active' : '' }}" 
+                            data-course-id="course-{{ $c->id }}" role="tab">
+                        {{ $c->name }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- DAFTAR LAPORAN NILAI PER MATA KULIAH (TERPISAH PER BOX) --}}
         @foreach ($courses as $course)
-            <section class="course-card">
-                <header class="course-card-header">
-                    <div>
+            @php
+                $courseAssignments = $course->assignments;
+                $courseTotalAsg = $courseAssignments->count();
+                $courseGradedCount = 0;
+                $courseTotalScore = 0;
+                $courseTotalMaxScore = 0;
+
+                foreach ($courseAssignments as $asg) {
+                    $sub = $asg->submissions->first();
+                    if ($sub?->grade) {
+                        $courseGradedCount++;
+                        $courseTotalScore += $sub->grade->score;
+                        $courseTotalMaxScore += $asg->max_score;
+                    }
+                }
+
+                $courseAverage = $courseGradedCount > 0 ? ($courseTotalScore / $courseGradedCount) : null;
+            @endphp
+
+            <section id="course-{{ $course->id }}" class="course-report-box {{ $loop->first ? 'is-active' : '' }}">
+                {{-- HEADER MATKUL (SESUAI GAMBAR 1) --}}
+                <header class="course-report-header">
+                    <div class="course-report-title">
                         <h2>{{ $course->name }} ({{ $course->code }})</h2>
-                        <p>Dosen Pengampu: {{ $course->lecturer?->name ?? '-' }}</p>
+                        <p>Dosen Pengampu: <strong>{{ $course->lecturer?->name ?? '-' }}</strong> &bull; Beban: {{ $course->sks }} SKS</p>
                     </div>
-                    <a href="{{ route('mahasiswa.courses.show', $course) }}" style="color: #2d4a3e; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
-                        Buka Kelas →
+                    <a href="{{ route('mahasiswa.courses.show', $course) }}" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; background: #ffffff; color: #2d4a3e; border: 1px solid rgba(45, 74, 62, 0.2); border-radius: 8px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                        Buka Kelas
                     </a>
                 </header>
 
-                @if ($course->assignments->isEmpty())
-                    <div style="padding: 1.5rem; color: #647a6e; font-size: 0.88rem; text-align: center;">
-                        Belum ada tugas pada mata kuliah ini.
+                {{-- STATISTIK MATA KULIAH INI --}}
+                <div class="course-stat-bar">
+                    <div class="course-stat-item">
+                        <div class="label">Total Tugas Kelas</div>
+                        <div class="value">{{ $courseTotalAsg }}</div>
+                    </div>
+                    <div class="course-stat-item">
+                        <div class="label">Tugas Telah Dinilai</div>
+                        <div class="value" style="color: #047857;">{{ $courseGradedCount }}</div>
+                    </div>
+                    <div class="course-stat-item">
+                        <div class="label">Rata-rata Nilai Matkul Ini</div>
+                        <div class="value" style="color: #2d4a3e;">
+                            {{ $courseAverage !== null ? number_format($courseAverage, 2) : '-' }}
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TABEL ITEM PENILAIAN --}}
+                @if ($courseAssignments->isEmpty())
+                    <div style="padding: 2rem; color: #647a6e; font-size: 0.88rem; text-align: center;">
+                        Belum ada tugas atau evaluasi pada mata kuliah ini.
                     </div>
                 @else
                     <div style="overflow-x: auto;">
                         <table class="grades-table">
                             <thead>
                                 <tr>
-                                    <th>Nama Tugas</th>
+                                    <th>Item Penilaian (Tugas)</th>
                                     <th>Batas Waktu</th>
                                     <th>Status Tugas</th>
-                                    <th>Nilai</th>
+                                    <th style="width: 120px;">Rentang</th>
+                                    <th style="width: 130px;">Nilai</th>
                                     <th>Catatan / Feedback</th>
-                                    <th style="text-align: right;">Aksi</th>
+                                    <th style="text-align: right; width: 110px;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($course->assignments as $asg)
+                                @foreach ($courseAssignments as $asg)
                                     @php
                                         $sub = $asg->submissions->first();
                                         $grd = $sub?->grade;
                                     @endphp
                                     <tr>
                                         <td>
-                                            <strong style="color: #1a2f25;">{{ $asg->title }}</strong>
-                                            <div style="font-size: 0.78rem; color: #647a6e;">Maksimal: {{ $asg->max_score }}</div>
+                                            <strong style="color: #1a2f25; font-size: 0.92rem;">{{ $asg->title }}</strong>
                                         </td>
-                                        <td>{{ $asg->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}</td>
+                                        <td style="color: #5e7166; font-size: 0.82rem;">
+                                            {{ $asg->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                                        </td>
                                         <td>
                                             @if (! $sub)
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 0.76rem; font-weight: 600;">
-                                                    Belum Mengumpulkan
+                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fde68a;">
+                                                    Belum Kumpul
                                                 </span>
                                             @elseif ($sub->is_late)
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fff7ed; color: #b45309; font-size: 0.76rem; font-weight: 600;">
+                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fff7ed; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fed7aa;">
                                                     Terlambat
                                                 </span>
                                             @else
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: 0.76rem; font-weight: 600;">
+                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: 0.76rem; font-weight: 600; border: 1px solid #a7f3d0;">
                                                     Tepat Waktu
                                                 </span>
                                             @endif
                                         </td>
+                                        <td style="color: #5e7166; font-size: 0.84rem;">
+                                            0 - {{ $asg->max_score }}
+                                        </td>
                                         <td>
                                             @if ($grd)
-                                                <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #ecfdf5; color: #047857; font-weight: 700; font-size: 0.88rem;">
-                                                    {{ $grd->score }} / {{ $asg->max_score }}
+                                                <span style="display: inline-block; padding: 3px 9px; border-radius: 6px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 0.95rem;">
+                                                    {{ $grd->score }}
                                                 </span>
                                             @elseif ($sub)
-                                                <span style="color: #92400e; font-size: 0.82rem; font-style: italic;">
-                                                    Menunggu penilaian
+                                                <span style="color: #92400e; font-size: 0.8rem; font-style: italic;">
+                                                    Menunggu nilai
                                                 </span>
                                             @else
                                                 <span style="color: #94a3b8;">-</span>
@@ -214,21 +407,87 @@
                                             @endif
                                         </td>
                                         <td style="text-align: right;">
-                                            <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="display: inline-block; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(45, 74, 62, 0.2); background: #ffffff; color: #2d4a3e; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
+                                            <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="display: inline-block; padding: 5px 12px; border-radius: 7px; border: 1px solid rgba(45, 74, 62, 0.2); background: #ffffff; color: #2d4a3e; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
                                                 Detail Tugas
                                             </a>
                                         </td>
                                     </tr>
                                 @endforeach
+
+                                {{-- BARIS AKHIR: NILAI RATA-RATA / NILAI AKHIR MATKUL INI (SESUAI GAMBAR 1) --}}
+                                <tr class="total-row">
+                                    <td colspan="3">
+                                        Nilai Akhir / Rata-rata Mata Kuliah: {{ $course->name }}
+                                    </td>
+                                    <td>0 - 100</td>
+                                    <td>
+                                        @if ($courseAverage !== null)
+                                            <span style="display: inline-block; padding: 4px 10px; border-radius: 7px; background: #2d4a3e; color: #ffffff; font-size: 1rem; font-weight: 800;">
+                                                {{ number_format($courseAverage, 2) }}
+                                            </span>
+                                        @else
+                                            <span style="color: #647a6e;">-</span>
+                                        @endif
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.82rem; color: #4a6354; font-weight: normal;">
+                                        @if ($courseGradedCount > 0)
+                                            Dihitung dari {{ $courseGradedCount }} tugas yang telah dinilai.
+                                        @else
+                                            Belum ada tugas yang dinilai oleh dosen.
+                                        @endif
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 @endif
             </section>
         @endforeach
-
-        <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
-            {{ $courses->links() }}
-        </div>
     @endif
+
+    {{-- SCRIPT INTERAKTIF PILIH MATA KULIAH (INSTAN TANPA RELOAD) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdown = document.getElementById('course-select');
+            const pills = document.querySelectorAll('.course-pill');
+            const reportBoxes = document.querySelectorAll('.course-report-box');
+
+            if (!dropdown) return;
+
+            function showCourse(courseTargetId) {
+                // Update dropdown value
+                dropdown.value = courseTargetId;
+
+                // Update pills
+                pills.forEach(pill => {
+                    const match = pill.getAttribute('data-course-id') === courseTargetId;
+                    pill.classList.toggle('active', match);
+                });
+
+                // Update visible report boxes
+                reportBoxes.forEach(box => {
+                    if (courseTargetId === 'all-courses') {
+                        box.style.display = 'block';
+                    } else if (box.id === courseTargetId) {
+                        box.style.display = 'block';
+                    } else {
+                        box.style.display = 'none';
+                    }
+                });
+            }
+
+            // Event listener saat dropdown berubah
+            dropdown.addEventListener('change', function() {
+                showCourse(this.value);
+            });
+
+            // Event listener saat tombol pill diklik
+            pills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-course-id');
+                    showCourse(targetId);
+                });
+            });
+        });
+    </script>
 </x-layout>
