@@ -134,6 +134,7 @@
             letter-spacing: 0.4px;
             padding: 11px 16px;
             border-bottom: 1px solid rgba(45, 74, 62, 0.1);
+            white-space: nowrap;
         }
         .grades-table td {
             padding: 12px 16px;
@@ -243,13 +244,13 @@
                         <table class="grades-table">
                             <thead>
                                 <tr>
-                                    <th>Item Penilaian (Tugas)</th>
-                                    <th>Batas Waktu</th>
-                                    <th>Status Tugas</th>
-                                    <th style="width: 120px;">Rentang</th>
-                                    <th style="width: 130px;">Nilai</th>
-                                    <th>Catatan / Feedback</th>
-                                    <th style="text-align: right; width: 110px;">Aksi</th>
+                                    <th style="min-width: 200px;">Item Penilaian (Tugas)</th>
+                                    <th style="white-space: nowrap; width: 160px;">Batas Waktu</th>
+                                    <th style="white-space: nowrap; width: 150px;">Status Tugas</th>
+                                    <th style="white-space: nowrap; width: 110px;">Rentang</th>
+                                    <th style="white-space: nowrap; width: 110px;">Nilai</th>
+                                    <th style="min-width: 220px;">Catatan / Feedback</th>
+                                    <th style="text-align: right; width: 110px; white-space: nowrap;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -260,36 +261,36 @@
                                     @endphp
                                     <tr>
                                         <td>
-                                            <strong style="color: #1a2f25; font-size: 0.92rem;">{{ $asg->title }}</strong>
+                                            <strong style="color: #1a2f25; font-size: 0.92rem; line-height: 1.4; display: block;">{{ $asg->title }}</strong>
                                         </td>
-                                        <td style="color: #5e7166; font-size: 0.82rem;">
+                                        <td style="color: #5e7166; font-size: 0.82rem; white-space: nowrap;">
                                             {{ $asg->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
                                         </td>
-                                        <td>
+                                        <td style="white-space: nowrap;">
                                             @if (! $sub)
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fde68a;">
+                                                <span style="display: inline-block; white-space: nowrap; padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fde68a;">
                                                     Belum Kumpul
                                                 </span>
                                             @elseif ($sub->is_late)
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fff7ed; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fed7aa;">
+                                                <span style="display: inline-block; white-space: nowrap; padding: 2px 8px; border-radius: 999px; background: #fff7ed; color: #b45309; font-size: 0.76rem; font-weight: 600; border: 1px solid #fed7aa;">
                                                     Terlambat
                                                 </span>
                                             @else
-                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: 0.76rem; font-weight: 600; border: 1px solid #a7f3d0;">
+                                                <span style="display: inline-block; white-space: nowrap; padding: 2px 8px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: 0.76rem; font-weight: 600; border: 1px solid #a7f3d0;">
                                                     Tepat Waktu
                                                 </span>
                                             @endif
                                         </td>
-                                        <td style="color: #5e7166; font-size: 0.84rem;">
+                                        <td style="color: #5e7166; font-size: 0.84rem; white-space: nowrap;">
                                             0 - {{ $asg->max_score }}
                                         </td>
-                                        <td>
+                                        <td style="white-space: nowrap;">
                                             @if ($grd)
-                                                <span style="display: inline-block; padding: 3px 9px; border-radius: 6px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 0.95rem;">
+                                                <span style="display: inline-block; white-space: nowrap; padding: 3px 9px; border-radius: 6px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 0.95rem;">
                                                     {{ $grd->score }}
                                                 </span>
                                             @elseif ($sub)
-                                                <span style="color: #92400e; font-size: 0.8rem; font-style: italic;">
+                                                <span style="color: #92400e; font-size: 0.8rem; font-style: italic; white-space: nowrap;">
                                                     Menunggu nilai
                                                 </span>
                                             @else
@@ -298,7 +299,7 @@
                                         </td>
                                         <td>
                                             @if ($grd?->feedback)
-                                                <div style="font-size: 0.82rem; color: #374151; max-width: 250px; word-break: break-word;">
+                                                <div style="font-size: 0.82rem; color: #374151; max-width: 280px; word-break: break-word; line-height: 1.45;">
                                                     "{{ $grd->feedback }}"
                                                 </div>
                                             @elseif ($grd)
@@ -307,7 +308,7 @@
                                                 <span style="color: #94a3b8;">-</span>
                                             @endif
                                         </td>
-                                        <td style="text-align: right;">
+                                        <td style="text-align: right; white-space: nowrap;">
                                             <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="display: inline-block; padding: 5px 12px; border-radius: 7px; border: 1px solid rgba(45, 74, 62, 0.2); background: #ffffff; color: #2d4a3e; font-size: 0.8rem; font-weight: 600; text-decoration: none;">
                                                 Detail Tugas
                                             </a>

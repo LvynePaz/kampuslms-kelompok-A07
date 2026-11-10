@@ -100,7 +100,7 @@
                                     default    => '',
                                 };
                             @endphp
-                            <span style="padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:600; {{ $statusClass }}">
+                            <span style="display: inline-block; white-space: nowrap; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; {{ $statusClass }}">
                                 {{ ucfirst($course->status) }}
                             </span>
                         </td>

@@ -269,6 +269,7 @@
             font-size: 0.82rem;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+            white-space: nowrap;
         }
         .lms-table td {
             padding: 12px 16px;
@@ -605,29 +606,29 @@
                         <table class="lms-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">No</th>
-                                    <th>Nama Mahasiswa</th>
-                                    <th>NIM</th>
-                                    <th>Email</th>
-                                    <th>Status Terdaftar</th>
+                                    <th style="width: 50px; text-align: center; white-space: nowrap;">No</th>
+                                    <th style="min-width: 200px;">Nama Mahasiswa</th>
+                                    <th style="white-space: nowrap; width: 150px;">NIM</th>
+                                    <th style="min-width: 200px;">Email</th>
+                                    <th style="white-space: nowrap; width: 140px; text-align: center;">Status Terdaftar</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($course->students as $std)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
+                                        <td style="text-align: center; font-weight: 600; color: #5e7166; white-space: nowrap;">{{ $loop->iteration }}</td>
                                         <td>
-                                            <div style="font-weight: 600; color: #1a2f25;">
+                                            <div style="font-weight: 600; color: #1a2f25; display: inline-flex; align-items: center; gap: 4px;">
                                                 {{ $std->name }}
                                                 @if ($std->id === auth()->id())
-                                                    <span style="background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 2px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; margin-left: 4px;">Anda</span>
+                                                    <span style="background: rgba(45, 74, 62, 0.1); color: #2d4a3e; padding: 2px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; white-space: nowrap;">Anda</span>
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>{{ $std->nim_nip ?? '-' }}</td>
+                                        <td style="white-space: nowrap; color: #4a6354;">{{ $std->nim_nip ?? '-' }}</td>
                                         <td style="color: #5e7166;">{{ $std->email }}</td>
-                                        <td>
-                                            <span style="background: #ecfdf5; color: #047857; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                                        <td style="white-space: nowrap; text-align: center;">
+                                            <span style="display: inline-block; white-space: nowrap; background: #ecfdf5; color: #047857; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid #a7f3d0;">
                                                 Aktif
                                             </span>
                                         </td>
@@ -669,26 +670,26 @@
                             <table class="lms-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 50px;">No</th>
-                                        <th>Nama Tugas</th>
-                                        <th>Deadline</th>
-                                        <th>Pengumpulan</th>
-                                        <th>Aksi</th>
+                                        <th style="width: 50px; text-align: center; white-space: nowrap;">No</th>
+                                        <th style="min-width: 220px;">Nama Tugas</th>
+                                        <th style="white-space: nowrap; width: 160px;">Deadline</th>
+                                        <th style="white-space: nowrap; width: 180px;">Pengumpulan</th>
+                                        <th style="white-space: nowrap; width: 140px; text-align: right;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($course->assignments as $asg)
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td><strong>{{ $asg->title }}</strong></td>
-                                            <td>{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</td>
-                                            <td>
+                                            <td style="text-align: center; font-weight: 600; color: #5e7166; white-space: nowrap;">{{ $loop->iteration }}</td>
+                                            <td><strong style="color: #1a2f25; line-height: 1.4;">{{ $asg->title }}</strong></td>
+                                            <td style="white-space: nowrap; color: #4a6354; font-size: 0.88rem;">{{ $asg->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}</td>
+                                            <td style="white-space: nowrap;">
                                                 <span style="font-weight: 600; color: #2d4a3e;">
                                                     {{ $asg->submissions->count() }} / {{ $course->students->count() }} Mahasiswa
                                                 </span>
                                             </td>
-                                            <td>
-                                                <a href="{{ route('dosen.assignments.submissions', $asg) }}" style="color: #2d4a3e; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.25); padding: 5px 12px; border-radius: 7px; background: #f7f9f7; font-size: 0.82rem;">
+                                            <td style="white-space: nowrap; text-align: right;">
+                                                <a href="{{ route('dosen.assignments.submissions', $asg) }}" style="display: inline-flex; align-items: center; color: #2d4a3e; font-weight: 600; text-decoration: none; border: 1px solid rgba(45, 74, 62, 0.25); padding: 5px 12px; border-radius: 7px; background: #f7f9f7; font-size: 0.82rem;">
                                                     Beri / Lihat Nilai
                                                 </a>
                                             </td>
@@ -712,12 +713,12 @@
                             <table class="lms-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 50px; text-align: center;">No</th>
+                                        <th style="width: 50px; text-align: center; white-space: nowrap;">No</th>
                                         <th style="min-width: 220px;">Nama Tugas</th>
                                         <th style="white-space: nowrap; width: 160px;">Deadline</th>
-                                        <th style="white-space: nowrap; width: 180px;">Status Pengumpulan</th>
-                                        <th style="white-space: nowrap; width: 150px; text-align: center;">Nilai Diperoleh</th>
-                                        <th style="min-width: 250px;">Catatan / Feedback</th>
+                                        <th style="white-space: nowrap; width: 190px;">Status Pengumpulan</th>
+                                        <th style="white-space: nowrap; width: 140px; text-align: center;">Nilai Diperoleh</th>
+                                        <th style="min-width: 240px;">Catatan / Feedback</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -727,35 +728,37 @@
                                             $grd = $sub?->grade;
                                         @endphp
                                         <tr>
-                                            <td style="text-align: center; font-weight: 500;">{{ $loop->iteration }}</td>
+                                            <td style="text-align: center; font-weight: 600; color: #5e7166; white-space: nowrap;">{{ $loop->iteration }}</td>
                                             <td>
-                                                <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="color: #1a2f25; font-weight: 600; text-decoration: none;">
+                                                <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="color: #1a2f25; font-weight: 600; text-decoration: none; line-height: 1.4; display: block;">
                                                     {{ $asg->title }}
                                                 </a>
                                             </td>
-                                            <td style="white-space: nowrap; color: #4a6354; font-size: 0.85rem;">{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</td>
+                                            <td style="white-space: nowrap; color: #4a6354; font-size: 0.88rem;">
+                                                {{ $asg->due_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                                            </td>
                                             <td style="white-space: nowrap;">
                                                 @if ($sub)
-                                                    <span style="display: inline-block; white-space: nowrap; background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
-                                                        Dikumpulkan ({{ $sub->submitted_at?->format('d M') ?? 'Ada' }})
+                                                    <span style="display: inline-block; white-space: nowrap; background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; border: 1px solid #bfdbfe;">
+                                                        Dikumpulkan ({{ $sub->submitted_at?->translatedFormat('d M') ?? 'Ada' }})
                                                     </span>
                                                 @else
-                                                    <span style="display: inline-block; white-space: nowrap; background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
+                                                    <span style="display: inline-block; white-space: nowrap; background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; border: 1px solid #fde68a;">
                                                         Belum Mengumpulkan
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td style="text-align: center; white-space: nowrap;">
+                                            <td style="white-space: nowrap; text-align: center;">
                                                 @if ($grd)
-                                                    <span style="font-size: 1.05rem; font-weight: 700; color: #047857;">
-                                                        {{ $grd->score }}
+                                                    <span style="font-size: 1.05rem; font-weight: 800; color: #047857;">
+                                                        {{ number_format($grd->score, 2) }}
                                                     </span>
-                                                    <small style="color: #647a6e;"> / {{ $asg->max_score }}</small>
+                                                    <small style="color: #647a6e; font-weight: 500;"> / {{ $asg->max_score }}</small>
                                                 @else
-                                                    <span style="color: #94a3b8; font-style: italic;">Belum Dinilai</span>
+                                                    <span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Belum Dinilai</span>
                                                 @endif
                                             </td>
-                                            <td style="color: #4a6354; font-size: 0.85rem; line-height: 1.45;">
+                                            <td style="color: #374151; font-size: 0.85rem; line-height: 1.45;">
                                                 {{ $grd?->feedback ?? '-' }}
                                             </td>
                                         </tr>

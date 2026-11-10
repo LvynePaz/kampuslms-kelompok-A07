@@ -50,6 +50,7 @@
         }
         .badge-score {
             display: inline-block;
+            white-space: nowrap;
             padding: 3px 8px;
             border-radius: 6px;
             background: #ecfdf5;
@@ -59,6 +60,7 @@
         }
         .badge-pending {
             display: inline-block;
+            white-space: nowrap;
             padding: 2px 7px;
             border-radius: 5px;
             background: #fff7ed;

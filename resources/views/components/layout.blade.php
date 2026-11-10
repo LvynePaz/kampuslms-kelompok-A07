@@ -305,6 +305,7 @@
             text-transform: uppercase;
             letter-spacing: 0.6px;
             text-align: left;
+            white-space: nowrap;
         }
 
         td {
@@ -368,6 +369,7 @@
         .badge-sks {
             display: inline-flex;
             align-items: center;
+            white-space: nowrap;
             padding: 3px 8px;
             border-radius: 6px;
             font-size: 0.8rem;
