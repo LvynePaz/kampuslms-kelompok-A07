@@ -60,4 +60,17 @@ class Submission extends Model
     {
         return $this->hasOne(Grade::class);
     }
+
+    public function getFormattedFileSizeAttribute(): ?string
+    {
+        if ($this->file_size === null) {
+            return null;
+        }
+
+        $bytes = (int) $this->file_size;
+
+        return $bytes >= 1024 * 1024
+            ? number_format($bytes / (1024 * 1024), 1) . ' MB'
+            : number_format($bytes / 1024, 1) . ' KB';
+    }
 }

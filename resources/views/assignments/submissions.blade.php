@@ -166,7 +166,7 @@
                                                 {{ $submission->original_name }}
                                             </a>
                                             <span style="font-size: 0.78rem; color: #647a6e;">
-                                                {{ \Illuminate\Support\Number::fileSize($submission->file_size) }}
+                                                {{ $submission->formatted_file_size ?? '-' }}
                                             </span>
                                         </div>
                                     @else
