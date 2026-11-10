@@ -795,10 +795,6 @@
                 {{-- Menu Mata Kuliah Sesuai Role Pengguna --}}
                 <a href="{{ route(auth()->user()->role . '.courses.index') }}">Mata Kuliah</a>
 
-                @if (auth()->user()->role === 'mahasiswa')
-                    <a href="{{ route('mahasiswa.grades.index') }}">Nilai Saya</a>
-                @endif
-
                 {{-- Menu Khusus Admin --}}
                 @if (auth()->user()->role === 'admin')
                     <details class="admin-menu">
@@ -860,10 +856,6 @@
             <a href="{{ route('dashboard') }}">Dashboard</a>
             @auth
                 <a href="{{ route(auth()->user()->role . '.courses.index') }}">Mata Kuliah</a>
-
-                @if (auth()->user()->role === 'mahasiswa')
-                    <a href="{{ route('mahasiswa.grades.index') }}">Nilai Saya</a>
-                @endif
 
                 @if (auth()->user()->role === 'admin')
                     <details class="navbar-mobile-admin">

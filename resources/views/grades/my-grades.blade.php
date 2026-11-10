@@ -57,76 +57,6 @@
             margin: 0;
         }
 
-        /* COURSE SELECTOR (DROPDOWN & PILLS SESUAI GAMBAR 1) */
-        .course-filter-card {
-            background: #ffffff;
-            border: 1px solid rgba(45, 74, 62, 0.12);
-            border-radius: 14px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 14px rgba(35, 62, 49, 0.04);
-        }
-        .course-filter-label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #243c32;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-        .course-select-dropdown {
-            width: 100%;
-            max-width: 520px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid rgba(45, 74, 62, 0.25);
-            background: #fbfdfc;
-            color: #1a2f25;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.2s;
-        }
-        .course-select-dropdown:focus {
-            border-color: #2d4a3e;
-            box-shadow: 0 0 0 3px rgba(45, 74, 62, 0.12);
-        }
-
-        .course-pills-wrap {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            margin-top: 0.85rem;
-            padding-bottom: 4px;
-        }
-        .course-pills-wrap::-webkit-scrollbar {
-            display: none;
-        }
-        .course-pill {
-            padding: 6px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(45, 74, 62, 0.18);
-            background: #f7f9f7;
-            color: #3b5246;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .course-pill:hover {
-            background: #eef5f1;
-            color: #1a2f25;
-        }
-        .course-pill.active {
-            background: #2d4a3e;
-            color: #ffffff;
-            border-color: #2d4a3e;
-        }
-
         /* COURSE GRADE REPORT (SATU MATA KULIAH TAMPIL PENUH) */
         .course-report-box {
             background: #ffffff;
@@ -135,9 +65,6 @@
             box-shadow: 0 4px 20px -2px rgba(35, 62, 49, 0.05);
             margin-bottom: 2rem;
             overflow: hidden;
-            display: none; /* diatur oleh JS */
-        }
-        .course-report-box.is-active {
             display: block;
         }
 
@@ -255,32 +182,6 @@
             Anda belum terdaftar pada mata kuliah apa pun.
         </div>
     @else
-        {{-- FILTER PILIH MATA KULIAH (AGAR NILAI DILIHAT PER MATKUL, BUKAN DITUMPUK SEMUA) --}}
-        <div class="course-filter-card">
-            <label for="course-select" class="course-filter-label">
-                Pilih Mata Kuliah yang Ingin Dilihat Nilainya:
-            </label>
-            <select id="course-select" class="course-select-dropdown" aria-label="Pilih mata kuliah">
-                @foreach ($courses as $c)
-                    <option value="course-{{ $c->id }}">
-                        {{ $c->name }} ({{ $c->code }})
-                    </option>
-                @endforeach
-                <option value="all-courses">
-                    Tampilkan Semua Mata Kuliah
-                </option>
-            </select>
-
-            <div class="course-pills-wrap" role="tablist">
-                @foreach ($courses as $c)
-                    <button type="button" class="course-pill {{ $loop->first ? 'active' : '' }}" 
-                            data-course-id="course-{{ $c->id }}" role="tab">
-                        {{ $c->name }}
-                    </button>
-                @endforeach
-            </div>
-        </div>
-
         {{-- DAFTAR LAPORAN NILAI PER MATA KULIAH (TERPISAH PER BOX) --}}
         @foreach ($courses as $course)
             @php
@@ -444,50 +345,4 @@
             </section>
         @endforeach
     @endif
-
-    {{-- SCRIPT INTERAKTIF PILIH MATA KULIAH (INSTAN TANPA RELOAD) --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropdown = document.getElementById('course-select');
-            const pills = document.querySelectorAll('.course-pill');
-            const reportBoxes = document.querySelectorAll('.course-report-box');
-
-            if (!dropdown) return;
-
-            function showCourse(courseTargetId) {
-                // Update dropdown value
-                dropdown.value = courseTargetId;
-
-                // Update pills
-                pills.forEach(pill => {
-                    const match = pill.getAttribute('data-course-id') === courseTargetId;
-                    pill.classList.toggle('active', match);
-                });
-
-                // Update visible report boxes
-                reportBoxes.forEach(box => {
-                    if (courseTargetId === 'all-courses') {
-                        box.style.display = 'block';
-                    } else if (box.id === courseTargetId) {
-                        box.style.display = 'block';
-                    } else {
-                        box.style.display = 'none';
-                    }
-                });
-            }
-
-            // Event listener saat dropdown berubah
-            dropdown.addEventListener('change', function() {
-                showCourse(this.value);
-            });
-
-            // Event listener saat tombol pill diklik
-            pills.forEach(pill => {
-                pill.addEventListener('click', function() {
-                    const targetId = this.getAttribute('data-course-id');
-                    showCourse(targetId);
-                });
-            });
-        });
-    </script>
 </x-layout>
