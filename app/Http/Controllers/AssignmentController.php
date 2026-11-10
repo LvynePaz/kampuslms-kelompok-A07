@@ -58,21 +58,25 @@ class AssignmentController extends Controller
 
     public function submissions(Assignment $assignment)
     {
-        Gate::authorize('update', $assignment);
+        try {
+            Gate::authorize('update', $assignment);
 
-        $assignment->load('course');
-        $students = $assignment->course->students()
-            ->select('users.id', 'users.name', 'users.nim_nip')
-            ->with(['submissions' => fn ($query) => $query
-                ->where('assignment_id', $assignment->id)
-                ->select('id', 'user_id', 'assignment_id', 'original_name', 'file_size', 'is_late', 'submitted_at')
-                ->with(['grade' => fn ($query) => $query
-                    ->select('id', 'submission_id', 'score', 'feedback')])])
-            ->orderBy('name')
-            ->get();
-        $course = $assignment->course;
+            $assignment->load('course');
+            $students = $assignment->course->students()
+                ->select('users.id', 'users.name', 'users.nim_nip')
+                ->with(['submissions' => fn ($query) => $query
+                    ->where('assignment_id', $assignment->id)
+                    ->select('id', 'user_id', 'assignment_id', 'original_name', 'file_size', 'is_late', 'submitted_at')
+                    ->with(['grade' => fn ($query) => $query
+                        ->select('id', 'submission_id', 'score', 'feedback')])])
+                ->orderBy('name')
+                ->get();
+            $course = $assignment->course;
 
-        return view('assignments.submissions', compact('assignment', 'course', 'students'));
+            return view('assignments.submissions', compact('assignment', 'course', 'students'));
+        } catch (\Throwable $e) {
+            return response("DIAGNOSTIC ERROR: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine(), 500);
+        }
     }
 
     public function create(Request $request, Course $course)
