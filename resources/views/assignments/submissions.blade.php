@@ -79,14 +79,14 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route('dosen.assignments.show', $assignment) }}" style="color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
-            ← Kembali ke Detail Tugas
+            Kembali
         </a>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <a href="{{ route('dosen.courses.grades', $course) }}" style="display: inline-flex; align-items: center; padding: 7px 14px; background: #2d4a3e; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
                 Rekap Nilai Mata Kuliah
             </a>
             <a href="{{ route('dosen.courses.grades.export', $course) }}" style="display: inline-flex; align-items: center; gap: 4px; padding: 7px 14px; background: #205c48; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
-                📥 Ekspor Nilai (CSV)
+                Ekspor Nilai (CSV)
             </a>
         </div>
     </div>

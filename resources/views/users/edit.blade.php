@@ -18,7 +18,7 @@
     </style>
 
     <div class="user-form-wrap">
-        <a href="{{ route('admin.users.show', $user) }}" class="user-form-back">&lt;- Kembali ke detail pengguna</a>
+        <a href="{{ route('admin.users.show', $user) }}" class="user-form-back">Kembali</a>
         <div class="user-form-heading"><div class="user-form-kicker">Mode admin / pengguna</div><h1>Edit pengguna</h1><p>Perbarui informasi akun dan role {{ $user->name }}.</p></div>
         <form action="{{ route('admin.users.update', $user) }}" method="POST" class="user-form-card">
             @csrf @method('PUT')

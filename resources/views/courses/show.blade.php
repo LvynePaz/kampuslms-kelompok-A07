@@ -132,7 +132,7 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route($routePrefix . 'courses.index') }}" class="back-link" style="margin-bottom: 0;">
-            ← Kembali ke Daftar Mata Kuliah
+            Kembali
         </a>
 
         @if (auth()->user()?->role === 'admin')

@@ -21,7 +21,7 @@
     </style>
 
     <div class="user-detail">
-        <a href="{{ route('admin.users.index') }}" class="user-back">&lt;- Kembali ke daftar pengguna</a>
+        <a href="{{ route('admin.users.index') }}" class="user-back">Kembali</a>
         <section class="profile-card">
             <div class="profile-head"><div class="profile-avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div><div><h1>{{ $user->name }}</h1><p>Profil pengguna KampusLMS</p></div></div>
             <div class="profile-body">

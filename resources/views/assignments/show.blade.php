@@ -124,7 +124,7 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route(auth()->user()->role . '.courses.show', $course) }}" class="back-link" style="margin-bottom: 0;">
-            ← Kembali ke Mata Kuliah: {{ $course->name }}
+            Kembali
         </a>
 
         @can('update', $assignment)

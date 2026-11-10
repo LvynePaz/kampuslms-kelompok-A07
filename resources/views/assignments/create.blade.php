@@ -1,7 +1,7 @@
 <x-layout title="Buat Tugas Kuliah">
     <div style="max-width: 800px; margin: 0 auto; padding: 2rem 0;">
         <a href="{{ url()->previous() }}" style="display: inline-flex; align-items: center; gap: 6px; color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 1.5rem;">
-            ← Kembali ke Detail Mata Kuliah
+            Kembali
         </a>
 
         <div style="background: #ffffff; border-radius: 18px; padding: 2.25rem; border: 1px solid rgba(45, 74, 62, 0.08); box-shadow: 0 4px 20px -2px rgba(35, 62, 49, 0.05);">

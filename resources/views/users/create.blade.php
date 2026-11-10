@@ -18,7 +18,7 @@
     </style>
 
     <div class="user-form-wrap">
-        <a href="{{ route('admin.users.index') }}" class="user-form-back">&lt;- Kembali ke daftar pengguna</a>
+        <a href="{{ route('admin.users.index') }}" class="user-form-back">Kembali</a>
         <div class="user-form-heading"><div class="user-form-kicker">Mode admin / pengguna</div><h1>Tambah pengguna</h1><p>Buat akun baru dan tentukan role aksesnya di KampusLMS.</p></div>
         <form action="{{ route('admin.users.store') }}" method="POST" class="user-form-card">
             @csrf

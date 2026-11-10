@@ -74,7 +74,7 @@
 
     <div style="margin-bottom: 1.25rem;">
         <a href="{{ route('dosen.courses.show', $course) }}" style="color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
-            ← Kembali ke Detail Mata Kuliah
+            Kembali
         </a>
     </div>
 

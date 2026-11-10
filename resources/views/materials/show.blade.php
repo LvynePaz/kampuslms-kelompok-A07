@@ -121,7 +121,7 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route($routePrefix . 'courses.show', $course) }}" class="back-link" style="margin-bottom: 0;">
-            ← Kembali ke {{ $course->name }}
+            Kembali
         </a>
 
         @can('update', $material)
