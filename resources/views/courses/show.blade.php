@@ -286,7 +286,8 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
         <a href="{{ route($routePrefix . 'courses.index') }}" class="back-link" style="margin-bottom: 0;">
-            Kembali
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 19l-7-7 7-7"/></svg>
+            <span>Kembali</span>
         </a>
 
         @if (auth()->user()?->role === 'admin')
@@ -711,12 +712,12 @@
                             <table class="lms-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 50px;">No</th>
-                                        <th>Nama Tugas</th>
-                                        <th>Deadline</th>
-                                        <th>Status Pengumpulan</th>
-                                        <th>Nilai Diperoleh</th>
-                                        <th>Catatan / Feedback</th>
+                                        <th style="width: 50px; text-align: center;">No</th>
+                                        <th style="min-width: 220px;">Nama Tugas</th>
+                                        <th style="white-space: nowrap; width: 160px;">Deadline</th>
+                                        <th style="white-space: nowrap; width: 180px;">Status Pengumpulan</th>
+                                        <th style="white-space: nowrap; width: 150px; text-align: center;">Nilai Diperoleh</th>
+                                        <th style="min-width: 250px;">Catatan / Feedback</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -726,25 +727,25 @@
                                             $grd = $sub?->grade;
                                         @endphp
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
+                                            <td style="text-align: center; font-weight: 500;">{{ $loop->iteration }}</td>
                                             <td>
                                                 <a href="{{ route('mahasiswa.assignments.show', $asg) }}" style="color: #1a2f25; font-weight: 600; text-decoration: none;">
                                                     {{ $asg->title }}
                                                 </a>
                                             </td>
-                                            <td>{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</td>
-                                            <td>
+                                            <td style="white-space: nowrap; color: #4a6354; font-size: 0.85rem;">{{ $asg->due_at?->format('d M Y, H:i') ?? '-' }}</td>
+                                            <td style="white-space: nowrap;">
                                                 @if ($sub)
-                                                    <span style="background: #eff6ff; color: #1d4ed8; padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
+                                                    <span style="display: inline-block; white-space: nowrap; background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
                                                         Dikumpulkan ({{ $sub->submitted_at?->format('d M') ?? 'Ada' }})
                                                     </span>
                                                 @else
-                                                    <span style="background: #fffbeb; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
+                                                    <span style="display: inline-block; white-space: nowrap; background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
                                                         Belum Mengumpulkan
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td style="text-align: center; white-space: nowrap;">
                                                 @if ($grd)
                                                     <span style="font-size: 1.05rem; font-weight: 700; color: #047857;">
                                                         {{ $grd->score }}
@@ -754,7 +755,7 @@
                                                     <span style="color: #94a3b8; font-style: italic;">Belum Dinilai</span>
                                                 @endif
                                             </td>
-                                            <td style="color: #4a6354; font-size: 0.85rem;">
+                                            <td style="color: #4a6354; font-size: 0.85rem; line-height: 1.45;">
                                                 {{ $grd?->feedback ?? '-' }}
                                             </td>
                                         </tr>

@@ -73,8 +73,9 @@
     </style>
 
     <div style="margin-bottom: 1.25rem;">
-        <a href="{{ route('dosen.courses.show', $course) }}" style="color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
-            Kembali
+        <a href="{{ route('dosen.courses.show', $course) }}" style="display: inline-flex; align-items: center; gap: 6px; color: #416454; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 19l-7-7 7-7"/></svg>
+            <span>Kembali</span>
         </a>
     </div>
 

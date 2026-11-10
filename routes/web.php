@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Course;
 use App\Models\User;
 
+
 // 1. Halaman Depan & Dashboard Utama
 Route::get('/', function () {
     if (auth()->check()) {

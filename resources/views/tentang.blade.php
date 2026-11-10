@@ -241,9 +241,9 @@
                 <p>Dibangun secara kerja kelompok </p>
             </div>
         </div>
-        <a href="{{ route('dashboard') }}" class="btn-back-dash">
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        <a href="{{ route('dashboard') }}" class="btn-back-dash" style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M15 19l-7-7 7-7" />
             </svg>
             <span>Kembali ke Dashboard</span>
         </a>

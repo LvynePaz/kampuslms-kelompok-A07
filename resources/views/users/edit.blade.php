@@ -18,7 +18,10 @@
     </style>
 
     <div class="user-form-wrap">
-        <a href="{{ route('admin.users.show', $user) }}" class="user-form-back">Kembali</a>
+        <a href="{{ route('admin.users.show', $user) }}" class="user-form-back" style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 19l-7-7 7-7"/></svg>
+            <span>Kembali</span>
+        </a>
         <div class="user-form-heading"><div class="user-form-kicker">Mode admin / pengguna</div><h1>Edit pengguna</h1><p>Perbarui informasi akun dan role {{ $user->name }}.</p></div>
         <form action="{{ route('admin.users.update', $user) }}" method="POST" class="user-form-card">
             @csrf @method('PUT')

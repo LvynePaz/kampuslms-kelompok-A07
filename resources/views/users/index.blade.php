@@ -152,9 +152,13 @@
 
                     <div class="pagination-controls">
                         @if ($users->onFirstPage())
-                            <span class="page-arrow disabled">&lsaquo;</span>
+                            <span class="page-arrow disabled" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+                            </span>
                         @else
-                            <a href="{{ $users->previousPageUrl() }}" class="page-arrow">&lsaquo;</a>
+                            <a href="{{ $users->previousPageUrl() }}" class="page-arrow" aria-label="Halaman sebelumnya">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+                            </a>
                         @endif
 
                         @foreach ($users->getUrlRange(1, $users->lastPage()) as $page => $url)
@@ -166,9 +170,13 @@
                         @endforeach
 
                         @if ($users->hasMorePages())
-                            <a href="{{ $users->nextPageUrl() }}" class="page-arrow">&rsaquo;</a>
+                            <a href="{{ $users->nextPageUrl() }}" class="page-arrow" aria-label="Halaman selanjutnya">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+                            </a>
                         @else
-                            <span class="page-arrow disabled">&rsaquo;</span>
+                            <span class="page-arrow disabled" aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+                            </span>
                         @endif
                     </div>
                 </nav>
