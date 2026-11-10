@@ -46,6 +46,7 @@
         }
 
         .navbar-toggle,
+        .navbar-mobile-actions,
         .navbar-mobile-menu {
             display: none;
         }
@@ -609,6 +610,25 @@
                 flex-wrap: wrap;
             }
 
+            .navbar-mobile-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .nav-notif-bell-mobile {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                padding: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
+            }
+
             .navbar-toggle {
                 display: inline-flex;
                 align-items: center;
@@ -739,14 +759,35 @@
         <a href="{{ route('dashboard') }}" class="navbar-brand">
             KampusLMS <span>A07</span>
         </a>
-        <button type="button" class="navbar-toggle" id="navbar-toggle"
-                aria-controls="navbar-mobile-menu" aria-expanded="false"
-                aria-label="Buka menu navigasi">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
+        <div class="navbar-mobile-actions">
+            @auth
+                @php
+                    $navUnreadCount = $navUnreadCount ?? auth()->user()->unreadNotifications()->count();
+                @endphp
+                <a href="{{ route('notifications.index') }}" 
+                   class="nav-notif-bell nav-notif-bell-mobile" 
+                   title="Notifikasi" 
+                   aria-label="Kotak Masuk Notifikasi">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span id="nav-notif-badge-mobile" 
+                          class="nav-notif-badge"
+                          style="{{ $navUnreadCount > 0 ? 'display: inline-flex;' : 'display: none;' }}">
+                        {{ $navUnreadCount > 99 ? '99+' : $navUnreadCount }}
+                    </span>
+                </a>
+            @endauth
+            <button type="button" class="navbar-toggle" id="navbar-toggle"
+                    aria-controls="navbar-mobile-menu" aria-expanded="false"
+                    aria-label="Buka menu navigasi">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
         <div class="navbar-links">
             <a href="{{ route('dashboard') }}">Dashboard</a>
 
@@ -836,18 +877,6 @@
             <a href="{{ route('tentang') }}">Tentang</a>
 
             @auth
-                <a href="{{ route('notifications.index') }}" class="nav-notif-bell"
-                   title="Notifikasi" aria-label="Kotak Masuk Notifikasi">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <span id="nav-notif-badge-mobile" class="nav-notif-badge"
-                          style="{{ $navUnreadCount > 0 ? 'display: inline-flex;' : 'display: none;' }}">
-                        {{ $navUnreadCount > 99 ? '99+' : $navUnreadCount }}
-                    </span>
-                </a>
-
                 <div class="navbar-mobile-account">
                     <span class="navbar-mobile-identity">
                         {{ auth()->user()->name }} · {{ auth()->user()->role }}
