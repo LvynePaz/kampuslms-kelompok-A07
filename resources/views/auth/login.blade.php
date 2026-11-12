@@ -55,26 +55,6 @@
             transform: scale(1.03);
         }
 
-        .demo-account-btn {
-            padding: 8px 10px;
-            background: #f4f8f6;
-            border: 1px solid rgba(45, 74, 62, 0.18);
-            border-radius: 9px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #205c48;
-            cursor: pointer;
-            transition: all 0.18s ease;
-            text-align: center;
-        }
-
-        .demo-account-btn:hover {
-            background: #205c48;
-            color: #ffffff;
-            border-color: #205c48;
-            transform: translateY(-1px);
-        }
-
         @media (max-width: 859px) {
             .split-card {
                 flex-direction: column;
@@ -214,41 +194,8 @@
                     Masuk
                 </button>
 
-                {{-- Lupa Kata Sandi --}}
-                <div style="display: flex; justify-content: flex-end;">
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" style="font-size: 0.8rem; color: #1a6cb8; text-decoration: none; font-weight: 500;">
-                            Lupa kata sandi?
-                        </a>
-                    @endif
-                </div>
-
-                {{-- Pilihan Masuk Akun Uji Coba Cepat (Demo) --}}
-                <div style="margin-top: 0.4rem;">
-                    <div style="font-size: 0.78rem; color: #62766c; margin-bottom: 0.5rem; text-align: center; font-weight: 500;">
-                        Atau pilih akun demo:
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-                        <button type="button" 
-                                class="demo-account-btn"
-                                onclick="fillCredentials('dosen@kampuslms.test')">
-                            Dosen
-                        </button>
-                        <button type="button" 
-                                class="demo-account-btn"
-                                onclick="fillCredentials('mahasiswa@kampuslms.test')">
-                            Mahasiswa
-                        </button>
-                        <button type="button" 
-                                class="demo-account-btn"
-                                onclick="fillCredentials('admin@kampuslms.test')">
-                            Admin
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Ingat Perangkat Ini --}}
-                <div style="display: flex; align-items: center; margin-top: 0.35rem;">
+                {{-- Opsi Bawah: Ingat Perangkat & Lupa Kata Sandi --}}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
                     <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #44584e; cursor: pointer;">
                         <input id="remember_me" 
                                type="checkbox" 
@@ -256,6 +203,12 @@
                                style="width: 15px; height: 15px; accent-color: #205c48; cursor: pointer;">
                         <span>Ingat perangkat ini</span>
                     </label>
+
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" style="font-size: 0.8rem; color: #1a6cb8; text-decoration: none; font-weight: 500;">
+                            Lupa kata sandi?
+                        </a>
+                    @endif
                 </div>
             </form>
 
@@ -274,19 +227,6 @@
 
     {{-- Script JavaScript Interaktif --}}
     <script>
-        function fillCredentials(email) {
-            const emailInput = document.getElementById('email');
-            const passInput = document.getElementById('password');
-            if (emailInput && passInput) {
-                emailInput.value = email;
-                passInput.value = 'password';
-                emailInput.style.borderColor = '#205c48';
-                passInput.style.borderColor = '#205c48';
-                emailInput.style.backgroundColor = '#ffffff';
-                passInput.style.backgroundColor = '#ffffff';
-            }
-        }
-
         function togglePasswordVisibility() {
             const passInput = document.getElementById('password');
             const icon = document.getElementById('eye-icon');
