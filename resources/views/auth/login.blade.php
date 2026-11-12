@@ -120,11 +120,6 @@
                      alt="Maskot Mahasiswa ITK" 
                      class="mascot-image">
             </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #e4efe9; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
-                <span>Gedung Terpadu Kampus ITK</span>
-                <span>SI2514024 Pemrograman Web</span>
-            </div>
         </div>
 
         {{-- SISI KANAN: Form Login Akun --}}
@@ -264,12 +259,8 @@
                 </div>
             </form>
 
-            {{-- Footer Tautan dan Legalitas --}}
-            <div style="margin-top: 1.35rem; font-size: 0.75rem; color: #788d82; text-align: center; line-height: 1.45;">
-                Dengan melanjutkan, kamu menyetujui Ketentuan Penggunaan KampusLMS Kelompok A07.
-            </div>
-
-            <div style="text-align: center; margin-top: 0.75rem;">
+            {{-- Link Kembali ke Beranda --}}
+            <div style="text-align: center; margin-top: 1.25rem;">
                 <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; color: #205c48; text-decoration: none; font-weight: 600;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M15 19l-7-7 7-7" />
