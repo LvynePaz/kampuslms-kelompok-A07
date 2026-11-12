@@ -110,7 +110,7 @@
         {{-- Fitur Diferensiasi No. 8: Impor Nilai Tugas dari File CSV --}}
         <div style="padding: 0.9rem 1.75rem; background: #fbfdfc; border-bottom: 1px solid rgba(45, 74, 62, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
             <div>
-                <span style="font-weight: 700; color: #1a2f25; font-size: 0.85rem;">📥 Impor Nilai dari Berkas CSV:</span>
+                <span style="font-weight: 700; color: #1a2f25; font-size: 0.85rem;">Impor Nilai dari Berkas CSV:</span>
                 <span style="font-size: 0.78rem; color: #647a6e; margin-left: 0.35rem;">Format baris: <code>NIM,Nilai,Feedback</code></span>
             </div>
             <form action="{{ route('dosen.assignments.grades.import', $assignment) }}" method="POST" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
