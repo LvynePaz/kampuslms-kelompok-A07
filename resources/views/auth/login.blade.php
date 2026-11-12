@@ -75,7 +75,7 @@
             }
 
             .mascot-image {
-                max-height: 200px;
+                max-height: 500px;
             }
         }
     </style>
@@ -88,10 +88,6 @@
                 <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(32, 92, 72, 0.14); padding: 4px 12px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; color: #143527; margin-bottom: 0.85rem; border: 1px solid rgba(32, 92, 72, 0.22); backdrop-filter: blur(4px);">
                     <span>Institut Teknologi Kalimantan &middot; KampusLMS A07</span>
                 </div>
-                
-                <h2 style="font-size: 1.45rem; font-weight: 800; color: #162a22; line-height: 1.35; margin: 0; letter-spacing: -0.3px;">
-                    Permudah interaksi perkuliahan <span style="color: #d96611;">Dosen</span> dan <span style="color: #1a6cb8;">Mahasiswa</span> secara online!
-                </h2>
             </div>
 
             {{-- Maskot Tampil Penuh di Depan Background Kampus (Bukan Dalam Lingkaran) --}}
