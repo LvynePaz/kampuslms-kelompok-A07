@@ -18,8 +18,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased text-[#1f2d26]" style="background-color: #f5f7f5; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; min-height: 100vh;">
-        <div style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem 1rem; background: radial-gradient(circle at 10% 15%, rgba(45, 74, 62, 0.08) 0%, rgba(245, 247, 245, 0.98) 60%, rgba(232, 241, 236, 0.6) 100%);">
+    <body class="font-sans antialiased text-[#1f2d26]" style="background-color: #e9eff5; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; min-height: 100vh;">
+        <div style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem 1rem; background: radial-gradient(circle at 15% 20%, rgba(32, 92, 72, 0.08) 0%, #e9eff5 60%, rgba(210, 225, 235, 0.8) 100%);">
             {{ $slot }}
         </div>
     </body>
