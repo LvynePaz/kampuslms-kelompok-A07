@@ -82,8 +82,10 @@ class UserController extends Controller
             ->with('status', 'Pengguna berhasil diperbarui.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
+        abort_if($user->id === $request->user()->id, 403, 'Anda tidak dapat menghapus akun Anda sendiri.');
+
         $user->delete();
 
         return redirect()->route('admin.users.index')

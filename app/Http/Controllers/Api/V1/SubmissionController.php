@@ -24,7 +24,7 @@ class SubmissionController extends Controller
         Gate::authorize('submit', $assignment);
 
         $data = $request->validate([
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
             'note' => ['nullable', 'string'],
         ]);
 
@@ -66,7 +66,7 @@ class SubmissionController extends Controller
         $grade = Grade::updateOrCreate(
             ['submission_id' => $submission->id],
             [
-                'graded_by' => $user->id,
+                'graded_by' => $request->user()->id,
                 'score' => $data['score'],
                 'feedback' => $data['feedback'] ?? null,
                 'graded_at' => now(),
