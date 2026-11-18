@@ -11,20 +11,26 @@ use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
-    public function index(Request $request, Course $course): JsonResponse
+    public function index(Request $request, Course $course)
     {
-        //validasi apakah user bisa mengakses matkul ini menggunakan Gate
+        // Validasi apakah user bisa mengakses matkul ini menggunakan Gate
         Gate::authorize('view', $course);
 
-        return response()->json($course->materials()->get([
-            'id',
-            'title',
-            'description',
-            'type',
-            'original_name',
-            'external_url',
-            'created_at',
-        ]));
+        if ($request->wantsJson()) {
+            return response()->json($course->materials()->get([
+                'id',
+                'title',
+                'description',
+                'type',
+                'original_name',
+                'external_url',
+                'created_at',
+            ]));
+        }
+
+        $user = $request->user();
+        $routePrefix = ($user?->role === 'dosen') ? 'dosen.' : 'mahasiswa.';
+        return redirect()->route($routePrefix . 'courses.show', $course);
     }
 
     public function show(Request $request, Material $material)
@@ -103,7 +109,7 @@ class MaterialController extends Controller
         // Normalisasi URL jika diisi
         if (!empty($validated['external_url'])) {
             $url = trim($validated['external_url']);
-            if (!preg_match('~^(?:f|ht)tps?://~i', $url) && !str_starts_with($url, 'file:///')) {
+            if (!preg_match('~^https?://~i', $url)) {
                 $url = 'https://' . $url;
             }
             $validated['external_url'] = $url;
@@ -168,7 +174,7 @@ class MaterialController extends Controller
         // Normalisasi URL jika diisi
         if (!empty($validated['external_url'])) {
             $url = trim($validated['external_url']);
-            if (!preg_match('~^(?:f|ht)tps?://~i', $url) && !str_starts_with($url, 'file:///')) {
+            if (!preg_match('~^https?://~i', $url)) {
                 $url = 'https://' . $url;
             }
             $validated['external_url'] = $url;
@@ -203,24 +209,7 @@ class MaterialController extends Controller
             return Storage::disk('public')->download($material->file_path, $filename);
         }
 
-        // 3. Berkas lokal dari file:/// path
-        if ($material->external_url && str_starts_with($material->external_url, 'file:///')) {
-            $rawPath = preg_replace('~^file:///~i', '', $material->external_url);
-            $candidatePaths = [
-                $rawPath,
-                urldecode($rawPath),
-                str_replace('/', DIRECTORY_SEPARATOR, $rawPath),
-                str_replace('/', DIRECTORY_SEPARATOR, urldecode($rawPath)),
-            ];
-
-            foreach ($candidatePaths as $candidate) {
-                if (file_exists($candidate)) {
-                    return response()->download($candidate, basename($candidate));
-                }
-            }
-        }
-
-        // 4. Data dummy seeder (file fisik di storage belum di-generate)
+        // 3. Data dummy seeder (file fisik di storage belum di-generate)
         if ($material->file_path) {
             $dummyContent = "====================================================\n"
                 . "DOKUMEN MATERI PERKULIAHAN RESMI (UNDUHAN PRIVAT)\n"
@@ -279,28 +268,7 @@ class MaterialController extends Controller
             );
         }
 
-        // 3. Berkas lokal dari file:/// path
-        if ($material->external_url && str_starts_with($material->external_url, 'file:///')) {
-            $rawPath = preg_replace('~^file:///~i', '', $material->external_url);
-            $candidatePaths = [
-                $rawPath,
-                urldecode($rawPath),
-                str_replace('/', DIRECTORY_SEPARATOR, $rawPath),
-                str_replace('/', DIRECTORY_SEPARATOR, urldecode($rawPath)),
-            ];
-
-            foreach ($candidatePaths as $candidate) {
-                if (file_exists($candidate)) {
-                    $mime = mime_content_type($candidate) ?: 'application/octet-stream';
-                    return response()->file($candidate, [
-                        'Content-Type'        => $mime,
-                        'Content-Disposition' => 'inline; filename="' . basename($candidate) . '"',
-                    ]);
-                }
-            }
-        }
-
-        // 4. Data seeder dummy (file_path ada tapi file fisik belum ada di disk)
+        // 3. Data seeder dummy (file_path ada tapi file fisik belum ada di disk)
         if ($material->file_path) {
             $filename = $material->original_name ?: basename($material->file_path);
             $dummyContent = "====================================================\n"
