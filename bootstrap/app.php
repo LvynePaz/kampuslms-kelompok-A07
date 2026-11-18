@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 # ini ngurus middleware 
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
-        $middleware->redirectGuestsTo(fn () => null);
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->expectsJson() ? null : route('login'));
         $middleware->alias([
             'role' => App\Http\Middleware\EnsureUserHasRole::class,
         ]);

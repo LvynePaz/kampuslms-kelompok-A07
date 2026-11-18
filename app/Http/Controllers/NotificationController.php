@@ -61,7 +61,9 @@ class NotificationController extends Controller
 
         // Jika terdapat parameter redirect (misal user mengklik link dari item notifikasi)
         if ($redirect = $request->input('redirect')) {
-            return redirect($redirect);
+            if (str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+                return redirect($redirect);
+            }
         }
 
         return back()->with('success', 'Notifikasi berhasil ditandai telah dibaca.');

@@ -12,25 +12,31 @@ use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
 {
-    public function index(Request $request, Course $course): JsonResponse
+    public function index(Request $request, Course $course)
     {
-        //validasi apakah user bisa mengakses matkul ini menggunakan Gate
+        // Validasi apakah user bisa mengakses matkul ini menggunakan Gate
         Gate::authorize('view', $course);
 
-        $query = $course->assignments();
-        if ($request->user()?->role === 'mahasiswa') {
-            $query->where('status', 'published');
+        if ($request->wantsJson()) {
+            $query = $course->assignments();
+            if ($request->user()?->role === 'mahasiswa') {
+                $query->where('status', 'published');
+            }
+
+            return response()->json($query->get([
+                'id',
+                'title',
+                'instructions',
+                'due_at',
+                'max_score',
+                'allow_late',
+                'status',
+            ]));
         }
 
-        return response()->json($query->get([
-            'id',
-            'title',
-            'instructions',
-            'due_at',
-            'max_score',
-            'allow_late',
-            'status',
-        ]));
+        $user = $request->user();
+        $routePrefix = ($user?->role === 'dosen') ? 'dosen.' : 'mahasiswa.';
+        return redirect()->route($routePrefix . 'courses.show', $course);
     }
 
     public function show(Request $request, Assignment $assignment)
