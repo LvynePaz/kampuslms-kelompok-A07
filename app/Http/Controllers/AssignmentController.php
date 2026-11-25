@@ -62,12 +62,12 @@ class AssignmentController extends Controller
         return view('assignments.show', compact('course', 'assignment'));
     }
 
-    public function submissions(Assignment $assignment)
+    public function submissions(Request $request, Assignment $assignment)
     {
         Gate::authorize('update', $assignment);
 
         $assignment->load('course');
-        $students = $assignment->course->students()
+        $allStudents = $assignment->course->students()
             ->select('users.id', 'users.name', 'users.nim_nip')
             ->with(['submissions' => fn ($query) => $query
                 ->where('assignment_id', $assignment->id)
@@ -76,9 +76,37 @@ class AssignmentController extends Controller
                     ->select('id', 'submission_id', 'score', 'feedback')])])
             ->orderBy('users.name')
             ->get();
+
+        $stats = [
+            'total' => $allStudents->count(),
+            'submitted' => $allStudents->filter(fn ($s) => $s->submissions->isNotEmpty() && ! $s->submissions->first()->is_late)->count(),
+            'late' => $allStudents->filter(fn ($s) => $s->submissions->isNotEmpty() && $s->submissions->first()->is_late)->count(),
+            'missing' => $allStudents->filter(fn ($s) => $s->submissions->isEmpty())->count(),
+        ];
+
+        $students = $allStudents;
+
+        if ($search = $request->input('search')) {
+            $search = strtolower($search);
+            $students = $students->filter(fn ($s) => 
+                str_contains(strtolower($s->name), $search) || 
+                str_contains(strtolower($s->nim_nip ?? ''), $search)
+            );
+        }
+
+        if ($status = $request->input('status')) {
+            if ($status === 'submitted') {
+                $students = $students->filter(fn ($s) => $s->submissions->isNotEmpty() && ! $s->submissions->first()->is_late);
+            } elseif ($status === 'late') {
+                $students = $students->filter(fn ($s) => $s->submissions->isNotEmpty() && $s->submissions->first()->is_late);
+            } elseif ($status === 'missing') {
+                $students = $students->filter(fn ($s) => $s->submissions->isEmpty());
+            }
+        }
+
         $course = $assignment->course;
 
-        return view('assignments.submissions', compact('assignment', 'course', 'students'));
+        return view('assignments.submissions', compact('assignment', 'course', 'students', 'stats'));
     }
 
     public function create(Request $request, Course $course)
