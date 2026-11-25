@@ -38,7 +38,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo_mysql, bcmath
+          extensions: mbstring, pdo_mysql, bcmath, pdo_sqlite, sqlite3
 
       - name: Copy .env
         run: cp .env.example .env
@@ -64,3 +64,6 @@ jobs:
 
       - name: migrate:refresh
         run: php artisan migrate:refresh --force
+
+      - name: Run automated test suite
+        run: php artisan test

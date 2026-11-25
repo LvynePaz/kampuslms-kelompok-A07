@@ -16,20 +16,20 @@ Pada sistem LMS kampus:
 
 ## 2. Tabel Matriks Titik Rawan IDOR & Solusi Penutupnya
 
-| No | Titik Rawan / Endpoint | Parameter Objek | Potensi Bahaya (Dampak IDOR) | Mekanisme Pengamanan | Penutup (Policy / Query Filter) | Status |
-|:--:|---|---|---|---|---|:--:|
-| **1** | `GET /courses` (Daftar Matkul) | Koleksi data | Mahasiswa melihat seluruh mata kuliah kampus, termasuk yang tidak diikutinya. | **Penyaringan di Level Query** | `CourseController@index`<br>`match ($user->role)` | ✅ Tertutup |
-| **2** | `GET /courses/{course}` | `Course $course` | Mahasiswa mengakses materi/detail mata kuliah kelas lain. | **Policy Objek** | `CoursePolicy@view`<br>`$course->students()->whereKey($user->id)->exists()` | ✅ Tertutup |
-| **3** | `PUT /courses/{course}` | `Course $course` | Dosen A mengedit informasi atau deskripsi mata kuliah milik Dosen B. | **Policy Objek** | `CoursePolicy@update`<br>`$course->lecturer_id === $user->id` | ✅ Tertutup |
-| **4** | `DELETE /courses/{course}` | `Course $course` | Dosen atau mahasiswa menghapus mata kuliah dari sistem. | **Role & Policy** | `CoursePolicy@delete`<br>`$user->role === 'admin'` | ✅ Tertutup |
-| **5** | `GET /materials/{material}` | `Material $material` | Mahasiswa mengunduh materi privat dari mata kuliah yang tidak diikutinya. | **Policy Objek** | `MaterialPolicy@view`<br>`$material->course->students()->whereKey(...)` | ✅ Tertutup |
-| **6** | `POST /courses/{course}/materials` | `Course $course` | Mahasiswa atau dosen lain mengunggah materi ke mata kuliah orang lain. | **Policy Objek** | `MaterialPolicy@create`<br>`$course->lecturer_id === $user->id` | ✅ Tertutup |
-| **7** | `GET /assignments/{assignment}` | `Assignment $assignment` | Mahasiswa melihat soal tugas dari kelas lain yang belum dibuka. | **Policy Objek** | `AssignmentPolicy@view`<br>`$assignment->course->students()->whereKey(...)` | ✅ Tertutup |
-| **8** | `POST /assignments` | Koleksi data | Mahasiswa membuat tugas kuliah tiruan di portal. | **Role Validation & Policy** | `AssignmentPolicy@create`<br>`in_array($user->role, ['admin', 'dosen'])` | ✅ Tertutup |
-| **9** | `GET /submissions/{submission}` | `Submission $submission` | **(Kritis)** Mahasiswa A menyalin file/jawaban tugas milik Mahasiswa B dengan menebak ID. | **Policy Objek** | `SubmissionPolicy@view`<br>`$submission->user_id === $user->id` | ✅ Tertutup |
-| **10** | `PUT /submissions/{submission}` | `Submission $submission` | Mahasiswa mengubah jawaban tugas setelah dinilai atau mengubah tugas milik orang lain. | **Policy Objek** | `SubmissionPolicy@update`<br>`!$submission->grade()->exists()` | ✅ Tertutup |
-| **11** | `POST /submissions/{id}/grade` | `Submission $submission` | Mahasiswa menilai tugasnya sendiri, atau Dosen A memberi nilai ke mahasiswa Dosen B. | **Policy Objek** | `GradePolicy@create`<br>`$grade->submission->assignment->course->lecturer_id` | ✅ Tertutup |
-| **12** | `PATCH /profile` | Data request | Penyerang mengirim payload `role=admin` untuk menaikkan hak akses (*Privilege Escalation*). | **Mass Assignment Whitelist** | `ProfileUpdateRequest`<br>Hanya mengizinkan `name` & `email` | ✅ Tertutup |
+| No | Titik Rawan / Endpoint | Parameter Objek | Potensi Bahaya (Dampak IDOR) | Mekanisme Pengamanan | Penutup (Policy / Query Filter) | Test Pembukti | Status |
+|:--:|---|---|---|---|---|---|:--:|
+| **1** | `GET /courses` (Daftar Matkul) | Koleksi data | Mahasiswa melihat seluruh mata kuliah kampus, termasuk yang tidak diikutinya. | **Penyaringan di Level Query** | `CourseController@index`<br>`match ($user->role)` | `RoleMiddlewareTest`<br>`ApiV1Test` | ✅ Tertutup |
+| **2** | `GET /courses/{course}` | `Course $course` | Mahasiswa mengakses materi/detail mata kuliah kelas lain. | **Policy Objek** | `CoursePolicy@view`<br>`$course->students()->whereKey($user->id)->exists()` | `RoleMiddlewareTest` | ✅ Tertutup |
+| **3** | `PUT /courses/{course}` | `Course $course` | Dosen A mengedit informasi atau deskripsi mata kuliah milik Dosen B. | **Policy Objek** | `CoursePolicy@update`<br>`$course->lecturer_id === $user->id` | `RoleMiddlewareTest` | ✅ Tertutup |
+| **4** | `DELETE /courses/{course}` | `Course $course` | Dosen atau mahasiswa menghapus mata kuliah dari sistem. | **Role & Policy** | `CoursePolicy@delete`<br>`$user->role === 'admin'` | `RoleMiddlewareTest` | ✅ Tertutup |
+| **5** | `GET /materials/{material}` | `Material $material` | Mahasiswa mengunduh materi privat dari mata kuliah yang tidak diikutinya. | **Policy Objek** | `MaterialPolicy@view`<br>`$material->course->students()->whereKey(...)` | `MaterialFeatureTest` | ✅ Tertutup |
+| **6** | `POST /courses/{course}/materials` | `Course $course` | Mahasiswa atau dosen lain mengunggah materi ke mata kuliah orang lain. | **Policy Objek** | `MaterialPolicy@create`<br>`$course->lecturer_id === $user->id` | `MaterialFeatureTest` | ✅ Tertutup |
+| **7** | `GET /assignments/{assignment}` | `Assignment $assignment` | Mahasiswa melihat soal tugas dari kelas lain yang belum dibuka. | **Policy Objek** | `AssignmentPolicy@view`<br>`$assignment->course->students()->whereKey(...)` | `RoleMiddlewareTest` | ✅ Tertutup |
+| **8** | `POST /assignments` | Koleksi data | Mahasiswa membuat tugas kuliah tiruan di portal. | **Role Validation & Policy** | `AssignmentPolicy@create`<br>`in_array($user->role, ['admin', 'dosen'])` | `ApiV1Test` | ✅ Tertutup |
+| **9** | `GET /submissions/{submission}` | `Submission $submission` | **(Kritis)** Mahasiswa A menyalin file/jawaban tugas milik Mahasiswa B dengan menebak ID. | **Policy Objek** | `SubmissionPolicy@view`<br>`$submission->user_id === $user->id` | `SubmissionSecurityTest` | ✅ Tertutup |
+| **10** | `PUT /submissions/{submission}` | `Submission $submission` | Mahasiswa mengubah jawaban tugas setelah dinilai atau mengubah tugas milik orang lain. | **Policy Objek** | `SubmissionPolicy@update`<br>`!$submission->grade()->exists()` | `SubmissionSecurityTest` | ✅ Tertutup |
+| **11** | `POST /submissions/{id}/grade` | `Submission $submission` | Mahasiswa menilai tugasnya sendiri, atau Dosen A memberi nilai ke mahasiswa Dosen B. | **Policy Objek** | `GradePolicy@create`<br>`$grade->submission->assignment->course->lecturer_id` | `GradingFeatureTest` | ✅ Tertutup |
+| **12** | `PATCH /profile` | Data request | Penyerang mengirim payload `role=admin` untuk menaikkan hak akses (*Privilege Escalation*). | **Mass Assignment Whitelist** | `ProfileUpdateRequest`<br>Hanya mengizinkan `name` & `email` | `ProfileTest` | ✅ Tertutup |
 
 ---
 
