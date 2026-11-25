@@ -122,6 +122,48 @@
             </form>
         </div>
 
+        {{-- Filter & Pencarian Mahasiswa (Penyempurnaan Review PR #44) --}}
+        <div style="padding: 0.85rem 1.75rem; background: #ffffff; border-bottom: 1px solid rgba(45, 74, 62, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                @php
+                    $currentStatus = request('status');
+                    $currentSearch = request('search');
+                @endphp
+                <a href="{{ route('dosen.assignments.submissions', array_filter(['assignment' => $assignment->id, 'search' => $currentSearch])) }}" 
+                   style="padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border: 1px solid {{ is_null($currentStatus) ? '#2d4a3e' : 'rgba(45,74,62,0.2)' }}; background: {{ is_null($currentStatus) ? '#2d4a3e' : '#ffffff' }}; color: {{ is_null($currentStatus) ? '#ffffff' : '#2d4a3e' }};">
+                    Semua ({{ $stats['total'] ?? $students->count() }})
+                </a>
+                <a href="{{ route('dosen.assignments.submissions', array_filter(['assignment' => $assignment->id, 'status' => 'submitted', 'search' => $currentSearch])) }}" 
+                   style="padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border: 1px solid {{ $currentStatus === 'submitted' ? '#047857' : 'rgba(45,74,62,0.2)' }}; background: {{ $currentStatus === 'submitted' ? '#ecfdf5' : '#ffffff' }}; color: #047857;">
+                    Tepat Waktu ({{ $stats['submitted'] ?? 0 }})
+                </a>
+                <a href="{{ route('dosen.assignments.submissions', array_filter(['assignment' => $assignment->id, 'status' => 'late', 'search' => $currentSearch])) }}" 
+                   style="padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border: 1px solid {{ $currentStatus === 'late' ? '#b45309' : 'rgba(45,74,62,0.2)' }}; background: {{ $currentStatus === 'late' ? '#fff7ed' : '#ffffff' }}; color: #b45309;">
+                    Terlambat ({{ $stats['late'] ?? 0 }})
+                </a>
+                <a href="{{ route('dosen.assignments.submissions', array_filter(['assignment' => $assignment->id, 'status' => 'missing', 'search' => $currentSearch])) }}" 
+                   style="padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border: 1px solid {{ $currentStatus === 'missing' ? '#64748b' : 'rgba(45,74,62,0.2)' }}; background: {{ $currentStatus === 'missing' ? '#f1f5f9' : '#ffffff' }}; color: #475569;">
+                    Belum Mengumpulkan ({{ $stats['missing'] ?? 0 }})
+                </a>
+            </div>
+
+            <form method="GET" action="{{ route('dosen.assignments.submissions', $assignment) }}" style="display: flex; gap: 0.35rem; align-items: center;">
+                @if (request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NIM..." 
+                       style="padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(45,74,62,0.2); font-size: 0.8rem; width: 170px;">
+                <button type="submit" style="padding: 5px 10px; border-radius: 6px; background: #2d4a3e; color: #ffffff; border: none; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                    Cari
+                </button>
+                @if (request('search') || request('status'))
+                    <a href="{{ route('dosen.assignments.submissions', $assignment) }}" style="padding: 5px 8px; border-radius: 6px; background: #f1f5f9; color: #475569; text-decoration: none; font-size: 0.78rem;">
+                        Reset
+                    </a>
+                @endif
+            </form>
+        </div>
+
         @if ($students->isEmpty())
             <div class="monitoring-empty">Belum ada mahasiswa terdaftar di mata kuliah ini.</div>
         @else
