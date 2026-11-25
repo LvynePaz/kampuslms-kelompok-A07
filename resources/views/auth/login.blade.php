@@ -134,6 +134,12 @@
                 </div>
             @endif
 
+            @if (session('warning'))
+                <div style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 9px 12px; border-radius: 9px; font-size: 0.83rem; margin-bottom: 1.15rem;">
+                    {{ session('warning') }}
+                </div>
+            @endif
+
             {{-- Pesan Error Validasi --}}
             @if ($errors->any())
                 <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 9px 12px; border-radius: 9px; font-size: 0.83rem; margin-bottom: 1.15rem;">
