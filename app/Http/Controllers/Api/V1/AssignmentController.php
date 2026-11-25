@@ -18,6 +18,8 @@ class AssignmentController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('create', Assignment::class);
+
         $data = $request->validate([
             'course_id' => ['required', 'integer', 'exists:courses,id'],
             'title' => ['required', 'string', 'max:255'],
