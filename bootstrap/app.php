@@ -32,6 +32,17 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson()
         );
 
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $exception, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'CSRF token mismatch.',
+                ], 419);
+            }
+
+            return redirect()->route('login')
+                ->with('warning', 'Sesi Anda telah kedaluwarsa. Silakan masuk kembali.');
+        });
+
         $exceptions->render(function (ValidationException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;

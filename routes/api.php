@@ -11,7 +11,12 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/users/{id}', function ($id) {
+        Route::get('/users/{id}', function (\Illuminate\Http\Request $request, $id) {
+            $currentUser = $request->user();
+            if ($currentUser->role !== 'admin' && (string) $currentUser->id !== (string) $id) {
+                abort(403, 'Anda tidak memiliki akses ke sumber daya ini.');
+            }
+
             $user = \App\Models\User::findOrFail($id);
 
             return new \App\Http\Resources\UserResource($user);

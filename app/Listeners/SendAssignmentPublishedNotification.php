@@ -22,10 +22,12 @@ class SendAssignmentPublishedNotification implements ShouldQueue
     {
         $assignment = $event->assignment->loadMissing('course.students');
 
-        Notification::send(
-            $assignment->course->students,
-            new NewAssignmentNotification($assignment)
-        );
+        if ($assignment->course && $assignment->course->students->isNotEmpty()) {
+            Notification::send(
+                $assignment->course->students,
+                new NewAssignmentNotification($assignment)
+            );
+        }
     }
 
     public function failed(AssignmentPublished $event, Throwable $exception): void

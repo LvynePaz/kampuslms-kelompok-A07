@@ -76,17 +76,79 @@ Sesuai penugasan modul, dilakukan peer review terhadap basis kode **Kelompok A08
 
 ---
 
-## 13.4 Checkpoint Minggu 13
+## 13.5 Checkpoint Minggu 13
 
-1. **Berapa commit atas nama Anda?**
-   Tercatat 140 commit (103 via `Traa897` dan 37 via `Patralysne`).
-2. **Kenapa `git rm --cached .env` tidak cukup kalau `.env` sudah pernah ter-push?**
-   Karena `git rm --cached` hanya menghapus berkas dari index commit berikutnya, tetapi riwayat berkas dan isi kredensialnya tetap terekam permanen di commit-commit sebelumnya dalam database Git object. Siapa pun bisa melihat commit lama lewat `git log` atau checkout commit lama. Rahasia yang terlanjur ter-push harus diganti nilainya.
-3. **Tunjukkan satu temuan review yang Anda tulis. Jelaskan risikonya tanpa membaca catatan.**
-   Temuan pada pengecekan otorisasi unduhan berkas privat: method download tanpa `Gate::authorize()` membuka celah IDOR di mana pengguna lain bisa mengunduh berkas tugas mahasiswa lain hanya dengan mengganti ID submission di URL browser.
-4. **Tunjukkan satu temuan yang masuk ke kelompok Anda. Anda terima atau tolak? Kenapa?**
-   Diterima. Temuan mengenai penanganan ukuran berkas null pada halaman submission (`b358b0f`). Perbaikan dilakukan dengan menambahkan pemeriksaan `optional($submission)->file_size` sebelum memformat ukuran file agar tidak menimbulkan exception saat mahasiswa belum mengunggah file.
-5. **Kenapa PR sebaiknya kecil dan satu fitur?**
-   PR yang kecil mudah dibaca, cepat direview, risiko konflik merge-nya rendah, dan jika terjadi bug mudah di-revert tanpa membatalkan fitur-fitur lainnya.
-6. **Kenapa penilaian kontribusi tidak bisa hanya berdasarkan jumlah commit?**
-   Karena pesan dan author commit di Git bisa diubah (`git commit --amend` atau `--author`), dan jumlah commit tidak mencerminkan kualitas maupun bobot kesulitan kode (misal 1 commit arsitektur besar bisa lebih bernilai dibanding 10 commit perbaikan typo).
+- [x] **Berapa commit atas nama Anda? Tunjukkan `git shortlog -sn`.**
+  - **Perintah:** `git shortlog -sn HEAD`
+  - **Hasil:** 97 `Traa897` + 37 `Patralysne` = **134 commit** (atau 141 commit jika dihitung di seluruh branch `--all`).
+  - **Catatan akun:** Akun hanya ada 1. Dua nama muncul karena 97 commit awal dibuat saat konfigurasi Git lokal masih bernama `Traa897` (`patran05534@gmail.com`), kemudian username diperbarui menjadi `Patralysne` (`95853238+LvynePaz@users.noreply.github.com`). Karena Git commit bersifat *immutable*, riwayat nama lama tetap terekam apa adanya.
+
+- [x] **Kenapa `git rm --cached .env` tidak cukup kalau `.env` sudah pernah ter-push?**
+  - Perintah `git rm --cached .env` hanya menghapus file dari staging index agar tidak ter-commit ke depan, tetapi riwayat isi file `.env` beserta kredensial rahasianya **masih tersimpan permanen di database commit Git lama**. Siapa pun yang meng-clone repository atau melihat log lama tetap bisa membaca rahasia tersebut.
+  - Penanganan wajib: commit lama harus di-rewrite (menggunakan `git filter-repo` atau BFG Repo-Cleaner) dan seluruh kredensial/rahasia yang bocor wajib di-rotate (diganti).
+
+- [x] **Tunjukkan satu temuan review yang Anda tulis. Jelaskan risikonya tanpa membaca catatan.**
+  - **Temuan di Kelompok A08 (PR #67):** File `app/Http/Controllers/EnrollmentController.php` baris 75-85 pada method `students(Course $course)` dan route `routes/web.php` baris 25-27.
+  - **Risiko Teknis:** Celah IDOR (Insecure Direct Object Reference) dan Broken Access Control. Endpoint `GET /courses/{course}/students` mengembalikan daftar nama dan NIM mahasiswa suatu kelas tanpa otorisasi (`Gate::authorize`). Mahasiswa kelas lain yang sudah login cukup mengubah parameter course di URL untuk melihat daftar mahasiswa kelas lain.
+  - **Solusi:** Tambahkan `Gate::authorize('view', $course)` atau batasi akses hanya untuk dosen pengampu dan mahasiswa terdaftar.
+
+- [x] **Tunjukkan satu temuan yang masuk ke kelompok Anda. Anda terima atau tolak? Kenapa?**
+
+  Berikut dua data temuan riil yang masuk ke pull request kelompok A07 (pilih salah satu saat wawancara):
+
+  - **PILIHAN A - TEMUAN YANG DITERIMA:**
+    - **Reviewer:** `@syahidrdho`
+    - **Tautan PR:** PR #56 (`https://github.com/LvynePaz/kampuslms-kelompok-A07/pull/56#discussion_r4618384060`)
+    - **File & Baris:** `routes/api.php` baris 33
+    - **Kode Asal:**
+      ```php
+      Route::get('/users/{id}', function ($id) {
+          $user = \App\Models\User::findOrFail($id);
+          return new \App\Http\Resources\UserResource($user);
+      });
+      ```
+    - **Status:** **Diterima**.
+    - **Alasan Teknis & Tindak Lanjut:** Endpoint detail profil pengguna awalnya ditaruh di luar middleware `auth:sanctum`. Akibatnya, publik/guest tanpa login bisa menebak ID di URL dan memanen profil pengguna lain (celah *information disclosure*). Temuan ini valid dan langsung kami terima: rute dipindahkan ke dalam grup `auth:sanctum` pada commit `6937d0b`, serta diperkuat dengan otorisasi anti-IDOR di mana hanya role admin atau pengguna pemilik akun itu sendiri yang diizinkan memanggil endpoint `GET /api/v1/users/{id}`.
+
+  - **PILIHAN B - TEMUAN YANG DITOLAK:**
+    - **Reviewer:** `@SufSoup`
+    - **Tautan PR:** PR #44 (`https://github.com/LvynePaz/kampuslms-kelompok-A07/pull/44`)
+    - **File & Baris:** `app/Http/Controllers/AssignmentController.php` baris 40-52 (method `submissions`) dan `resources/views/assignments/submissions.blade.php`
+    - **Kode Terkait:**
+      ```php
+      $students = $assignment->course->students()
+          ->with(['submissions' => fn ($query) => $query->where('assignment_id', $assignment->id)])
+          ->orderBy('name')
+          ->get();
+      ```
+    - **Status:** **Ditolak**.
+    - **Alasan Teknis & Solusi Alternatif:** Reviewer menyarankan agar daftar pengumpulan tugas mahasiswa dipecah menggunakan paginasi (`paginate(10)`). Saran paginasi ditolak karena halaman ini berfungsi sebagai dasbor monitoring dosen untuk melihat kelengkapan pengumpulan satu kelas secara utuh (siapa yang sudah dan belum mengumpulkan). Memotong data per 10 orang mempersulit dosen memantau progres kelas. Selain itu, query sudah dioptimasi menggunakan eager loading `with()` (hanya 2 query dieksekusi, bebas N+1), dan jumlah mahasiswa per kelas dibatasi 25-50 orang. Sebagai gantinya, kekhawatiran reviewer diselesaikan dengan menambahkan fitur filter status instan (*Semua*, *Tepat Waktu*, *Terlambat*, *Belum Mengumpulkan*) serta pencarian nama/NIM tanpa memotong kelengkapan data satu kelas.
+
+- [x] **Kenapa PR sebaiknya kecil dan satu fitur?**
+  - **Mudah dan cepat direview:** Reviewer tidak mengalami fatigue dan lebih teliti menemukan bug atau celah keamanan.
+  - **Minim konflik merge:** Perubahan yang terisolasi memperkecil risiko tabrakan kode dengan pekerjaan anggota lain.
+  - **Aman saat rollback:** Jika timbul regresi atau bug di production, PR dapat di-revert secara instan tanpa membatalkan fitur lain yang sudah berjalan baik.
+
+- [x] **Kenapa penilaian kontribusi tidak bisa hanya berdasarkan jumlah commit?**
+  - Jumlah commit mudah dimanipulasi (misal commit per baris atau commit perbaikan typo berulang kali).
+  - Jumlah commit tidak mencerminkan kualitas kode, pencegahan celah keamanan, maupun bobot arsitektur (1 commit refactor optimasi database atau penutupan celah IDOR jauh lebih berharga daripada 20 commit perbaikan tampilan/spasi).
+
+---
+
+## 13.6 Rangkuman Materi Kuis 13
+
+1. **Alur Branching (Branch Strategy):**
+   - `main`: Selalu stabil, siap produksi, tidak menerima push langsung (dilindungi Branch Protection).
+   - `dev`: Cabang integrasi mingguan tempat semua fitur digabungkan sebelum masuk ke `main`.
+   - `feat/*` dan `fix/*`: Cabang kerja spesifik per fitur atau perbaikan bug, selalu digabungkan melalui Pull Request.
+2. **Conventional Commits:**
+   - Struktur standar: `<tipe>(<lingkup opsional>): <deskripsi singkat imperative>`.
+   - Tipe utama: `feat` (fitur baru), `fix` (perbaikan bug), `refactor` (ubah struktur tanpa ubah perilaku), `docs` (dokumentasi), `test` (pengujian otomatis), `style` (tampilan/formatting).
+3. **Resolusi Konflik Git (Merge Conflicts):**
+   - Terjadi ketika dua branch mengubah baris yang sama di file yang sama.
+   - Diselesaikan secara sadar dengan membaca konteks kedua perubahan, menghapus penanda konflik (`<<<<<<<`, `=======`, `>>>>>>>`), memilih kode yang benar atau menggabungkan keduanya, lalu membuat commit penyelesaian.
+4. **Isi Code Review yang Berkualitas:**
+   - Objektif dan fokus pada kode (menyerang kode, bukan orangnya).
+   - Menyebutkan lokasi baris kode secara spesifik.
+   - Menjelaskan dampak teknis dan skenario risikonya (kenapa itu masalah).
+   - Memberikan rekomendasi solusi konkret yang bisa langsung diterapkan.
