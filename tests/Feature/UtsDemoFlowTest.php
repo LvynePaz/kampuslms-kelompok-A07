@@ -98,6 +98,15 @@ class UtsDemoFlowTest extends TestCase
         $studentAsgShow->assertOk();
         $studentAsgShow->assertSee('Tugas 1 - Implementasi Controller');
         $studentAsgShow->assertSee('Kumpulkan sebelum batas waktu');
+        $studentAsgShow->assertSee('Pilih Berkas Tugas');
+        $studentAsgShow->assertSee('name="file"', false);
+        $studentAsgShow->assertSee('action="'.route('submissions.store', $assignment).'"', false);
+        $studentAsgShow->assertDontSee('Unduh Berkas Saya');
+        $studentAsgShow->assertDontSee('Dikumpulkan pada:');
+        $this->assertDatabaseMissing('submissions', [
+            'assignment_id' => $assignment->id,
+            'user_id'       => $student->id,
+        ]);
 
         // Skenario Tambahan: Akses Berkas Materi
         $material = $course->materials()->first();

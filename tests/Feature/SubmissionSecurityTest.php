@@ -65,6 +65,15 @@ class SubmissionSecurityTest extends TestCase
 
         $submission = Submission::where('user_id', $this->student1->id)->first();
         $this->assertNotNull($submission);
+        $this->assertSame(
+            1,
+            Submission::where('assignment_id', $this->assignment->id)
+                ->where('user_id', $this->student1->id)
+                ->count()
+        );
+        $this->assertStringStartsWith("submissions/{$this->assignment->id}/", $submission->file_path);
+        $this->assertSame($file->getSize(), $submission->file_size);
+        $this->assertNotNull($submission->submitted_at);
 
         // Pastikan berkas disimpan di disk privat 'local', BUKAN public
         Storage::disk('local')->assertExists($submission->file_path);
@@ -93,8 +102,22 @@ class SubmissionSecurityTest extends TestCase
         $this->assertDatabaseHas('submissions', [
             'assignment_id' => $pastAssignment->id,
             'user_id'       => $this->student1->id,
+            'original_name' => 'tugas-terlambat.pdf',
             'is_late'       => true,
         ]);
+
+        $submission = Submission::where('assignment_id', $pastAssignment->id)
+            ->where('user_id', $this->student1->id)
+            ->first();
+        $this->assertNotNull($submission);
+        $this->assertSame(
+            1,
+            Submission::where('assignment_id', $pastAssignment->id)
+                ->where('user_id', $this->student1->id)
+                ->count()
+        );
+        $this->assertStringStartsWith("submissions/{$pastAssignment->id}/", $submission->file_path);
+        Storage::disk('local')->assertExists($submission->file_path);
     }
 
     public function test_submission_rejected_when_past_due_and_allow_late_is_false(): void
@@ -119,6 +142,34 @@ class SubmissionSecurityTest extends TestCase
             'assignment_id' => $strictAssignment->id,
             'user_id'       => $this->student1->id,
         ]);
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_student_outside_course_cannot_submit_assignment(): void
+    {
+        $outsideStudent = User::factory()->create(['role' => 'mahasiswa']);
+        $courseLecturer = User::factory()->create(['role' => 'dosen']);
+        $outsideCourse = Course::factory()->create(['lecturer_id' => $courseLecturer->id]);
+        $outsideAssignment = Assignment::factory()->create([
+            'course_id'  => $outsideCourse->id,
+            'created_by' => $courseLecturer->id,
+            'status'     => 'published',
+            'due_at'     => now()->addDays(3),
+            'allow_late' => false,
+        ]);
+        $file = UploadedFile::fake()->create('tugas-luar-kelas.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($outsideStudent)
+            ->post(route('submissions.store', $outsideAssignment), [
+                'file' => $file,
+            ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('submissions', [
+            'assignment_id' => $outsideAssignment->id,
+            'user_id'       => $outsideStudent->id,
+        ]);
+        $this->assertSame([], Storage::disk('local')->allFiles());
     }
 
     public function test_resubmission_overwrites_existing_record_and_removes_old_file(): void
